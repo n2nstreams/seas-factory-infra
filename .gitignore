@@ -15,4 +15,11 @@ yarn-error.log*
 .idea/
 .vscode/
 *.swp
-*.swo 
+*.swo
+
+# Terraform files
+.terraform/
+*.tfplan
+tf.plan
+*.tfstate
+*.tfstate.backup 
