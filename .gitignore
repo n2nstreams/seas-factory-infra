@@ -22,4 +22,7 @@ yarn-error.log*
 *.tfplan
 tf.plan
 *.tfstate
-*.tfstate.backup 
+*.tfstate.backup
+
+# Plan files
+night4plan.md 
