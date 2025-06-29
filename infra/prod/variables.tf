@@ -8,4 +8,19 @@ variable "region" {
   description = "The GCP region for resources."
   type        = string
   default     = "us-central1"
+}
+
+variable "owner_email" {
+  description = "The email address of the project owner."
+  type        = string
+}
+
+variable "devops_group" {
+  description = "The email address of the DevOps Google Group."
+  type        = string
+}
+
+variable "viewer_group" {
+  description = "The email address of the Viewer Google Group."
+  type        = string
 } 
