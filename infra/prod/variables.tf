@@ -41,4 +41,15 @@ variable "db_password" {
   description = "The password for the default database user."
   type        = string
   sensitive   = true
+}
+
+variable "billing_account" {
+  description = "The billing account ID for budget alerts."
+  type        = string
+}
+
+variable "slack_webhook_token" {
+  description = "The Slack webhook token for notifications."
+  type        = string
+  sensitive   = true
 } 

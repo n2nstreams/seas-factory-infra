@@ -45,4 +45,17 @@ resource "google_sql_database" "factorydb" {
   project  = var.project_id
   name     = var.db_name
   instance = module.cloudsql_postgres.instance_name
+}
+
+# Application user for Cloud Run services
+resource "google_sql_user" "app" {
+  name     = "appuser"
+  instance = module.cloudsql_postgres.instance_name
+  password = random_password.appuser.result
+  project  = var.project_id
+}
+
+resource "random_password" "appuser" {
+  length  = 16
+  special = true
 } 
