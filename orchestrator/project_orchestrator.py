@@ -7,14 +7,37 @@ Built with Google Cloud AI Platform and AutoGen architecture
 import os
 import json
 import logging
+import time
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
-from google.cloud import aiplatform
+from google.cloud import aiplatform, pubsub_v1
 from dataclasses import dataclass
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Pub/Sub configuration
+PROJECT_ID = os.getenv("PROJECT_ID", "summer-nexus-463503-e1")
+publisher = pubsub_v1.PublisherClient()
+TOPIC_PATH = publisher.topic_path(PROJECT_ID, "agent-events")
+
+def emit(event_type: str, payload: Dict[str, Any]):
+    """Emit an event to Pub/Sub topic"""
+    try:
+        event_data = {
+            "type": event_type,
+            "timestamp": time.time(),
+            **payload
+        }
+        data = json.dumps(event_data).encode("utf-8")
+        future = publisher.publish(TOPIC_PATH, data)
+        logger.info(f"Published event: {event_type} - {payload}")
+        return future.result()  # Wait for the publish to complete
+    except Exception as e:
+        logger.error(f"Failed to publish event {event_type}: {str(e)}")
+        # Don't raise the exception to avoid breaking the main flow
+        return None
 
 @dataclass
 class TaskRequest:
@@ -61,9 +84,25 @@ class GreeterAgent(Agent):
         """Greet the user"""
         self.log_info(f"Processing greeting task: {task.request_id}")
         
+        # Emit START event
+        emit("START", {
+            "stage": "greet",
+            "agent": self.name,
+            "request_id": task.request_id
+        })
+        
         try:
             name = task.payload.get("name", "world")
             greeting = f"Hello, {name}! 🚀 SaaS Factory is ready to build!"
+            
+            # Emit FINISH event
+            emit("FINISH", {
+                "stage": "greet",
+                "agent": self.name,
+                "request_id": task.request_id,
+                "status": "success",
+                "result": {"greeting": greeting}
+            })
             
             return TaskResponse(
                 request_id=task.request_id,
@@ -72,6 +111,15 @@ class GreeterAgent(Agent):
             )
         except Exception as e:
             self.log_error(f"Error in greeting task: {str(e)}")
+            
+            # Emit ERROR event
+            emit("ERROR", {
+                "stage": "greet",
+                "agent": self.name,
+                "request_id": task.request_id,
+                "error": str(e)
+            })
+            
             return TaskResponse(
                 request_id=task.request_id,
                 status="error",

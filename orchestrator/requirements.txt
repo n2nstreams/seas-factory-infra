@@ -17,6 +17,8 @@ google-auth==2.40.3
 google-cloud-aiplatform==1.101.0
 google-cloud-bigquery==3.34.0
 google-cloud-core==2.4.3
+google-cloud-firestore==2.21.0
+google-cloud-pubsub==2.26.0
 google-cloud-resource-manager==1.14.2
 google-cloud-storage==2.19.0
 google-crc32c==1.7.1
@@ -48,7 +50,7 @@ orjson==3.10.18
 ormsgpack==1.10.0
 packaging==24.2
 proto-plus==1.26.1
-protobuf==6.31.1
+protobuf>=3.20.2,<6.0.0dev
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pydantic==2.11.7
