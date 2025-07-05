@@ -31,7 +31,7 @@ resource "google_project_iam_member" "event_relay_pubsub" {
 resource "google_project_iam_member" "orchestrator_pubsub_publisher" {
   project = var.project_id
   role    = "roles/pubsub.publisher"
-  member  = "serviceAccount:${google_service_account.run_sa.email}"
+  member  = "serviceAccount:${google_service_account.orchestrator_sa.email}"
 }
 
 # Pub/Sub push subscription for Event Relay

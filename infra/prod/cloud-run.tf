@@ -190,10 +190,15 @@ resource "google_cloud_run_v2_service" "orchestrator" {
     service_account = google_service_account.orchestrator_sa.email
     
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/orchestrator:0.4"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/project-orchestrator:v2.1"
       
       ports {
         container_port = 8080
+      }
+      
+      env {
+        name  = "PROJECT_ID"
+        value = var.project_id
       }
       
       env {

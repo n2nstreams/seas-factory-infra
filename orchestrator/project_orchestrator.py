@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Project Orchestrator - Core brain of the SaaS Factory
-Built with Google Cloud AI Platform and AutoGen architecture
+Built with Google Cloud Pub/Sub for event-driven architecture
 """
 
 import os
@@ -10,7 +10,7 @@ import logging
 import time
 from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
-from google.cloud import aiplatform, pubsub_v1
+from google.cloud import pubsub_v1
 from dataclasses import dataclass
 
 # Configure logging
