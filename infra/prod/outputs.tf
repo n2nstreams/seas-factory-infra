@@ -68,4 +68,16 @@ output "gha_deployer_email" {
 output "workload_identity_pool_id" {
   description = "The ID of the workload identity pool"
   value       = google_iam_workload_identity_pool.gh_pool.workload_identity_pool_id
+}
+
+# Orchestrator service account
+output "orchestrator_sa_email" {
+  description = "The email address of the orchestrator service account"
+  value       = google_service_account.orchestrator_sa.email
+}
+
+# Orchestrator endpoint
+output "orchestrator_endpoint" {
+  description = "The endpoint URI for the Project Orchestrator"
+  value       = google_cloud_run_v2_service.orchestrator.uri
 } 

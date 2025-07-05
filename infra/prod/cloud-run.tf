@@ -177,4 +177,65 @@ resource "google_cloud_run_service_iam_member" "public_access_east" {
   service  = google_cloud_run_v2_service.api_east.name
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+# Cloud Run service for the Project Orchestrator
+resource "google_cloud_run_v2_service" "orchestrator" {
+  name     = "project-orchestrator"
+  location = var.region
+  project  = var.project_id
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    service_account = google_service_account.orchestrator_sa.email
+    
+    containers {
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/orchestrator:0.4"
+      
+      ports {
+        container_port = 8080
+      }
+      
+      env {
+        name  = "ENVIRONMENT"
+        value = "production"
+      }
+      
+      env {
+        name  = "LOG_LEVEL"
+        value = "INFO"
+      }
+      
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "1Gi"
+        }
+      }
+    }
+    
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 5
+    }
+  }
+  
+  traffic {
+    percent = 100
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+  }
+  
+  depends_on = [
+    google_artifact_registry_repository.saas_factory,
+    google_service_account.orchestrator_sa
+  ]
+}
+
+# Allow public access to the orchestrator service
+resource "google_cloud_run_service_iam_member" "orchestrator_public_access" {
+  project  = var.project_id
+  location = google_cloud_run_v2_service.orchestrator.location
+  service  = google_cloud_run_v2_service.orchestrator.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 } 
