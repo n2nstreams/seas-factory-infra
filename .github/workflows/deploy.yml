@@ -26,6 +26,10 @@ jobs:
       - name: Setup Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
       
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+      
       - name: Test authentication
         run: |
           # Test basic authentication
@@ -43,4 +47,28 @@ jobs:
           echo "Project info:"
           gcloud config get-value project
           
-          echo "✅ GitHub OIDC authentication working!" 
+          echo "✅ GitHub OIDC authentication working!"
+      
+      - name: Build and push UI image
+        run: |
+          cd ui
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }} .
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:latest .
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }}
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:latest
+      
+      - name: Deploy UI to Cloud Run
+        run: |
+          gcloud run deploy web-frontend \
+            --image=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }} \
+            --region=us-central1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=80 \
+            --cpu=1 \
+            --memory=512Mi \
+            --max-instances=5 \
+            --min-instances=0
+          
+          echo "🚀 UI deployed successfully!"
+          echo "Frontend URL: $(gcloud run services describe web-frontend --region=us-central1 --format='value(status.url)')" 
