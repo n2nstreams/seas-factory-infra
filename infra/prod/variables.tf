@@ -52,4 +52,15 @@ variable "slack_webhook_token" {
   description = "The Slack webhook token for notifications."
   type        = string
   sensitive   = true
+}
+
+variable "workload_pool_id" {
+  description = "The workload identity pool ID for GitHub Actions"
+  type        = string
+  default     = "gh-pool"
+}
+
+variable "github_repo" {
+  description = "The GitHub repository in the format 'owner/repo'"
+  type        = string
 } 

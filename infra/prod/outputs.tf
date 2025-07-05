@@ -52,4 +52,20 @@ output "artifact_registry_repository" {
 output "monitoring_dashboard_url" {
   description = "The URL of the monitoring dashboard"
   value       = "https://console.cloud.google.com/monitoring/dashboards/custom/${google_monitoring_dashboard.api_dashboard.id}?project=${var.project_id}"
+}
+
+# Workload Identity outputs for GitHub Actions
+output "gh_provider_name" {
+  description = "The full name of the GitHub OIDC provider"
+  value       = google_iam_workload_identity_pool_provider.gh_provider.name
+}
+
+output "gha_deployer_email" {
+  description = "The email address of the GitHub Actions deployer service account"
+  value       = google_service_account.gha_deployer.email
+}
+
+output "workload_identity_pool_id" {
+  description = "The ID of the workload identity pool"
+  value       = google_iam_workload_identity_pool.gh_pool.workload_identity_pool_id
 } 

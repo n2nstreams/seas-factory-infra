@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # Required for OIDC
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+      
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Test authentication
+        run: |
+          # Test basic authentication
+          gcloud auth list
+          
+          # Test Cloud Run access
+          echo "Testing Cloud Run access..."
+          gcloud run services list --region=us-central1 --limit=5
+          
+          # Test Artifact Registry access
+          echo "Testing Artifact Registry access..."
+          gcloud artifacts repositories list --limit=5
+          
+          # Test project info
+          echo "Project info:"
+          gcloud config get-value project
+          
+          echo "✅ GitHub OIDC authentication working!" 

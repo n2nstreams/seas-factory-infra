@@ -122,7 +122,7 @@ resource "google_monitoring_alert_policy" "cost_alert" {
     
     condition_threshold {
       filter          = "metric.type=\"logging.googleapis.com/user/cost_threshold_exceeded\""
-      comparison      = "COMPARISON_GREATER_THAN"
+      comparison      = "COMPARISON_GT"
       threshold_value = 0
       duration        = "0s"
       

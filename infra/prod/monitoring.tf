@@ -67,7 +67,7 @@ resource "google_monitoring_alert_policy" "uptime_alert" {
     
     condition_threshold {
       filter          = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\""
-      comparison      = "COMPARISON_EQUAL"
+      comparison      = "COMPARISON_EQ"
       threshold_value = 0
       duration        = "300s"
       
@@ -99,7 +99,7 @@ resource "google_monitoring_alert_policy" "error_rate_alert" {
     
     condition_threshold {
       filter          = "resource.type=\"cloud_run_revision\" AND metric.type=\"run.googleapis.com/request_count\""
-      comparison      = "COMPARISON_GREATER_THAN"
+      comparison      = "COMPARISON_GT"
       threshold_value = 0.1
       duration        = "300s"
       
@@ -129,7 +129,7 @@ resource "google_monitoring_alert_policy" "latency_alert" {
     
     condition_threshold {
       filter          = "resource.type=\"cloud_run_revision\" AND metric.type=\"run.googleapis.com/request_latencies\""
-      comparison      = "COMPARISON_GREATER_THAN"
+      comparison      = "COMPARISON_GT"
       threshold_value = 5000
       duration        = "300s"
       
