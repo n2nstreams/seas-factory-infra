@@ -16,20 +16,18 @@ DB_PASS = os.getenv("DB_PASS", "")
 DB_NAME = os.getenv("DB_NAME", "factorydb")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
+
 def get_db_connection():
     """Get database connection"""
     try:
         conn = psycopg2.connect(
-            host=DB_HOST,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASS,
-            port=DB_PORT
+            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS, port=DB_PORT
         )
         return conn
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
         return None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,11 +37,12 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down SaaS Factory API")
 
+
 app = FastAPI(
     title="SaaS Factory API",
     description="Production-ready API for SaaS Factory",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -55,10 +54,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def root():
     """Root endpoint"""
     return {"message": "SaaS Factory API v0.1", "status": "running"}
+
 
 @app.get("/health")
 async def health_check():
@@ -74,15 +75,12 @@ async def health_check():
             db_status = "healthy"
         else:
             db_status = "unhealthy"
-        
-        return {
-            "status": "OK",
-            "database": db_status,
-            "version": "0.1.0"
-        }
+
+        return {"status": "OK", "database": db_status, "version": "0.1.0"}
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Service unavailable")
+
 
 @app.get("/api/v1/status")
 async def api_status():
@@ -90,9 +88,11 @@ async def api_status():
     return {
         "api_version": "v1",
         "status": "operational",
-        "features": ["authentication", "database", "monitoring"]
+        "features": ["authentication", "database", "monitoring"],
     }
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080) 
+
+    uvicorn.run(app, host="0.0.0.0", port=8080)

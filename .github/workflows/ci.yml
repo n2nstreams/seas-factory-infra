@@ -75,6 +75,11 @@ jobs:
           fi
         env:
           DATABASE_URL: postgresql://factoryadmin:localpass@localhost:5432/factorydb
+          DB_HOST: localhost
+          DB_USER: factoryadmin
+          DB_PASS: localpass
+          DB_NAME: factorydb
+          DB_PORT: 5432
           
       - name: Upload coverage to Codecov
         if: success()
