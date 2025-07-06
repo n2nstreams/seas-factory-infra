@@ -67,11 +67,17 @@ jobs:
           
       - name: Run tests
         run: |
-          # Run tests if test files exist
-          if find . -name "*test*.py" -o -name "test_*.py" | grep -q .; then
+          # Check for test files more robustly
+          TEST_FILES=$(find . -name "*test*.py" -o -name "test_*.py" 2>/dev/null | head -1)
+          if [ -n "$TEST_FILES" ]; then
+            echo "Test files found, running pytest..."
             pytest --cov=. --cov-report=xml --cov-report=term-missing
           else
             echo "No test files found, skipping tests"
+            echo "This is expected for projects without tests yet."
+            # Create a dummy coverage.xml file to satisfy later steps
+            mkdir -p .
+            echo '<?xml version="1.0" ?><coverage version="7.0.0"><sources></sources><packages></packages></coverage>' > ./coverage.xml
           fi
         env:
           DATABASE_URL: postgresql://factoryadmin:localpass@localhost:5432/factorydb
@@ -82,7 +88,7 @@ jobs:
           DB_PORT: 5432
           
       - name: Upload coverage to Codecov
-        if: success()
+        if: success() && hashFiles('./coverage.xml') != ''
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
