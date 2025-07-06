@@ -67,13 +67,13 @@ jobs:
           
       - name: Run tests
         run: |
-          # Check for test files more robustly
-          TEST_FILES=$(find . -name "*test*.py" -o -name "test_*.py" 2>/dev/null | head -1)
+          # Check for test files in project directories only (exclude venv and third-party)
+          TEST_FILES=$(find . -name "*test*.py" -o -name "test_*.py" 2>/dev/null | grep -v -E "(\.venv|venv|env|y/google-cloud-sdk|orchestrator/\.venv)" | head -1)
           if [ -n "$TEST_FILES" ]; then
             echo "Test files found, running pytest..."
             pytest --cov=. --cov-report=xml --cov-report=term-missing
           else
-            echo "No test files found, skipping tests"
+            echo "No test files found in project directories, skipping tests"
             echo "This is expected for projects without tests yet."
             # Create a dummy coverage.xml file to satisfy later steps
             mkdir -p .
