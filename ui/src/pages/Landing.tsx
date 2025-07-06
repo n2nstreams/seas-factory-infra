@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { Check, Code2, CreditCard, Shield, TrendingUp, Users, Zap, Star, ArrowRight, Sparkles, Layers, Globe, Cpu, Wrench } from "lucide-react";
+import { Check, Code2, CreditCard, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Landing() {

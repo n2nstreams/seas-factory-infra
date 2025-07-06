@@ -70,6 +70,11 @@ output "workload_identity_pool_id" {
   value       = google_iam_workload_identity_pool.gh_pool.workload_identity_pool_id
 }
 
+output "ui_staging_bucket_name" {
+  description = "The name of the UI staging bucket"
+  value       = google_storage_bucket.ui_staging.name
+}
+
 # Orchestrator service account
 output "orchestrator_sa_email" {
   description = "The email address of the orchestrator service account"

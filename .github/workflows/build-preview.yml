@@ -1,0 +1,108 @@
+name: Build Preview
+
+on:
+  push:
+    branches: [ "**" ]  # All branches
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # Required for OIDC
+      contents: read
+      pull-requests: write # Required for PR comments
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd ui
+          npm ci
+      
+      - name: Build React app
+        run: |
+          cd ui
+          npm run build
+      
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SA_EMAIL }}
+      
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Generate build path
+        id: build_path
+        run: |
+          # Create a unique path for this build
+          BRANCH_NAME="${GITHUB_REF##*/}"
+          COMMIT_SHA="${GITHUB_SHA:0:8}"
+          BUILD_PATH="${BRANCH_NAME}/${COMMIT_SHA}"
+          echo "BUILD_PATH=${BUILD_PATH}" >> $GITHUB_OUTPUT
+          echo "BUCKET_NAME=ui-staging-builds-${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_OUTPUT
+          echo "Building for branch: ${BRANCH_NAME}, commit: ${COMMIT_SHA}"
+      
+      - name: Upload build to GCS
+        run: |
+          cd ui
+          # Copy all files from dist/ to the GCS bucket
+          gsutil -m rsync -r -d dist/ gs://${{ steps.build_path.outputs.BUCKET_NAME }}/${{ steps.build_path.outputs.BUILD_PATH }}/
+          
+          echo "✅ Build uploaded to GCS!"
+          echo "Path: gs://${{ steps.build_path.outputs.BUCKET_NAME }}/${{ steps.build_path.outputs.BUILD_PATH }}/"
+      
+      - name: Generate preview URL
+        id: preview_url
+        run: |
+          # Generate a public URL for the index.html file
+          PREVIEW_URL="https://storage.googleapis.com/${{ steps.build_path.outputs.BUCKET_NAME }}/${{ steps.build_path.outputs.BUILD_PATH }}/index.html"
+          
+          echo "PREVIEW_URL=${PREVIEW_URL}" >> $GITHUB_OUTPUT
+          echo "🔗 Preview URL generated: ${PREVIEW_URL}"
+      
+      - name: Create or update PR comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.number }}
+          body: |
+            ## 🚀 Build Preview Ready!
+            
+            Your changes have been built and are ready for preview:
+            
+            **🔗 Preview URL:** ${{ steps.preview_url.outputs.PREVIEW_URL }}
+            
+            - **Branch:** `${{ github.head_ref || github.ref_name }}`
+            - **Commit:** `${{ github.sha }}`
+            - **Build Path:** `${{ steps.build_path.outputs.BUILD_PATH }}`
+            
+            > This preview will be automatically cleaned up after 14 days.
+            
+            ---
+            *Build artifacts are stored in Google Cloud Storage for quick preview access*
+          comment-tag: build-preview
+      
+      - name: Output preview info
+        run: |
+          echo "## Build Preview Summary"
+          echo "- **Branch:** ${{ github.head_ref || github.ref_name }}"
+          echo "- **Commit:** ${{ github.sha }}"
+          echo "- **Build Path:** ${{ steps.build_path.outputs.BUILD_PATH }}"
+          echo "- **Preview URL:** ${{ steps.preview_url.outputs.PREVIEW_URL }}"
+          echo ""
+          echo "Preview is ready! 🎉" 
