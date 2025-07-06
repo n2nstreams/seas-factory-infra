@@ -240,7 +240,7 @@ export default function Landing() {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900">
                     Live Business
                   </span>{" "}
-                  in Hours.
+                  in Hours! 🚀✨
                 </h1>
                 <p className="text-xl text-stone-700 leading-relaxed">
                   Describe your SaaS idea. Our AI factory builds the app, configures payments, and automates your operations, launching a ready-to-run business on Google Cloud.
