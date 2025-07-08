@@ -190,7 +190,7 @@ resource "google_cloud_run_v2_service" "orchestrator" {
     service_account = google_service_account.orchestrator_sa.email
     
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/project-orchestrator:v2.1"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/project-orchestrator:v0.3"
       
       ports {
         container_port = 8080
@@ -209,6 +209,21 @@ resource "google_cloud_run_v2_service" "orchestrator" {
       env {
         name  = "LOG_LEVEL"
         value = "INFO"
+      }
+      
+      env {
+        name  = "MODEL_PROVIDER"
+        value = "gpt4o"
+      }
+      
+      env {
+        name = "OPENAI_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.openai_key.secret_id
+            version = "latest"
+          }
+        }
       }
       
       resources {

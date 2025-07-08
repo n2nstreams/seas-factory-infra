@@ -63,4 +63,16 @@ variable "workload_pool_id" {
 variable "github_repo" {
   description = "The GitHub repository in the format 'owner/repo'"
   type        = string
+}
+
+variable "openai_api_key" {
+  description = "The OpenAI API key for GPT-4o model access"
+  type        = string
+  sensitive   = true
+}
+
+variable "use_separate_cloud_run_sa" {
+  description = "Whether to use a separate service account for Cloud Run"
+  type        = bool
+  default     = false
 } 
