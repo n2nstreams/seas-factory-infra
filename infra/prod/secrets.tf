@@ -1,9 +1,10 @@
 # OpenAI API Key Secret Management
 resource "google_secret_manager_secret" "openai_key" {
   secret_id = "openai-api-key"
+  project   = var.project_id
   
   replication {
-    automatic = true
+    auto {}
   }
   
   labels = {
@@ -30,5 +31,5 @@ resource "google_secret_manager_secret_iam_member" "cloud_run_openai_reader" {
   count     = var.use_separate_cloud_run_sa ? 1 : 0
   secret_id = google_secret_manager_secret.openai_key.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.cloud_run_sa[0].email}"
+  member    = "serviceAccount:${google_service_account.run_sa.email}"
 } 
