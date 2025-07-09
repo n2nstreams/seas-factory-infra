@@ -48,13 +48,13 @@ def orchestrator_endpoint():
 
         logger.info(f"Received request: {data}")
 
-        # Process the request
-        result = orchestrator.process_request(data)
+        # Process the request using the run method
+        result = orchestrator.run(data)
 
         logger.info(f"Orchestrator response: {result}")
 
         # Return the result
-        return jsonify(result)
+        return jsonify({"status": "success", "result": result})
 
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")
@@ -90,7 +90,8 @@ def simple_orchestrator_endpoint():
 def list_agents():
     """List available agents"""
     try:
-        agents = list(orchestrator.agents.keys())
+        # For now, return the sub-agents
+        agents = ["greeter_agent"]  # Fixed list for now
         return jsonify({"status": "success", "agents": agents})
     except Exception as e:
         logger.error(f"Error listing agents: {str(e)}")

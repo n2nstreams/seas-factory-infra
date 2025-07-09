@@ -8,6 +8,7 @@ google-cloud-aiplatform>=1.48  # Vertex AI SDK
 # Web Framework
 fastapi>=0.115.0          # FastAPI web framework
 uvicorn>=0.35.0           # ASGI server
+flask>=3.0.0              # Flask web framework
 
 # Database
 sqlalchemy>=2.0.0         # SQL toolkit and ORM
