@@ -75,4 +75,9 @@ variable "use_separate_cloud_run_sa" {
   description = "Whether to use a separate service account for Cloud Run"
   type        = bool
   default     = false
+}
+
+variable "orchestrator_vertex_endpoint" {
+  description = "The Vertex AI Agent Engine endpoint URL for the Project Orchestrator"
+  type        = string
 } 
