@@ -52,6 +52,22 @@ jobs:
           if [ -f agents/dev/starter-api/requirements.txt ]; then pip install -r agents/dev/starter-api/requirements.txt; fi
           if [ -f orchestrator/requirements.txt ]; then pip install -r orchestrator/requirements.txt; fi
           
+      - name: Validate orchestrator dependencies
+        run: |
+          if [ -f orchestrator/requirements.in ]; then
+            echo "Checking orchestrator dependency lock file..."
+            cd orchestrator
+            pip install pip-tools
+            pip-compile requirements.in --resolver=backtracking -o requirements.txt.tmp
+            if ! diff -q requirements.txt requirements.txt.tmp > /dev/null; then
+              echo "ERROR: requirements.txt is out of sync with requirements.in"
+              echo "Please run: cd orchestrator && pip-compile requirements.in --resolver=backtracking -o requirements.txt"
+              exit 1
+            fi
+            rm requirements.txt.tmp
+            echo "✓ Orchestrator dependencies are in sync"
+          fi
+          
       - name: Create pgvector extension
         run: |
           PGPASSWORD=localpass psql -h localhost -U factoryadmin -d factorydb -c "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -141,6 +157,22 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f agents/dev/starter-api/requirements.txt ]; then pip install -r agents/dev/starter-api/requirements.txt; fi
           if [ -f orchestrator/requirements.txt ]; then pip install -r orchestrator/requirements.txt; fi
+          
+      - name: Validate orchestrator dependencies
+        run: |
+          if [ -f orchestrator/requirements.in ]; then
+            echo "Checking orchestrator dependency lock file..."
+            cd orchestrator
+            pip install pip-tools
+            pip-compile requirements.in --resolver=backtracking -o requirements.txt.tmp
+            if ! diff -q requirements.txt requirements.txt.tmp > /dev/null; then
+              echo "ERROR: requirements.txt is out of sync with requirements.in"
+              echo "Please run: cd orchestrator && pip-compile requirements.in --resolver=backtracking -o requirements.txt"
+              exit 1
+            fi
+            rm requirements.txt.tmp
+            echo "✓ Orchestrator dependencies are in sync"
+          fi
           
       - name: Create pgvector extension
         run: |
