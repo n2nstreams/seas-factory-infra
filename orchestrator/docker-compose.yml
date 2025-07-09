@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64  # Force AMD64 for Cloud Run compatibility
+    image: us-central1-docker.pkg.dev/summer-nexus-463503-e1/saas-factory/orchestrator:latest
+    platform: linux/amd64
+    ports:
+      - "8080:8080"
+    environment:
+      - MODEL_PROVIDER=gemini
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service for local testing
+  orchestrator-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    platform: linux/amd64
+    ports:
+      - "8080:8080"
+    environment:
+      - MODEL_PROVIDER=gemini
+      - FLASK_ENV=development
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app  # Mount source for development
+    command: python api_server.py 
