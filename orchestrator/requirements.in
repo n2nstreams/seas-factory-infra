@@ -1,5 +1,6 @@
 # Core AI/ML Libraries
 google-adk>=1.5.0          # Google Agent Development Kit
+agent2agent>=0.1.64        # Google agent-to-agent protocol library
 autogen-agentchat>=0.2.40  # Microsoft multi-agent lib
 langgraph>=0.5.1           # LangChain graph orchestrator
 openai>=1.3               # GPT-4o access
@@ -22,4 +23,5 @@ google-cloud-secret-manager>=2.24.0  # Secret management
 python-dotenv>=1.0.0      # Environment variable management
 pydantic>=2.11.0         # Data validation
 requests>=2.32.0         # HTTP library
+httpx>=0.27.0            # Modern HTTP client
 pyyaml>=6.0.0            # YAML parsing 

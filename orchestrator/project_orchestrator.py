@@ -1,6 +1,18 @@
 from google.adk.agents import Agent
 from google.adk.tools import transfer_to_agent
 from orchestrator.providers import get_llm_model
+from pydantic import BaseModel
+from typing import Any
+import httpx
+import os
+
+LANG_ECHO_URL = os.getenv("LANG_ECHO_URL")
+
+class Envelope(BaseModel):
+    """Agent2Agent protocol envelope"""
+    type: str = "agent2agent"
+    version: int = 1
+    content: Any
 
 def greet(name: str) -> str:
     """Tiny helper function for first-run smoke test."""
@@ -38,8 +50,22 @@ class ProjectOrchestrator(Agent):
     def run(self, payload: dict) -> str:
         """Main entry point for the orchestrator (compatibility with original plan)"""
         _name = payload.get("name", "world")
-        # delegate to sub-agent; ignore its input for now
-        return "pong"
+        
+        # Step 1 – delegate to internal agent
+        internal = "pong"  # Direct call to match expected behavior
+        
+        # Step 2 – bounce to LangGraph agent via Agent2Agent
+        if LANG_ECHO_URL:
+            try:
+                env = Envelope(type="agent2agent", version=1, content="ping")
+                response = httpx.post(LANG_ECHO_URL, json=env.model_dump(), timeout=30.0)
+                reply = Envelope(**response.json()).content
+                return f"{internal} + {reply}"
+            except Exception as e:
+                print(f"Error calling LangGraph agent: {e}")
+                return f"{internal} + error"
+        
+        return internal
 
 if __name__ == "__main__":  # quick local smoke test
     from orchestrator.providers import get_provider_config, validate_provider_config

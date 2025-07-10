@@ -190,7 +190,7 @@ resource "google_cloud_run_v2_service" "orchestrator" {
     service_account = google_service_account.orchestrator_sa.email
     
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/project-orchestrator:v0.3"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/orchestrator:0.6"
       
       ports {
         container_port = 8080
@@ -226,6 +226,11 @@ resource "google_cloud_run_v2_service" "orchestrator" {
         }
       }
       
+      env {
+        name  = "LANG_ECHO_URL"
+        value = google_cloud_run_v2_service.lang_echo.uri
+      }
+      
       resources {
         limits = {
           cpu    = "1"
@@ -247,7 +252,8 @@ resource "google_cloud_run_v2_service" "orchestrator" {
   
   depends_on = [
     google_artifact_registry_repository.saas_factory,
-    google_service_account.orchestrator_sa
+    google_service_account.orchestrator_sa,
+    google_cloud_run_v2_service.lang_echo
   ]
 }
 
