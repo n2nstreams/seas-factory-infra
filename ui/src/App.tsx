@@ -1,6 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Dashboard from './pages/Dashboard'
-import Landing from './pages/Landing'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Landing from './pages/Landing';
+import Dashboard from './pages/Dashboard';
+import EventDashboard from './pages/EventDashboard';
+import './App.css';
 
 function App() {
   return (
@@ -8,9 +10,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/events" element={<EventDashboard />} />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
