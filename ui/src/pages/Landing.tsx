@@ -251,8 +251,41 @@ export default function Landing() {
                   Start My Business
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40">
-                  Watch Demo
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40"
+                  onClick={() => window.location.href = '/design'}
+                >
+                  🎨 Try Design Studio
+                </Button>
+              </div>
+              
+              {/* Quick access buttons */}
+              <div className="flex flex-wrap gap-3 pt-4">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="bg-white/20 backdrop-blur-sm text-stone-700 hover:bg-white/30"
+                  onClick={() => window.location.href = '/dashboard'}
+                >
+                  📊 Live Dashboard
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="bg-white/20 backdrop-blur-sm text-stone-700 hover:bg-white/30"
+                  onClick={() => window.location.href = '/events'}
+                >
+                  ⚡ Event Monitor
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="bg-white/20 backdrop-blur-sm text-stone-700 hover:bg-white/30"
+                  onClick={() => window.location.href = '/design'}
+                >
+                  🎨 Glassmorphism Designer
                 </Button>
               </div>
             </div>

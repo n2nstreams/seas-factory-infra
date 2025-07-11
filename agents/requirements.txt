@@ -12,5 +12,6 @@ google-cloud-pubsub==2.19.0
 google-cloud-storage==2.10.0
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
+asyncpg==0.29.0
 redis==5.0.1
 celery==5.3.4 

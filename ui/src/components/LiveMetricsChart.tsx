@@ -29,7 +29,6 @@ interface ChartDataPoint {
 }
 
 const LiveMetricsChart: React.FC<LiveMetricsChartProps> = ({
-  metrics,
   events,
   className = ""
 }) => {
