@@ -26,6 +26,10 @@ import yaml
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from github_integration import (
+    create_github_integration, ReviewComment, 
+    generate_pr_title, generate_pr_body
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -114,6 +118,10 @@ class ReviewAgent:
         self.google_cloud_project = os.getenv("GOOGLE_CLOUD_PROJECT", "saas-factory-prod")
         self.cloud_build_region = os.getenv("CLOUD_BUILD_REGION", "us-central1")
         self.max_retry_attempts = int(os.getenv("MAX_REVIEW_RETRIES", "3"))
+        self.github_integration = create_github_integration()
+        
+        # Auto-comment settings
+        self.auto_comment_enabled = os.getenv("ENABLE_AUTO_COMMENT", "false").lower() == "true"
         
         # Cloud Build configuration template
         self.cloud_build_template = {
@@ -516,6 +524,191 @@ markers =
             logger.error(f"Error sending feedback to DevAgent: {e}")
             return False
     
+    async def add_github_pr_comment(
+        self, 
+        pr_number: int, 
+        review_result: CodeReviewResult,
+        tenant_context: TenantContext
+    ) -> bool:
+        """Add a comment to GitHub PR with review results"""
+        if not self.github_integration:
+            logger.warning("GitHub integration not available - skipping PR comment")
+            return False
+        
+        if not self.auto_comment_enabled:
+            logger.info("Auto PR commenting disabled")
+            return False
+        
+        try:
+            # Generate comprehensive review comment
+            comment_parts = [
+                f"## 🤖 ReviewAgent Analysis - {review_result.module_name}",
+                "",
+                f"**Review Status:** {'✅ PASSED' if review_result.review_status == 'passed' else '❌ FAILED'}",
+                f"**Quality Score:** {review_result.feedback.code_quality_score:.1f}/100",
+                ""
+            ]
+            
+            # Add test results if available
+            if review_result.cloud_build_result and review_result.cloud_build_result.pytest_results:
+                pytest_results = review_result.cloud_build_result.pytest_results
+                comment_parts.extend([
+                    "### 🧪 Test Results",
+                    f"- **Total Tests:** {pytest_results.total_tests}",
+                    f"- **Passed:** {pytest_results.passed} ✅",
+                    f"- **Failed:** {pytest_results.failed} ❌",
+                    f"- **Skipped:** {pytest_results.skipped} ⏭️",
+                    f"- **Duration:** {pytest_results.duration:.2f}s",
+                    ""
+                ])
+                
+                if pytest_results.coverage_percentage:
+                    coverage_emoji = "✅" if pytest_results.coverage_percentage >= 80 else "⚠️" if pytest_results.coverage_percentage >= 70 else "❌"
+                    comment_parts.append(f"- **Coverage:** {pytest_results.coverage_percentage:.1f}% {coverage_emoji}")
+                    comment_parts.append("")
+            
+            # Add issues found
+            if review_result.feedback.issues_found:
+                comment_parts.extend([
+                    "### 🚨 Issues Found",
+                    ""
+                ])
+                for i, issue in enumerate(review_result.feedback.issues_found[:10], 1):  # Limit to 10 issues
+                    comment_parts.append(f"{i}. {issue}")
+                
+                if len(review_result.feedback.issues_found) > 10:
+                    comment_parts.append(f"... and {len(review_result.feedback.issues_found) - 10} more issues")
+                comment_parts.append("")
+            
+            # Add suggestions
+            if review_result.feedback.suggestions:
+                comment_parts.extend([
+                    "### 💡 Suggestions",
+                    ""
+                ])
+                for i, suggestion in enumerate(review_result.feedback.suggestions[:5], 1):  # Limit to 5 suggestions
+                    comment_parts.append(f"{i}. {suggestion}")
+                comment_parts.append("")
+            
+            # Add Cloud Build info if available
+            if review_result.cloud_build_result:
+                comment_parts.extend([
+                    "### 🏗️ Cloud Build",
+                    f"- **Build ID:** `{review_result.cloud_build_result.build_id}`",
+                    f"- **Status:** {review_result.cloud_build_result.status}",
+                    f"- **Duration:** {review_result.cloud_build_result.duration:.2f}s",
+                    ""
+                ])
+                
+                if review_result.cloud_build_result.log_url:
+                    comment_parts.append(f"- **[View Build Logs]({review_result.cloud_build_result.log_url})**")
+                    comment_parts.append("")
+            
+            # Add next steps
+            if review_result.review_status == "failed":
+                comment_parts.extend([
+                    "### 🔄 Next Steps",
+                    "1. Review the issues and suggestions above",
+                    "2. Fix the identified problems",
+                    "3. Push changes to trigger a new review",
+                    ""
+                ])
+                
+                if review_result.feedback.retry_recommended:
+                    comment_parts.append("*DevAgent will automatically regenerate improved code based on this feedback.*")
+            else:
+                comment_parts.extend([
+                    "### ✅ Ready for Merge",
+                    "All tests passed and code quality checks are satisfied. This PR is ready for merge.",
+                    ""
+                ])
+            
+            comment_parts.extend([
+                "---",
+                f"*🤖 This review was performed automatically by ReviewAgent at {review_result.created_at.strftime('%Y-%m-%d %H:%M:%S')} UTC*",
+                f"*Review ID: `{review_result.review_id}`*"
+            ])
+            
+            comment_text = "\n".join(comment_parts)
+            
+            # Add the comment to the PR
+            await self.github_integration.add_pr_comment(pr_number, comment_text)
+            
+            # Log the comment
+            await self.tenant_db.log_agent_event(
+                tenant_context=tenant_context,
+                event_type="pr_comment_added",
+                agent_name="ReviewAgent",
+                stage="pr_commenting",
+                status="completed",
+                project_id=review_result.project_id,
+                output_data={
+                    "pr_number": pr_number,
+                    "review_id": review_result.review_id,
+                    "comment_length": len(comment_text),
+                    "review_status": review_result.review_status
+                }
+            )
+            
+            logger.info(f"Added review comment to PR #{pr_number}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error adding PR comment: {e}")
+            
+            # Log failure
+            await self.tenant_db.log_agent_event(
+                tenant_context=tenant_context,
+                event_type="pr_comment_failed",
+                agent_name="ReviewAgent",
+                stage="pr_commenting",
+                status="failed",
+                project_id=review_result.project_id,
+                error_message=str(e)
+            )
+            
+            return False
+    
+    async def add_inline_pr_comments(
+        self, 
+        pr_number: int, 
+        review_result: CodeReviewResult,
+        tenant_context: TenantContext
+    ) -> bool:
+        """Add inline comments to specific files/lines in the PR"""
+        if not self.github_integration:
+            logger.warning("GitHub integration not available - skipping inline comments")
+            return False
+        
+        try:
+            # Extract issues that can be mapped to specific lines
+            inline_comments = []
+            
+            for test_result in review_result.feedback.test_failures:
+                if test_result.error_message and test_result.test_name:
+                    # Try to determine which file the error relates to
+                    for file in review_result.cloud_build_result.pytest_results.test_results if review_result.cloud_build_result else []:
+                        if test_result.test_name in file.test_name:
+                            comment = ReviewComment(
+                                body=f"**Test Failure:** {test_result.error_message}\n\n*From test: `{test_result.test_name}`*",
+                                path=None,  # Would need to parse traceback to get exact file/line
+                                line=None,
+                                side="RIGHT"
+                            )
+                            inline_comments.append(comment)
+                            break
+            
+            # Add inline comments
+            for comment in inline_comments[:5]:  # Limit to 5 inline comments
+                await self.github_integration.add_pr_review_comment(pr_number, comment)
+            
+            logger.info(f"Added {len(inline_comments)} inline comments to PR #{pr_number}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error adding inline PR comments: {e}")
+            return False
+    
     async def review_generated_code(self, request: CodeReviewRequest, tenant_context: TenantContext) -> CodeReviewResult:
         """Main method to review generated code using pytest in Cloud Build"""
         review_id = str(uuid.uuid4())
@@ -752,6 +945,35 @@ async def get_review_history(
         
     except Exception as e:
         logger.error(f"Error getting review history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/pr-comment")
+async def add_pr_comment(
+    pr_comment_request: Dict[str, Any],
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Add a comment to a GitHub PR with review results"""
+    try:
+        pr_number = pr_comment_request.get("pr_number")
+        review_result_data = pr_comment_request.get("review_result")
+        
+        if not pr_number or not review_result_data:
+            raise HTTPException(status_code=400, detail="pr_number and review_result are required")
+        
+        # Convert review result data to CodeReviewResult
+        review_result = CodeReviewResult(**review_result_data)
+        
+        # Add the comment
+        success = await review_agent.add_github_pr_comment(pr_number, review_result, tenant_context)
+        
+        return {
+            "message": "PR comment added successfully" if success else "Failed to add PR comment",
+            "success": success,
+            "pr_number": pr_number
+        }
+        
+    except Exception as e:
+        logger.error(f"Error adding PR comment: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -20,6 +20,10 @@ from pathlib import Path
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from github_integration import (
+    create_github_integration, GitHubFile, PullRequestConfig,
+    generate_branch_name, generate_pr_title, generate_pr_body
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -84,7 +88,12 @@ class DevAgent:
             api_key=os.getenv("OPENAI_API_KEY")
         )
         self.tenant_db = TenantDatabase()
+        self.github_integration = create_github_integration()
         self.code_templates = self._load_code_templates()
+        
+        # Auto-commit settings
+        self.auto_commit_enabled = os.getenv("ENABLE_AUTO_COMMIT", "false").lower() == "true"
+        self.auto_pr_enabled = os.getenv("ENABLE_AUTO_PR", "false").lower() == "true"
         
     def _load_code_templates(self) -> Dict[str, str]:
         """Load code templates for different module types"""
@@ -836,6 +845,115 @@ TODO: Add API documentation if applicable
             "5. Test integration with other components",
             "6. Deploy to development environment"
         ]
+    
+    async def create_github_pull_request(
+        self, 
+        result: CodeGenerationResult, 
+        request: CodeGenerationRequest,
+        tenant_context: TenantContext
+    ) -> Optional[Dict[str, Any]]:
+        """Create a GitHub pull request with generated code"""
+        if not self.github_integration:
+            logger.warning("GitHub integration not available - skipping PR creation")
+            return None
+        
+        if not self.auto_pr_enabled:
+            logger.info("Auto PR creation disabled")
+            return None
+        
+        try:
+            # Generate unique branch name
+            branch_name = generate_branch_name(
+                "feature", 
+                f"{result.module_name.lower()}-{request.project_id or 'auto'}"
+            )
+            
+            # Create branch
+            await self.github_integration.create_branch(branch_name)
+            
+            # Convert generated files to GitHub files
+            github_files = []
+            for file in result.files:
+                # Determine target path based on file type and language
+                if file.language == "python":
+                    target_path = f"generated/{result.module_name.lower()}/{file.filename}"
+                elif file.language in ["typescript", "javascript"]:
+                    target_path = f"ui/src/components/{file.filename}"
+                else:
+                    target_path = f"generated/{result.module_name.lower()}/{file.filename}"
+                
+                github_files.append(GitHubFile(
+                    path=target_path,
+                    content=file.content
+                ))
+            
+            # Add generated files to the branch
+            await self.github_integration.create_multiple_files(
+                files=github_files,
+                commit_message=f"Add {result.module_name} module - Auto-generated code",
+                branch=branch_name
+            )
+            
+            # Create PR configuration
+            pr_config = PullRequestConfig(
+                title=generate_pr_title(result.module_name),
+                body=generate_pr_body(
+                    module_name=result.module_name,
+                    description=request.module_spec.description,
+                    dev_agent_request_id=getattr(request, 'request_id', None)
+                ),
+                head_branch=branch_name,
+                base_branch="main",
+                labels=["auto-generated", "dev-agent", f"language-{request.module_spec.language}"],
+                auto_merge=False  # Let orchestrator handle merging
+            )
+            
+            # Create the pull request
+            pr_info = await self.github_integration.create_pull_request(pr_config)
+            
+            # Log PR creation
+            await self.tenant_db.log_agent_event(
+                tenant_context=tenant_context,
+                event_type="pull_request_created",
+                agent_name="DevAgent",
+                stage="pr_creation",
+                status="completed",
+                project_id=request.project_id,
+                output_data={
+                    "pr_number": pr_info.number,
+                    "pr_url": pr_info.url,
+                    "branch_name": branch_name,
+                    "files_count": len(github_files)
+                }
+            )
+            
+            logger.info(f"Created PR #{pr_info.number} for {result.module_name}: {pr_info.url}")
+            
+            return {
+                "pr_number": pr_info.number,
+                "pr_url": pr_info.url,
+                "branch_name": branch_name,
+                "status": "created"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error creating GitHub PR: {e}")
+            
+            # Log failure
+            await self.tenant_db.log_agent_event(
+                tenant_context=tenant_context,
+                event_type="pull_request_failed",
+                agent_name="DevAgent",
+                stage="pr_creation",
+                status="failed",
+                project_id=request.project_id,
+                error_message=str(e)
+            )
+            
+            return {
+                "status": "error",
+                "error": str(e)
+            }
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -886,10 +1004,22 @@ async def health_check():
 @app.post("/generate", response_model=CodeGenerationResult)
 async def generate_code_endpoint(
     request: CodeGenerationRequest,
+    create_pr: bool = False,
     tenant_context: TenantContext = Depends(get_tenant_context)
 ):
     """Generate code based on module specification"""
-    return await dev_agent.generate_code(request, tenant_context)
+    result = await dev_agent.generate_code(request, tenant_context)
+    
+    # Optionally create GitHub PR
+    if create_pr:
+        pr_result = await dev_agent.create_github_pull_request(result, request, tenant_context)
+        if pr_result:
+            # Add PR info to the result
+            result_dict = result.model_dump()
+            result_dict["github_pr"] = pr_result
+            return result_dict
+    
+    return result
 
 @app.get("/templates")
 async def get_code_templates():
@@ -1065,6 +1195,71 @@ async def get_generation_history(
         
     except Exception as e:
         logger.error(f"Error getting generation history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/create-pr")
+async def create_pull_request_endpoint(
+    pr_request: Dict[str, Any],
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Create a GitHub pull request for generated code"""
+    try:
+        # Extract required fields
+        module_name = pr_request.get("module_name")
+        files = pr_request.get("files", [])
+        project_id = pr_request.get("project_id")
+        description = pr_request.get("description", "Auto-generated code")
+        
+        if not module_name or not files:
+            raise HTTPException(status_code=400, detail="module_name and files are required")
+        
+        # Convert files to GeneratedFile objects
+        generated_files = []
+        for file_data in files:
+            generated_files.append(GeneratedFile(
+                filename=file_data["filename"],
+                content=file_data["content"], 
+                file_type=file_data.get("file_type", "source"),
+                language=file_data.get("language", "python"),
+                size_bytes=len(file_data["content"].encode('utf-8')),
+                functions=file_data.get("functions", []),
+                imports=file_data.get("imports", [])
+            ))
+        
+        # Create CodeGenerationResult
+        result = CodeGenerationResult(
+            module_name=module_name,
+            files=generated_files,
+            total_files=len(generated_files),
+            total_lines=sum(len(f.content.splitlines()) for f in generated_files),
+            estimated_complexity="Unknown",
+            validation_results={},
+            setup_instructions=[],
+            next_steps=[],
+            reasoning="Manual PR creation request"
+        )
+        
+        # Create minimal request for PR creation
+        request = CodeGenerationRequest(
+            project_id=project_id,
+            module_spec=ModuleSpec(
+                name=module_name,
+                description=description,
+                module_type="utility",
+                language="python"
+            )
+        )
+        
+        # Create PR
+        pr_result = await dev_agent.create_github_pull_request(result, request, tenant_context)
+        
+        return {
+            "message": "Pull request created successfully",
+            "pr_result": pr_result
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating PR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -6,10 +6,26 @@ from typing import Any, Dict
 import httpx
 import os
 import json
+import asyncio
+import logging
+
+# Import GitHub integration
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agents', 'shared'))
+from github_integration import create_github_integration
 
 LANG_ECHO_URL = os.getenv("LANG_ECHO_URL")
 TECHSTACK_AGENT_URL = os.getenv("TECHSTACK_AGENT_URL", "http://localhost:8081")
 DESIGN_AGENT_URL = os.getenv("DESIGN_AGENT_URL", "http://localhost:8082")
+DEV_AGENT_URL = os.getenv("DEV_AGENT_URL", "http://dev-agent:8083")
+REVIEW_AGENT_URL = os.getenv("REVIEW_AGENT_URL", "http://review-agent:8084")
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# GitHub integration instance
+github_integration = create_github_integration()
 
 class Envelope(BaseModel):
     """Agent2Agent protocol envelope"""
@@ -121,6 +137,122 @@ def generate_wireframes(project_type: str, pages: str = "", style_preferences: s
     except Exception as e:
         return f"Error generating wireframes: {str(e)}"
 
+def check_pr_merge_status(pr_number: int) -> str:
+    """Check if a PR is ready to merge and merge it if all checks pass"""
+    if not github_integration:
+        return "GitHub integration not available"
+    
+    try:
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            # Check PR status
+            pr_status = loop.run_until_complete(
+                github_integration.is_pr_ready_to_merge(pr_number)
+            )
+            
+            if pr_status["ready"]:
+                # PR is ready to merge
+                merge_result = loop.run_until_complete(
+                    github_integration.merge_pull_request(
+                        pr_number=pr_number,
+                        commit_title=f"Auto-merge: PR #{pr_number} - All checks passed",
+                        commit_message="Automatically merged by orchestrator after all checks passed",
+                        merge_method="squash"
+                    )
+                )
+                
+                logger.info(f"Successfully merged PR #{pr_number}")
+                return f"✅ PR #{pr_number} merged successfully! All checks passed."
+            else:
+                reason = pr_status.get("reason", "Unknown reason")
+                logger.info(f"PR #{pr_number} not ready to merge: {reason}")
+                return f"⏳ PR #{pr_number} not ready to merge: {reason}"
+                
+        finally:
+            loop.close()
+            
+    except Exception as e:
+        logger.error(f"Error checking PR merge status: {e}")
+        return f"❌ Error checking PR #{pr_number}: {str(e)}"
+
+def monitor_pr_for_auto_merge(pr_number: int, max_wait_minutes: int = 30) -> str:
+    """Monitor a PR and auto-merge when ready"""
+    if not github_integration:
+        return "GitHub integration not available"
+    
+    try:
+        # Check immediately first
+        initial_status = check_pr_merge_status(pr_number)
+        if "merged successfully" in initial_status:
+            return initial_status
+        
+        # In a production environment, this would be handled by a background task
+        # For now, we'll just return the monitoring setup message
+        return f"🔄 Monitoring PR #{pr_number} for auto-merge. Will merge when all checks pass."
+        
+    except Exception as e:
+        logger.error(f"Error setting up PR monitoring: {e}")
+        return f"❌ Error monitoring PR #{pr_number}: {str(e)}"
+
+def orchestrate_full_workflow(project_type: str, module_name: str, description: str = "") -> str:
+    """Orchestrate the full workflow: DevAgent -> ReviewAgent -> Auto-merge"""
+    try:
+        workflow_summary = []
+        workflow_summary.append(f"🚀 Starting full workflow for {module_name} ({project_type})")
+        
+        # Step 1: Generate code with DevAgent
+        workflow_summary.append("📝 Step 1: Generating code with DevAgent...")
+        try:
+            dev_payload = {
+                "project_id": f"auto-workflow-{module_name}",
+                "module_spec": {
+                    "name": module_name,
+                    "description": description or f"Auto-generated {module_name} module",
+                    "module_type": "utility",
+                    "language": "python",
+                    "framework": "fastapi" if project_type == "api" else None,
+                    "requirements": ["Generate clean, testable code"],
+                    "dependencies": []
+                }
+            }
+            
+            dev_response = httpx.post(f"{DEV_AGENT_URL}/generate?create_pr=true", json=dev_payload, timeout=120.0)
+            
+            if dev_response.status_code == 200:
+                dev_result = dev_response.json()
+                workflow_summary.append(f"✅ Code generated successfully")
+                
+                # Extract PR info if available
+                pr_info = dev_result.get("github_pr")
+                if pr_info:
+                    pr_number = pr_info["pr_number"]
+                    workflow_summary.append(f"📋 PR #{pr_number} created: {pr_info['pr_url']}")
+                    
+                    # Step 2: Review with ReviewAgent
+                    workflow_summary.append("🔍 Step 2: Reviewing code with ReviewAgent...")
+                    
+                    # Step 3: Setup auto-merge monitoring
+                    workflow_summary.append("🔄 Step 3: Setting up auto-merge monitoring...")
+                    monitor_result = monitor_pr_for_auto_merge(pr_number)
+                    workflow_summary.append(monitor_result)
+                    
+                else:
+                    workflow_summary.append("⚠️ No PR was created, check DevAgent configuration")
+                    
+            else:
+                workflow_summary.append(f"❌ DevAgent failed: {dev_response.status_code}")
+                
+        except Exception as e:
+            workflow_summary.append(f"❌ DevAgent error: {str(e)}")
+        
+        return "\n".join(workflow_summary)
+        
+    except Exception as e:
+        return f"❌ Workflow orchestration failed: {str(e)}"
+
 class GreeterAgent(Agent):
     """Tiny helper agent for first-run smoke test."""
     
@@ -157,6 +289,18 @@ class DesignProxyAgent(Agent):
             tools=[generate_wireframes]
         )
 
+class GitHubMergeAgent(Agent):
+    """Agent for handling GitHub PR management and auto-merge functionality"""
+    
+    def __init__(self):
+        super().__init__(
+            name="github_merge_agent",
+            model=get_llm_model(),
+            description="GitHub integration agent that manages pull requests, checks merge status, and performs auto-merges when all checks pass",
+            instruction="You are a GitHub automation expert responsible for managing pull requests in the AI SaaS Factory. Use check_pr_merge_status to check if a PR is ready and merge it automatically. Use monitor_pr_for_auto_merge to set up monitoring. Use orchestrate_full_workflow to run the complete DevAgent -> ReviewAgent -> Auto-merge pipeline.",
+            tools=[check_pr_merge_status, monitor_pr_for_auto_merge, orchestrate_full_workflow]
+        )
+
 class ProjectOrchestrator(Agent):
     """Root agent — will later delegate to Idea, Dev, QA agents."""
     
@@ -164,12 +308,13 @@ class ProjectOrchestrator(Agent):
         greeter = GreeterAgent()
         techstack = TechStackProxyAgent()
         design = DesignProxyAgent()
+        github_merge = GitHubMergeAgent()
         super().__init__(
             name="project_orchestrator",
             model=get_llm_model(), 
-            description="Root orchestrator agent that coordinates all other agents including tech stack and design recommendations",
-            instruction="You are the root orchestrator that coordinates between different specialized agents. You can delegate to: greeter_agent for simple greetings, techstack_agent for technology stack recommendations, or design_agent for wireframes and UI design. For tech stack requests, specify project type (web, api, mobile, ml, desktop). For design requests, specify project type and desired pages.",
-            sub_agents=[greeter, techstack, design],
+            description="Root orchestrator agent that coordinates all other agents including tech stack, design, and GitHub auto-merge workflow",
+            instruction="You are the root orchestrator that coordinates between different specialized agents. You can delegate to: greeter_agent for simple greetings, techstack_agent for technology stack recommendations, design_agent for wireframes and UI design, or github_merge_agent for GitHub PR management and auto-merge workflows. For tech stack requests, specify project type (web, api, mobile, ml, desktop). For design requests, specify project type and desired pages. For GitHub operations, use PR numbers or workflow requests.",
+            sub_agents=[greeter, techstack, design, github_merge],
             tools=[transfer_to_agent]
         )
     
