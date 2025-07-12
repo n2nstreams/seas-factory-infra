@@ -1,0 +1,96 @@
+steps:
+  # Step 1: Install dependencies
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        apt-get update && apt-get install -y git
+        pip install --upgrade pip
+        pip install pytest pytest-cov pytest-xdist pytest-html pytest-json-report
+        pip install fastapi pydantic asyncpg httpx uvicorn
+        pip install -r requirements.txt || echo "No requirements.txt found, using default dependencies"
+
+  # Step 2: Set up environment
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        export PYTHONPATH=/workspace/src:$PYTHONPATH
+        echo "Python path set to: $PYTHONPATH"
+        ls -la /workspace/
+        ls -la /workspace/src/ || echo "No src directory"
+        ls -la /workspace/tests/ || echo "No tests directory"
+
+  # Step 3: Run syntax checks
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Running syntax checks..."
+        find /workspace -name "*.py" -exec python -m py_compile {} \; || echo "Syntax check failed"
+
+  # Step 4: Run pytest with coverage
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        export PYTHONPATH=/workspace/src:$PYTHONPATH
+        echo "Starting pytest execution..."
+        
+        # Run pytest with comprehensive options
+        python -m pytest \
+          --tb=short \
+          --cov=src \
+          --cov-report=xml:/workspace/coverage.xml \
+          --cov-report=term-missing \
+          --cov-report=html:/workspace/htmlcov \
+          --junit-xml=/workspace/test-results.xml \
+          --json-report --json-report-file=/workspace/test-report.json \
+          -v \
+          --maxfail=10 \
+          tests/ || echo "Tests completed with failures"
+
+    # Step 5: Generate test report
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Generating test summary..."
+        
+        echo "=== BUILD COMPLETED ==="
+        echo "Build artifacts:"
+        ls -la *.xml *.json htmlcov/ 2>/dev/null || echo "No artifacts found"
+        
+        echo "=== PYTEST OUTPUT ==="
+        cat pytest-output.log 2>/dev/null || echo "No pytest output log found"
+
+# Store artifacts
+artifacts:
+  objects:
+    location: 'gs://${PROJECT_ID}-build-artifacts/reviews/${BUILD_ID}'
+    paths:
+      - 'test-results.xml'
+      - 'coverage.xml'
+      - 'test-report.json'
+      - 'htmlcov/**'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_MEDIUM'
+  diskSizeGb: '20'
+
+# Timeout after 10 minutes
+timeout: '600s'
+
+# Substitutions for variables
+substitutions:
+  _TEST_TYPE: 'unit'
+  _COVERAGE_THRESHOLD: '70' 

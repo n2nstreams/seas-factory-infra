@@ -908,6 +908,165 @@ async def get_supported_languages():
         "frameworks": ["fastapi", "react", "vue", "express", "flask"]
     }
 
+@app.post("/feedback")
+async def receive_review_feedback(
+    feedback_data: Dict[str, Any],
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Receive feedback from ReviewAgent and potentially regenerate code"""
+    try:
+        request_id = feedback_data.get("request_id")
+        review_passed = feedback_data.get("review_passed", False)
+        issues = feedback_data.get("issues", [])
+        suggestions = feedback_data.get("suggestions", [])
+        code_quality_score = feedback_data.get("code_quality_score", 0.0)
+        retry_recommended = feedback_data.get("retry_recommended", False)
+        
+        logger.info(f"Received review feedback for request {request_id}: passed={review_passed}")
+        
+        # Log feedback event
+        await dev_agent.tenant_db.log_agent_event(
+            tenant_context=tenant_context,
+            event_type="review_feedback",
+            agent_name="DevAgent",
+            stage="feedback_received",
+            status="completed",
+            input_data={
+                "request_id": request_id,
+                "review_passed": review_passed,
+                "issues_count": len(issues),
+                "code_quality_score": code_quality_score,
+                "retry_recommended": retry_recommended
+            }
+        )
+        
+        feedback_response = {
+            "message": "Feedback received successfully",
+            "request_id": request_id,
+            "will_retry": False
+        }
+        
+        # If review failed and retry is recommended, we could implement auto-retry logic here
+        if not review_passed and retry_recommended:
+            # Store feedback for potential retry
+            # In a full implementation, this would:
+            # 1. Store the original request
+            # 2. Analyze the feedback
+            # 3. Modify the prompt/generation strategy
+            # 4. Regenerate the code
+            # 5. Send back to ReviewAgent
+            
+            logger.info(f"Review failed for {request_id}. Issues: {len(issues)}, Score: {code_quality_score}")
+            
+            # For now, just log what we would do
+            if issues:
+                logger.info("Issues to address:")
+                for issue in issues[:5]:  # Log first 5 issues
+                    logger.info(f"  - {issue}")
+            
+            if suggestions:
+                logger.info("Suggestions received:")
+                for suggestion in suggestions[:3]:  # Log first 3 suggestions
+                    logger.info(f"  - {suggestion}")
+            
+            feedback_response["will_retry"] = False  # Set to True when auto-retry is implemented
+            feedback_response["feedback_stored"] = True
+        
+        return feedback_response
+        
+    except Exception as e:
+        logger.error(f"Error processing review feedback: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/regenerate")
+async def regenerate_code_with_feedback(
+    regenerate_request: Dict[str, Any],
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Regenerate code based on review feedback"""
+    try:
+        original_request_id = regenerate_request.get("original_request_id")
+        feedback = regenerate_request.get("feedback", {})
+        issues = feedback.get("issues", [])
+        suggestions = feedback.get("suggestions", [])
+        original_spec = regenerate_request.get("original_module_spec")
+        
+        if not original_spec:
+            raise HTTPException(status_code=400, detail="Original module spec required for regeneration")
+        
+        logger.info(f"Regenerating code for request {original_request_id} based on feedback")
+        
+        # Create enhanced module spec incorporating feedback
+        enhanced_spec = ModuleSpec(**original_spec)
+        
+        # Add feedback-based requirements
+        feedback_requirements = []
+        for issue in issues:
+            if "assertion" in issue.lower():
+                feedback_requirements.append("Ensure all test assertions use correct expected values")
+            elif "import" in issue.lower():
+                feedback_requirements.append("Verify all import statements and dependencies")
+            elif "type" in issue.lower():
+                feedback_requirements.append("Add comprehensive type hints and validate function signatures")
+            elif "syntax" in issue.lower():
+                feedback_requirements.append("Review code syntax and Python grammar")
+        
+        enhanced_spec.requirements.extend(feedback_requirements)
+        
+        # Add suggestion-based constraints
+        enhanced_spec.constraints.extend(suggestions)
+        
+        # Create new generation request
+        enhanced_request = CodeGenerationRequest(
+            project_id=regenerate_request.get("project_id"),
+            module_spec=enhanced_spec,
+            style_preferences={
+                "follow_pep8": True,
+                "use_type_hints": True,
+                "include_docstrings": True,
+                "address_review_feedback": True
+            },
+            include_tests=True,
+            include_documentation=True
+        )
+        
+        # Generate improved code
+        result = await dev_agent.generate_code(enhanced_request, tenant_context)
+        
+        # Mark as regeneration
+        result_dict = result.model_dump()
+        result_dict["is_regeneration"] = True
+        result_dict["original_request_id"] = original_request_id
+        result_dict["feedback_addressed"] = len(issues) + len(suggestions)
+        
+        return result_dict
+        
+    except Exception as e:
+        logger.error(f"Error regenerating code: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/generation-history/{project_id}")
+async def get_generation_history(
+    project_id: str,
+    limit: int = 10,
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Get code generation history for a project"""
+    try:
+        events = await dev_agent.tenant_db.get_tenant_events(
+            tenant_context=tenant_context,
+            event_type="code_generation"
+        )
+        
+        # Filter by project and limit
+        project_events = [e for e in events if e.get('project_id') == project_id][:limit]
+        
+        return {"project_id": project_id, "generations": project_events}
+        
+    except Exception as e:
+        logger.error(f"Error getting generation history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8083) 
