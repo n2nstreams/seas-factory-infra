@@ -105,6 +105,40 @@ jobs:
           DB_NAME: factorydb
           DB_PORT: 5432
           
+      - name: Setup Snyk CLI
+        uses: snyk/actions/setup@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          
+      - name: Run Snyk Security Scan
+        run: |
+          # Run Snyk test on all projects
+          echo "Running Snyk security scan..."
+          snyk test --all-projects --json > snyk-results.json || true
+          
+          # Display results summary
+          echo "Snyk scan completed. Results:"
+          snyk test --all-projects --severity-threshold=high || echo "High/Critical vulnerabilities found"
+          
+          # Upload results as artifact
+          if [ -f snyk-results.json ]; then
+            echo "Snyk results file created successfully"
+            ls -la snyk-results.json
+          else
+            echo "No Snyk results file found"
+          fi
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+        
+      - name: Upload Snyk results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snyk-security-report
+          path: snyk-results.json
+          retention-days: 30
+          
       - name: Upload coverage to Codecov
         if: success() && hashFiles('./coverage.xml') != ''
         uses: codecov/codecov-action@v4
@@ -212,6 +246,40 @@ jobs:
           DB_PORT: 5432
           MODEL_PROVIDER: gpt4o
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          
+      - name: Setup Snyk CLI
+        uses: snyk/actions/setup@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          
+      - name: Run Snyk Security Scan
+        run: |
+          # Run Snyk test on all projects
+          echo "Running Snyk security scan..."
+          snyk test --all-projects --json > snyk-results.json || true
+          
+          # Display results summary
+          echo "Snyk scan completed. Results:"
+          snyk test --all-projects --severity-threshold=high || echo "High/Critical vulnerabilities found"
+          
+          # Upload results as artifact
+          if [ -f snyk-results.json ]; then
+            echo "Snyk results file created successfully"
+            ls -la snyk-results.json
+          else
+            echo "No Snyk results file found"
+          fi
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+        
+      - name: Upload Snyk results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snyk-security-report-gpt4o
+          path: snyk-results.json
+          retention-days: 30
           
       - name: Upload coverage to Codecov
         if: success() && hashFiles('./coverage.xml') != ''

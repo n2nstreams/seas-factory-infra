@@ -1,0 +1,78 @@
+# Snyk Configuration for AI SaaS Factory
+# This file contains project-specific security policies and vulnerability ignore rules
+
+# Security policies
+version: v1.0.0
+
+# Ignore specific vulnerabilities (add with caution)
+ignore:
+  # Example ignore (remove when not needed):
+  # SNYK-JS-LODASH-567746:
+  #   - '*':
+  #       reason: "This vulnerability doesn't affect our usage pattern"
+  #       expires: '2024-12-31T23:59:59.999Z'
+  #       created: '2024-01-01T00:00:00.000Z'
+
+# Language-specific settings
+language-settings:
+  python:
+    # Skip dev dependencies in production scans
+    skip-dev-dependencies: true
+    # Include system packages
+    include-system-packages: false
+    
+  javascript:
+    # Skip dev dependencies in production scans
+    skip-dev-dependencies: true
+    # Include peer dependencies
+    include-peer-dependencies: true
+
+# Patches (automatically applied by Snyk)
+patches: {}
+
+# Project-specific exclude patterns
+exclude:
+  # Exclude build artifacts
+  - "**/*.pyc"
+  - "**/__pycache__/**"
+  - "**/node_modules/**"
+  - "**/build/**"
+  - "**/dist/**"
+  - "**/.next/**"
+  - "**/coverage/**"
+  - "**/htmlcov/**"
+  
+  # Exclude test files from some scans
+  - "**/tests/**"
+  - "**/*test*.py"
+  - "**/*test*.js"
+  - "**/*spec*.js"
+  - "**/*spec*.ts"
+  
+  # Exclude documentation
+  - "**/docs/**"
+  - "**/*.md"
+  - "**/*.rst"
+  
+  # Exclude configuration files
+  - "**/.github/**"
+  - "**/terraform/**"
+  - "**/infra/**"
+  - "**/*.tf"
+  - "**/*.tfvars"
+  
+  # Exclude development tools
+  - "**/.vscode/**"
+  - "**/.idea/**"
+  - "**/y/**"
+
+# Notification settings
+notifications:
+  # Enable notifications for critical vulnerabilities
+  critical: true
+  # Enable notifications for high vulnerabilities
+  high: true
+  # Disable notifications for medium vulnerabilities
+  medium: false
+  # Disable notifications for low vulnerabilities
+  low: false 

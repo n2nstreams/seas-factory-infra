@@ -1262,6 +1262,256 @@ async def create_pull_request_endpoint(
         logger.error(f"Error creating PR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/active-tasks")
+async def get_active_code_generation_tasks(
+    limit: int = 10,
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Get active code generation tasks with progress"""
+    try:
+        # Query the database for active code generation tasks
+        query = """
+        SELECT 
+            event_id as id,
+            project_id,
+            agent_name,
+            stage,
+            status,
+            created_at,
+            updated_at,
+            input_data,
+            output_data,
+            error_message
+        FROM agent_events 
+        WHERE tenant_id = %s 
+        AND agent_name = 'DevAgent' 
+        AND event_type = 'code_generation'
+        AND status IN ('started', 'in_progress', 'generating', 'validating', 'creating_pr')
+        ORDER BY created_at DESC
+        LIMIT %s
+        """
+        
+        async with dev_agent.tenant_db.get_connection() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(query, (tenant_context.tenant_id, limit))
+                rows = await cursor.fetchall()
+                
+                tasks = []
+                for row in rows:
+                    # Parse input and output data
+                    input_data = json.loads(row[7]) if row[7] else {}
+                    output_data = json.loads(row[8]) if row[8] else {}
+                    
+                    # Calculate progress based on stage and status
+                    progress = calculate_progress(row[3], row[4])  # stage, status
+                    
+                    # Extract module information
+                    module_spec = input_data.get('module_spec', {})
+                    
+                    # Get GitHub PR info if available
+                    github_pr = output_data.get('github_pr')
+                    
+                    task = {
+                        'id': row[0],
+                        'project_id': row[1],
+                        'module_name': module_spec.get('name', 'Unknown'),
+                        'module_type': module_spec.get('module_type', 'unknown'),
+                        'language': module_spec.get('language', 'unknown'),
+                        'framework': module_spec.get('framework'),
+                        'status': map_status(row[4]),  # Convert internal status to external
+                        'progress': progress,
+                        'current_stage': get_current_stage_description(row[3], row[4]),
+                        'created_at': row[5].isoformat(),
+                        'updated_at': row[6].isoformat(),
+                        'error_message': row[9],
+                        'total_files': output_data.get('total_files'),
+                        'completed_files': output_data.get('completed_files'),
+                        'total_lines': output_data.get('total_lines'),
+                        'github_pr': github_pr
+                    }
+                    tasks.append(task)
+                
+                return {
+                    'tasks': tasks,
+                    'total_count': len(tasks)
+                }
+                
+    except Exception as e:
+        logger.error(f"Error fetching active tasks: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+def calculate_progress(stage: str, status: str) -> float:
+    """Calculate progress percentage based on stage and status"""
+    stage_progress = {
+        'code_generation': 20,
+        'validating': 60,
+        'creating_pr': 80,
+        'completed': 100
+    }
+    
+    if status == 'failed':
+        return 0
+    elif status == 'completed':
+        return 100
+    else:
+        return stage_progress.get(stage, 10)
+
+def map_status(internal_status: str) -> str:
+    """Map internal status to external status"""
+    mapping = {
+        'started': 'started',
+        'in_progress': 'generating',
+        'completed': 'completed',
+        'failed': 'failed'
+    }
+    return mapping.get(internal_status, internal_status)
+
+def get_current_stage_description(stage: str, status: str) -> str:
+    """Get human-readable description of current stage"""
+    descriptions = {
+        'code_generation': 'Generating code with GPT-4o...',
+        'validating': 'Validating generated code...',
+        'creating_pr': 'Creating GitHub pull request...',
+        'completed': 'Code generation completed successfully'
+    }
+    
+    if status == 'failed':
+        return f'Failed during {stage}'
+    
+    return descriptions.get(stage, f'Processing {stage}...')
+
+@app.get("/pull-requests")
+async def get_pull_requests(
+    limit: int = 10,
+    auto_generated: bool = False,
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Get pull requests created by agents"""
+    try:
+        # Query for PR events
+        query = """
+        SELECT 
+            event_id as id,
+            project_id,
+            agent_name,
+            created_at,
+            updated_at,
+            output_data,
+            input_data
+        FROM agent_events 
+        WHERE tenant_id = %s 
+        AND event_type = 'pull_request_created'
+        ORDER BY created_at DESC
+        LIMIT %s
+        """
+        
+        if auto_generated:
+            query = query.replace(
+                "AND event_type = 'pull_request_created'",
+                "AND event_type = 'pull_request_created' AND agent_name LIKE '%Agent'"
+            )
+        
+        async with dev_agent.tenant_db.get_connection() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(query, (tenant_context.tenant_id, limit))
+                rows = await cursor.fetchall()
+                
+                pull_requests = []
+                for row in rows:
+                    output_data = json.loads(row[5]) if row[5] else {}
+                    input_data = json.loads(row[6]) if row[6] else {}
+                    
+                    pr_info = output_data.get('pr_info', {})
+                    module_spec = input_data.get('module_spec', {})
+                    
+                    # Mock some GitHub data (in real implementation, this would come from GitHub API)
+                    pr = {
+                        'id': row[0],
+                        'number': pr_info.get('pr_number', 0),
+                        'title': pr_info.get('title', f"Add {module_spec.get('name', 'module')} - Auto-generated"),
+                        'description': pr_info.get('body', ''),
+                        'url': pr_info.get('pr_url', ''),
+                        'branch_name': pr_info.get('branch_name', 'feature/auto-generated'),
+                        'base_branch': 'main',
+                        'status': 'open',  # Default to open
+                        'state': 'open',
+                        'mergeable': True,
+                        'draft': False,
+                        'created_at': row[3].isoformat(),
+                        'updated_at': row[4].isoformat(),
+                        'author': {
+                            'username': f"{row[2]}",  # Agent name
+                            'avatar_url': None
+                        },
+                        'labels': ['auto-generated', 'dev-agent'],
+                        'checks': {
+                            'status': 'pending',
+                            'total_count': 3,
+                            'success_count': 0,
+                            'failure_count': 0,
+                            'pending_count': 3
+                        },
+                        'review_status': 'pending',
+                        'commits_count': 1,
+                        'additions': output_data.get('total_lines', 0),
+                        'deletions': 0,
+                        'changed_files': output_data.get('total_files', 0),
+                        'project_id': row[1],
+                        'module_name': module_spec.get('name'),
+                        'generated_by': row[2]
+                    }
+                    pull_requests.append(pr)
+                
+                return {
+                    'pull_requests': pull_requests,
+                    'total_count': len(pull_requests)
+                }
+                
+    except Exception as e:
+        logger.error(f"Error fetching pull requests: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dashboard/stats")
+async def get_dashboard_stats(
+    tenant_context: TenantContext = Depends(get_tenant_context)
+):
+    """Get dashboard statistics"""
+    try:
+        # Query for generation statistics
+        stats_query = """
+        SELECT 
+            COUNT(CASE WHEN status IN ('started', 'in_progress') AND event_type = 'code_generation' THEN 1 END) as active_generations,
+            COUNT(CASE WHEN status = 'completed' AND event_type = 'code_generation' THEN 1 END) as completed_generations,
+            COUNT(CASE WHEN status = 'failed' AND event_type = 'code_generation' THEN 1 END) as failed_generations,
+            COUNT(CASE WHEN event_type = 'pull_request_created' THEN 1 END) as total_prs,
+            COUNT(*) as total_events,
+            MAX(created_at) as last_activity
+        FROM agent_events 
+        WHERE tenant_id = %s 
+        AND agent_name = 'DevAgent'
+        """
+        
+        async with dev_agent.tenant_db.get_connection() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(stats_query, (tenant_context.tenant_id,))
+                row = await cursor.fetchone()
+                
+                stats = {
+                    'active_generations': row[0] or 0,
+                    'completed_generations': row[1] or 0,
+                    'failed_generations': row[2] or 0,
+                    'open_prs': row[3] or 0,  # Assume all PRs are open for now
+                    'merged_prs': 0,  # Would need GitHub API integration
+                    'total_events': row[4] or 0,
+                    'last_activity': row[5].isoformat() if row[5] else datetime.now().isoformat()
+                }
+                
+                return stats
+                
+    except Exception as e:
+        logger.error(f"Error fetching dashboard stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8083) 
