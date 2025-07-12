@@ -14,4 +14,7 @@ google-cloud-logging==3.8.0
 python-multipart==0.0.6
 python-dotenv==1.0.0
 PyYAML==6.0.1
-pathlib==1.0.1 
+pathlib==1.0.1
+
+# Playwright dependencies (Python side)
+playwright==1.40.0 

@@ -20,6 +20,7 @@ DESIGN_AGENT_URL = os.getenv("DESIGN_AGENT_URL", "http://localhost:8082")
 DEV_AGENT_URL = os.getenv("DEV_AGENT_URL", "http://dev-agent:8083")
 REVIEW_AGENT_URL = os.getenv("REVIEW_AGENT_URL", "http://review-agent:8084")
 UI_DEV_AGENT_URL = os.getenv("UI_DEV_AGENT_URL", "http://ui-dev-agent:8085")
+QA_AGENT_URL = os.getenv("QA_AGENT_URL", "http://qa-agent:8084")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -209,6 +210,127 @@ def scaffold_react_ui(project_id: str, figma_json: str, style_framework: str = "
     except Exception as e:
         return f"Error scaffolding React UI: {str(e)}"
 
+def generate_playwright_tests(project_id: str, ui_scaffold_result: str = "", api_endpoints: str = "") -> str:
+    """Generate comprehensive Playwright tests using QA Agent"""
+    try:
+        # Parse inputs
+        scaffold_data = {}
+        if ui_scaffold_result:
+            try:
+                scaffold_data = json.loads(ui_scaffold_result)
+            except json.JSONDecodeError:
+                return "Error: Invalid UI scaffold result JSON format"
+        
+        api_list = []
+        if api_endpoints:
+            try:
+                api_list = json.loads(api_endpoints)
+            except json.JSONDecodeError:
+                # Try parsing as comma-separated list
+                api_endpoints_clean = api_endpoints.strip()
+                if api_endpoints_clean:
+                    for endpoint in api_endpoints_clean.split(','):
+                        endpoint = endpoint.strip()
+                        if endpoint:
+                            # Default to GET if no method specified
+                            method = "GET"
+                            path = endpoint
+                            if ' ' in endpoint:
+                                parts = endpoint.split(' ', 1)
+                                method = parts[0].upper()
+                                path = parts[1]
+                            api_list.append({"method": method, "path": path})
+        
+        # If we have UI scaffold result, use the specialized endpoint
+        if scaffold_data:
+            payload = {
+                "project_id": project_id,
+                "scaffold_result": scaffold_data
+            }
+            
+            response = httpx.post(f"{QA_AGENT_URL}/playwright-tests-from-ui-scaffold", 
+                                json=payload, 
+                                params={"project_id": project_id},
+                                timeout=180.0)
+        else:
+            # Use general Playwright test generation
+            payload = {
+                "project_id": project_id,
+                "ui_components": [],
+                "api_endpoints": api_list,
+                "test_types": ["e2e", "api", "accessibility", "performance"],
+                "browsers": ["chromium", "firefox", "webkit"]
+            }
+            
+            response = httpx.post(f"{QA_AGENT_URL}/generate-playwright-tests", 
+                                json=payload, 
+                                timeout=180.0)
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            # Format the response for the orchestrator
+            if "test_suite" in result:
+                test_suite = result["test_suite"]
+                summary = f"Playwright Test Suite Generated for {project_id}:\n"
+                summary += f"Generated {result.get('test_count', len(test_suite.get('test_cases', [])))} test cases\n"
+                summary += f"Estimated duration: {test_suite.get('estimated_duration', 'Unknown')} minutes\n\n"
+                
+                # Group tests by type
+                test_types = {}
+                for test_case in test_suite.get('test_cases', []):
+                    test_type = test_case.get('test_type', 'unknown')
+                    if test_type not in test_types:
+                        test_types[test_type] = []
+                    test_types[test_type].append(test_case['name'])
+                
+                summary += "Test Categories:\n"
+                for test_type, tests in test_types.items():
+                    summary += f"  {test_type.upper()}: {len(tests)} tests\n"
+                    for test in tests[:3]:  # Show first 3 tests
+                        summary += f"    - {test}\n"
+                    if len(tests) > 3:
+                        summary += f"    ... and {len(tests) - 3} more\n"
+                
+                # Setup files info
+                setup_files = test_suite.get('setup_files', {})
+                if setup_files:
+                    summary += f"\nGenerated Files:\n"
+                    for file_path, content in list(setup_files.items())[:5]:  # Show first 5
+                        lines = len(content.splitlines()) if isinstance(content, str) else 0
+                        summary += f"  - {file_path} ({lines} lines)\n"
+                    if len(setup_files) > 5:
+                        summary += f"  ... and {len(setup_files) - 5} more files\n"
+                
+                # Configuration info
+                config = test_suite.get('config', {})
+                if config:
+                    summary += f"\nConfiguration:\n"
+                    summary += f"  Browsers: {', '.join(config.get('browsers', []))}\n"
+                    summary += f"  Timeout: {config.get('timeout', 60000)}ms\n"
+                    summary += f"  Retries: {config.get('retries', 2)}\n"
+                
+                summary += f"\nNext Steps:\n"
+                summary += f"1. Install Playwright: npm install -D @playwright/test\n"
+                summary += f"2. Install browsers: npx playwright install\n"
+                summary += f"3. Place generated files in your project\n"
+                summary += f"4. Run tests: npx playwright test\n"
+                
+                return summary
+            else:
+                # Direct test suite response
+                test_suite = result
+                summary = f"Playwright Test Suite Generated for {project_id}:\n"
+                summary += f"Generated {len(test_suite.get('test_cases', []))} test cases\n"
+                summary += f"Estimated duration: {test_suite.get('estimated_duration', 'Unknown')} minutes\n"
+                return summary
+                
+        else:
+            return f"Error calling QA Agent: {response.status_code} - {response.text}"
+            
+    except Exception as e:
+        return f"Error generating Playwright tests: {str(e)}"
+
 def check_pr_merge_status(pr_number: int) -> str:
     """Check if a PR is ready to merge and merge it if all checks pass"""
     if not github_integration:
@@ -373,6 +495,18 @@ class UIDevProxyAgent(Agent):
             tools=[scaffold_react_ui]
         )
 
+class PlaywrightQAAgent(Agent):
+    """Proxy agent for Playwright test generation"""
+    
+    def __init__(self):
+        super().__init__(
+            name="playwright_qa_agent",
+            model=get_llm_model(),
+            description="Playwright test generation agent that creates comprehensive end-to-end, accessibility, performance, and visual regression tests for web applications",
+            instruction="You are a QA automation expert specializing in Playwright test generation. When asked to create tests, use the generate_playwright_tests tool with the project ID. You can generate tests from UI scaffold results, API endpoints, or both. You create comprehensive test suites including E2E user journeys, accessibility compliance, performance monitoring, and visual regression testing. Always include tests for glassmorphism effects and olive theme validation.",
+            tools=[generate_playwright_tests]
+        )
+
 class GitHubMergeAgent(Agent):
     """Agent for handling GitHub PR management and auto-merge functionality"""
     
@@ -393,13 +527,14 @@ class ProjectOrchestrator(Agent):
         techstack = TechStackProxyAgent()
         design = DesignProxyAgent()
         ui_dev = UIDevProxyAgent()
+        playwright_qa = PlaywrightQAAgent()
         github_merge = GitHubMergeAgent()
         super().__init__(
             name="project_orchestrator",
             model=get_llm_model(), 
-            description="Root orchestrator agent that coordinates all other agents including tech stack, design, UI development, and GitHub auto-merge workflow",
-            instruction="You are the root orchestrator that coordinates between different specialized agents. You can delegate to: greeter_agent for simple greetings, techstack_agent for technology stack recommendations, design_agent for wireframes and UI design, ui_dev_agent for React UI scaffolding from Figma designs, or github_merge_agent for GitHub PR management and auto-merge workflows. For tech stack requests, specify project type (web, api, mobile, ml, desktop). For design requests, specify project type and desired pages. For UI development, provide project ID and Figma JSON data. For GitHub operations, use PR numbers or workflow requests.",
-            sub_agents=[greeter, techstack, design, ui_dev, github_merge],
+            description="Root orchestrator agent that coordinates all other agents including tech stack, design, UI development, Playwright testing, and GitHub auto-merge workflow",
+            instruction="You are the root orchestrator that coordinates between different specialized agents. You can delegate to: greeter_agent for simple greetings, techstack_agent for technology stack recommendations, design_agent for wireframes and UI design, ui_dev_agent for React UI scaffolding from Figma designs, playwright_qa_agent for comprehensive test generation, or github_merge_agent for GitHub PR management and auto-merge workflows. For tech stack requests, specify project type (web, api, mobile, ml, desktop). For design requests, specify project type and desired pages. For UI development, provide project ID and Figma JSON data. For Playwright testing, provide project ID and optionally UI scaffold results or API endpoints. For GitHub operations, use PR numbers or workflow requests.",
+            sub_agents=[greeter, techstack, design, ui_dev, playwright_qa, github_merge],
             tools=[transfer_to_agent]
         )
     

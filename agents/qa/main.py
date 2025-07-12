@@ -16,6 +16,9 @@ from datetime import datetime
 import uuid
 import logging
 
+# Import Playwright generator
+from playwright_generator import PlaywrightGenerator, PlaywrightTestSuite, PlaywrightTestCase, UIComponent
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,6 +62,19 @@ class QualityMetrics(BaseModel):
     code_smells: int
     security_vulnerabilities: int
 
+class PlaywrightTestRequest(BaseModel):
+    project_id: str = Field(..., description="Project ID to generate Playwright tests for")
+    ui_components: List[Dict[str, Any]] = Field(default_factory=list, description="UI components from UIDevAgent")
+    api_endpoints: List[Dict[str, str]] = Field(default_factory=list, description="API endpoints to test")
+    test_types: List[str] = Field(default=["e2e", "api", "accessibility", "performance"], description="Types of tests to generate")
+    browsers: List[str] = Field(default=["chromium", "firefox", "webkit"], description="Browsers to test")
+
+class UIComponentTestRequest(BaseModel):
+    project_id: str = Field(..., description="Project ID")
+    figma_pages: List[Dict[str, Any]] = Field(..., description="Figma pages from UIDevAgent")
+    generate_visual_tests: bool = Field(default=True, description="Generate visual regression tests")
+    generate_accessibility_tests: bool = Field(default=True, description="Generate accessibility tests")
+
 class QAAgent:
     """Main QA Agent class for automated testing and quality assurance"""
     
@@ -70,6 +86,9 @@ class QAAgent:
             'user': os.getenv('DB_USER', 'factoryadmin'),
             'password': os.getenv('DB_PASSWORD', 'localpass')
         }
+        
+        # Initialize Playwright generator
+        self.playwright_generator = PlaywrightGenerator()
         
         # Test generation prompts
         self.test_prompts = {
@@ -452,6 +471,169 @@ async def test_database_query_performance():
             estimated_duration=len(test_cases) * 3,  # 3 minutes per test
             dependencies=["pytest", "asyncpg", "requests"]
         )
+    
+    async def generate_playwright_tests(self, request: PlaywrightTestRequest) -> PlaywrightTestSuite:
+        """Generate comprehensive Playwright test suite"""
+        logger.info(f"Generating Playwright tests for project: {request.project_id}")
+        
+        # Convert UI components to UIComponent models
+        ui_components = []
+        for comp_data in request.ui_components:
+            # Extract selectors from component data
+            selectors = {}
+            if 'content' in comp_data:
+                # Parse React component content for className patterns
+                content = comp_data['content']
+                # Extract className patterns using regex
+                import re
+                class_matches = re.findall(r'className=["\'](.*?)["\']', content)
+                for i, class_str in enumerate(class_matches):
+                    selectors[f"element_{i}"] = f".{class_str.split()[0]}" if class_str else "div"
+            
+            # Determine interactions based on component type
+            interactions = ["click", "hover", "focus"]
+            if "form" in comp_data.get('name', '').lower():
+                interactions.extend(["fill", "submit"])
+            if "button" in comp_data.get('name', '').lower():
+                interactions.extend(["press"])
+            
+            ui_component = UIComponent(
+                name=comp_data.get('name', 'Component'),
+                type=comp_data.get('type', 'component'),
+                selectors=selectors,
+                interactions=interactions,
+                route=comp_data.get('route', f"/{comp_data.get('name', 'component').lower()}")
+            )
+            ui_components.append(ui_component)
+        
+        # Generate comprehensive test suite
+        test_suite = self.playwright_generator.generate_complete_test_suite(
+            project_id=request.project_id,
+            ui_components=ui_components,
+            api_endpoints=request.api_endpoints
+        )
+        
+        logger.info(f"Generated {len(test_suite.test_cases)} Playwright test cases")
+        return test_suite
+    
+    async def generate_ui_component_tests(self, request: UIComponentTestRequest) -> PlaywrightTestSuite:
+        """Generate tests specifically for UI components from UIDevAgent"""
+        logger.info(f"Generating UI component tests for project: {request.project_id}")
+        
+        # Convert Figma pages to UI components
+        ui_components = []
+        for page_data in request.figma_pages:
+            # Create UI component from Figma page data
+            selectors = {
+                "page_container": ".page-container",
+                "glass_elements": ".glass, [class*='backdrop-blur']",
+                "olive_theme": "[class*='text-green'], [class*='bg-green']"
+            }
+            
+            # Add specific selectors based on page structure
+            if 'content' in page_data:
+                content = page_data['content']
+                import re
+                # Extract unique className patterns
+                class_matches = re.findall(r'className="([^"]*)"', content)
+                for i, class_str in enumerate(class_matches[:5]):  # Limit to first 5
+                    if class_str:
+                        key = f"element_{i}"
+                        # Use first class in the string
+                        first_class = class_str.split()[0] if class_str.split() else class_str
+                        selectors[key] = f".{first_class}"
+            
+            ui_component = UIComponent(
+                name=page_data.get('name', 'Page'),
+                type="page",
+                selectors=selectors,
+                interactions=["navigate", "scroll", "resize"],
+                route=page_data.get('route', f"/{page_data.get('name', 'page').lower()}")
+            )
+            ui_components.append(ui_component)
+        
+        # Generate test cases
+        test_cases = []
+        setup_files = {}
+        
+        for component in ui_components:
+            # Generate page object model
+            page_object = self.playwright_generator.generate_page_object_model(component)
+            setup_files[f"pages/{component.name}Page.ts"] = page_object
+            
+            # Generate E2E tests
+            test_cases.append(
+                self.playwright_generator.generate_e2e_test_case(component, "user_interaction")
+            )
+            test_cases.append(
+                self.playwright_generator.generate_e2e_test_case(component, "navigation")
+            )
+            
+            # Generate performance tests
+            test_cases.append(
+                self.playwright_generator.generate_performance_test_case(component)
+            )
+            
+            # Generate accessibility tests if requested
+            if request.generate_accessibility_tests:
+                test_cases.append(
+                    self.playwright_generator.generate_accessibility_test_case(component)
+                )
+            
+            # Generate visual regression tests if requested
+            if request.generate_visual_tests:
+                test_cases.append(
+                    self.playwright_generator.generate_visual_regression_test_case(component)
+                )
+        
+        # Create test suite
+        test_suite = PlaywrightTestSuite(
+            name=f"{request.project_id}_ui_test_suite",
+            project_id=request.project_id,
+            test_cases=test_cases,
+            config={
+                "browsers": ["chromium", "firefox", "webkit"],
+                "retries": 2,
+                "timeout": 60000
+            },
+            setup_files=setup_files,
+            fixtures=self.playwright_generator.generate_fixtures(),
+            estimated_duration=len(test_cases) * 3
+        )
+        
+        # Add configuration files
+        setup_files["playwright.config.ts"] = self.playwright_generator.generate_playwright_config(
+            request.project_id, test_suite
+        )
+        setup_files["tests/global-setup.ts"] = self.playwright_generator.generate_global_setup()
+        setup_files["tests/global-teardown.ts"] = self.playwright_generator.generate_global_teardown()
+        
+        logger.info(f"Generated {len(test_cases)} UI component test cases")
+        return test_suite
+    
+    def convert_ui_scaffold_to_components(self, scaffold_result: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Convert UIDevAgent scaffold result to component data for testing"""
+        components = []
+        
+        # Process pages
+        for page in scaffold_result.get('pages', []):
+            components.append({
+                'name': page['name'],
+                'type': 'page',
+                'route': page['route'],
+                'content': page['content'],
+                'components': page.get('components', [])
+            })
+        
+        # Process individual components
+        for comp in scaffold_result.get('components', []):
+            components.append({
+                'name': comp['name'],
+                'type': 'component',
+                'content': comp['content']
+            })
+        
+        return components
 
 # Initialize QA Agent
 qa_agent = QAAgent()
@@ -492,6 +674,102 @@ async def run_tests(project_id: str, background_tasks: BackgroundTasks):
     except Exception as e:
         logger.error(f"Error starting tests: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate-playwright-tests", response_model=PlaywrightTestSuite)
+async def generate_playwright_tests(request: PlaywrightTestRequest):
+    """Generate comprehensive Playwright test suite"""
+    try:
+        test_suite = await qa_agent.generate_playwright_tests(request)
+        return test_suite
+    except Exception as e:
+        logger.error(f"Error generating Playwright tests: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate-ui-component-tests", response_model=PlaywrightTestSuite)
+async def generate_ui_component_tests(request: UIComponentTestRequest):
+    """Generate tests for UI components from UIDevAgent"""
+    try:
+        test_suite = await qa_agent.generate_ui_component_tests(request)
+        return test_suite
+    except Exception as e:
+        logger.error(f"Error generating UI component tests: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/playwright-tests-from-ui-scaffold")
+async def create_playwright_tests_from_ui_scaffold(
+    project_id: str,
+    scaffold_result: Dict[str, Any]
+):
+    """Generate Playwright tests directly from UIDevAgent scaffold result"""
+    try:
+        # Convert scaffold result to component data
+        ui_components = qa_agent.convert_ui_scaffold_to_components(scaffold_result)
+        
+        # Create test request
+        test_request = PlaywrightTestRequest(
+            project_id=project_id,
+            ui_components=ui_components,
+            api_endpoints=[],  # No API endpoints for pure UI testing
+            test_types=["e2e", "accessibility", "performance", "visual"]
+        )
+        
+        # Generate tests
+        test_suite = await qa_agent.generate_playwright_tests(test_request)
+        
+        return {
+            "message": "Playwright tests generated successfully",
+            "test_suite": test_suite,
+            "test_count": len(test_suite.test_cases),
+            "estimated_duration": test_suite.estimated_duration
+        }
+    except Exception as e:
+        logger.error(f"Error generating Playwright tests from UI scaffold: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/playwright-test-templates")
+async def get_playwright_test_templates():
+    """Get available Playwright test templates and patterns"""
+    return {
+        "test_types": [
+            {
+                "name": "e2e",
+                "description": "End-to-end user journey tests",
+                "scenarios": ["user_interaction", "navigation", "form_submission"]
+            },
+            {
+                "name": "api",
+                "description": "API endpoint testing with Playwright",
+                "scenarios": ["success", "authentication", "validation", "error_handling"]
+            },
+            {
+                "name": "accessibility",
+                "description": "WCAG compliance and accessibility testing",
+                "scenarios": ["keyboard_navigation", "screen_reader", "color_contrast"]
+            },
+            {
+                "name": "performance",
+                "description": "Performance and Core Web Vitals testing",
+                "scenarios": ["page_load", "interaction_timing", "memory_usage"]
+            },
+            {
+                "name": "visual",
+                "description": "Visual regression testing",
+                "scenarios": ["responsive", "hover_states", "theme_variations"]
+            }
+        ],
+        "browsers": ["chromium", "firefox", "webkit"],
+        "device_types": ["desktop", "tablet", "mobile"],
+        "glassmorphism_features": [
+            "backdrop_blur_effects",
+            "transparency_layers",
+            "hover_animations"
+        ],
+        "olive_theme_features": [
+            "color_palette_validation",
+            "contrast_checking",
+            "theme_consistency"
+        ]
+    }
 
 async def run_project_tests(project_id: str):
     """Background task to run project tests"""
