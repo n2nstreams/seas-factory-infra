@@ -19,6 +19,7 @@ TECHSTACK_AGENT_URL = os.getenv("TECHSTACK_AGENT_URL", "http://localhost:8081")
 DESIGN_AGENT_URL = os.getenv("DESIGN_AGENT_URL", "http://localhost:8082")
 DEV_AGENT_URL = os.getenv("DEV_AGENT_URL", "http://dev-agent:8083")
 REVIEW_AGENT_URL = os.getenv("REVIEW_AGENT_URL", "http://review-agent:8084")
+UI_DEV_AGENT_URL = os.getenv("UI_DEV_AGENT_URL", "http://ui-dev-agent:8085")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -136,6 +137,77 @@ def generate_wireframes(project_type: str, pages: str = "", style_preferences: s
             
     except Exception as e:
         return f"Error generating wireframes: {str(e)}"
+
+def scaffold_react_ui(project_id: str, figma_json: str, style_framework: str = "tailwind", component_library: str = "") -> str:
+    """Call UIDevAgent to scaffold React UI from Figma JSON"""
+    try:
+        # Parse figma_json if it's a string
+        if isinstance(figma_json, str):
+            try:
+                figma_data = json.loads(figma_json)
+            except json.JSONDecodeError:
+                return "Error: Invalid Figma JSON format"
+        else:
+            figma_data = figma_json
+        
+        payload = {
+            "project_id": project_id,
+            "figma_data": figma_data,
+            "target_pages": [],  # All pages by default
+            "style_framework": style_framework,
+            "component_library": component_library if component_library else None,
+            "typescript": True,
+            "responsive": True,
+            "glassmorphism": True,
+            "olive_green_theme": True
+        }
+        
+        response = httpx.post(f"{UI_DEV_AGENT_URL}/scaffold", json=payload, timeout=120.0)
+        
+        if response.status_code == 200:
+            result = response.json()
+            # Format the response for the orchestrator
+            summary = f"React UI Scaffolding Results for {project_id}:\n"
+            summary += f"Generated {len(result['pages'])} pages and {len(result['components'])} components\n"
+            summary += f"Total files: {result['total_files']}, Total lines: {result['total_lines']}\n\n"
+            
+            # List generated pages
+            summary += "Generated Pages:\n"
+            for page in result['pages']:
+                summary += f"  - {page['name']} ({page['filename']}) -> Route: {page['route']}\n"
+                if page['components']:
+                    summary += f"    Components: {len(page['components'])} extracted\n"
+            
+            # List reusable components
+            if result['components']:
+                summary += "\nReusable Components:\n"
+                for comp in result['components']:
+                    summary += f"  - {comp['name']} ({comp['filename']})\n"
+            
+            # List generated styles
+            if result['styles']:
+                summary += "\nGenerated Styles:\n"
+                for style_file in result['styles'].keys():
+                    summary += f"  - {style_file}\n"
+            
+            # Dependencies
+            summary += f"\nDependencies ({len(result['dependencies'])}):\n"
+            for dep in result['dependencies'][:5]:  # Show first 5
+                summary += f"  - {dep}\n"
+            if len(result['dependencies']) > 5:
+                summary += f"  ... and {len(result['dependencies']) - 5} more\n"
+            
+            # Setup instructions preview
+            summary += f"\nSetup Instructions:\n"
+            for instruction in result['setup_instructions'][:3]:  # Show first 3
+                summary += f"  {instruction}\n"
+            
+            return summary
+        else:
+            return f"Error calling UIDevAgent: {response.status_code} - {response.text}"
+            
+    except Exception as e:
+        return f"Error scaffolding React UI: {str(e)}"
 
 def check_pr_merge_status(pr_number: int) -> str:
     """Check if a PR is ready to merge and merge it if all checks pass"""
@@ -289,6 +361,18 @@ class DesignProxyAgent(Agent):
             tools=[generate_wireframes]
         )
 
+class UIDevProxyAgent(Agent):
+    """Proxy agent for React UI scaffolding from Figma designs"""
+    
+    def __init__(self):
+        super().__init__(
+            name="ui_dev_agent",
+            model=get_llm_model(),
+            description="React UI scaffolding agent that converts Figma designs into production-ready React components and pages with glassmorphism styling and olive green theming",
+            instruction="You are a React UI development expert specializing in scaffolding React applications from Figma designs. When asked to create React components or pages, use the scaffold_react_ui tool with the project ID and Figma JSON data. You support various style frameworks (tailwind, styled-components) and component libraries (mui, antd, chakra). Always use TypeScript, glassmorphism styling, and olive green color themes by default.",
+            tools=[scaffold_react_ui]
+        )
+
 class GitHubMergeAgent(Agent):
     """Agent for handling GitHub PR management and auto-merge functionality"""
     
@@ -308,13 +392,14 @@ class ProjectOrchestrator(Agent):
         greeter = GreeterAgent()
         techstack = TechStackProxyAgent()
         design = DesignProxyAgent()
+        ui_dev = UIDevProxyAgent()
         github_merge = GitHubMergeAgent()
         super().__init__(
             name="project_orchestrator",
             model=get_llm_model(), 
-            description="Root orchestrator agent that coordinates all other agents including tech stack, design, and GitHub auto-merge workflow",
-            instruction="You are the root orchestrator that coordinates between different specialized agents. You can delegate to: greeter_agent for simple greetings, techstack_agent for technology stack recommendations, design_agent for wireframes and UI design, or github_merge_agent for GitHub PR management and auto-merge workflows. For tech stack requests, specify project type (web, api, mobile, ml, desktop). For design requests, specify project type and desired pages. For GitHub operations, use PR numbers or workflow requests.",
-            sub_agents=[greeter, techstack, design, github_merge],
+            description="Root orchestrator agent that coordinates all other agents including tech stack, design, UI development, and GitHub auto-merge workflow",
+            instruction="You are the root orchestrator that coordinates between different specialized agents. You can delegate to: greeter_agent for simple greetings, techstack_agent for technology stack recommendations, design_agent for wireframes and UI design, ui_dev_agent for React UI scaffolding from Figma designs, or github_merge_agent for GitHub PR management and auto-merge workflows. For tech stack requests, specify project type (web, api, mobile, ml, desktop). For design requests, specify project type and desired pages. For UI development, provide project ID and Figma JSON data. For GitHub operations, use PR numbers or workflow requests.",
+            sub_agents=[greeter, techstack, design, ui_dev, github_merge],
             tools=[transfer_to_agent]
         )
     
