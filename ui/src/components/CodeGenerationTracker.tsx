@@ -48,12 +48,11 @@ const CodeGenerationTracker: React.FC<CodeGenerationTrackerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [wsConnected, setWsConnected] = useState(false);
 
   // WebSocket connection for real-time updates
-  const { isConnected, connectionStatus, lastMessage } = useWebSocket({
+  const { isConnected } = useWebSocket({
     url: 'ws://localhost:8000/ws/code-generation',
-    onMessage: useCallback((message) => {
+    onMessage: useCallback((message: { type: string; data: any }) => {
       if (message.type === 'code_generation_update') {
         // Update specific task
         setTasks(prevTasks => 
@@ -77,8 +76,6 @@ const CodeGenerationTracker: React.FC<CodeGenerationTrackerProps> = ({
         );
       }
     }, []),
-    onOpen: () => setWsConnected(true),
-    onClose: () => setWsConnected(false),
     enabled: !isPaused
   });
 

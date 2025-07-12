@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { GitBranch, ExternalLink, CheckCircle, XCircle, Clock, GitMerge, Eye, MessageSquare, RefreshCw } from 'lucide-react';
+import { GitBranch, ExternalLink, XCircle, GitMerge, Eye, MessageSquare, RefreshCw } from 'lucide-react';
 
 interface PullRequest {
   id: string;
