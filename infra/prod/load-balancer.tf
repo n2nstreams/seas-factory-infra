@@ -48,6 +48,54 @@ resource "google_compute_backend_service" "backend" {
   health_checks = [google_compute_health_check.health_check.id]
 }
 
+# Backend service for agent services
+resource "google_compute_backend_service" "agents_backend" {
+  name                  = "agents-backend-service"
+  project               = var.project_id
+  protocol              = "HTTP"
+  timeout_sec           = 30
+  load_balancing_scheme = "EXTERNAL_MANAGED"
+  
+  backend {
+    group = module.idea_agent.neg_id
+  }
+  
+  backend {
+    group = module.design_agent.neg_id
+  }
+  
+  backend {
+    group = module.dev_agent.neg_id
+  }
+  
+  backend {
+    group = module.qa_agent.neg_id
+  }
+  
+  backend {
+    group = module.ops_agent.neg_id
+  }
+  
+  backend {
+    group = module.techstack_agent.neg_id
+  }
+  
+  health_checks = [google_compute_health_check.agents_health_check.id]
+}
+
+# Health check for agent services
+resource "google_compute_health_check" "agents_health_check" {
+  name               = "agents-health-check"
+  project            = var.project_id
+  check_interval_sec = 30
+  timeout_sec        = 5
+  
+  http_health_check {
+    port         = 8080
+    request_path = "/health"
+  }
+}
+
 # Health check
 resource "google_compute_health_check" "health_check" {
   name               = "api-health-check"
@@ -61,11 +109,56 @@ resource "google_compute_health_check" "health_check" {
   }
 }
 
-# URL map
+# URL map with path-based routing
 resource "google_compute_url_map" "url_map" {
   name            = "api-url-map"
   project         = var.project_id
   default_service = google_compute_backend_service.backend.id
+  
+  path_matcher {
+    name            = "agents-matcher"
+    default_service = google_compute_backend_service.backend.id
+    
+    path_rule {
+      paths   = ["/agents/*"]
+      service = google_compute_backend_service.agents_backend.id
+    }
+    
+    path_rule {
+      paths   = ["/idea/*"]
+      service = google_compute_backend_service.agents_backend.id
+    }
+    
+    path_rule {
+      paths   = ["/design/*"]
+      service = google_compute_backend_service.agents_backend.id
+    }
+    
+    path_rule {
+      paths   = ["/dev/*"]
+      service = google_compute_backend_service.agents_backend.id
+    }
+    
+    path_rule {
+      paths   = ["/qa/*"]
+      service = google_compute_backend_service.agents_backend.id
+    }
+    
+    path_rule {
+      paths   = ["/ops/*"]
+      service = google_compute_backend_service.agents_backend.id
+    }
+    
+    path_rule {
+      paths   = ["/techstack/*"]
+      service = google_compute_backend_service.agents_backend.id
+    }
+  }
+  
+  host_rule {
+    hosts        = ["*"]
+    path_matcher = "agents-matcher"
+  }
 }
 
 # Managed SSL certificate

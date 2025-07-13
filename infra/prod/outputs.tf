@@ -85,4 +85,35 @@ output "orchestrator_sa_email" {
 output "orchestrator_endpoint" {
   description = "The endpoint URI for the Project Orchestrator"
   value       = google_cloud_run_v2_service.orchestrator.uri
+}
+
+# Agent service endpoints
+output "idea_agent_url" {
+  description = "The URL of the Idea Agent service"
+  value       = module.idea_agent.service_url
+}
+
+output "design_agent_url" {
+  description = "The URL of the Design Agent service"
+  value       = module.design_agent.service_url
+}
+
+output "dev_agent_url" {
+  description = "The URL of the Dev Agent service"
+  value       = module.dev_agent.service_url
+}
+
+output "qa_agent_url" {
+  description = "The URL of the QA Agent service"
+  value       = module.qa_agent.service_url
+}
+
+output "ops_agent_url" {
+  description = "The URL of the Ops Agent service"
+  value       = module.ops_agent.service_url
+}
+
+output "techstack_agent_url" {
+  description = "The URL of the TechStack Agent service"
+  value       = module.techstack_agent.service_url
 } 
