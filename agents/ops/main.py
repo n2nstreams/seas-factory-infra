@@ -26,30 +26,39 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
 
-# Import AIOps agent
+# Import AIOps agent and rollback controller
 from aiops_agent import (
     AIOpsAgent, LogStreamConfig, AnomalyDetectionRequest, AlertConfigUpdate,
     LogAnalyticsQuery, AlertSeverity, AnomalyType, GOOGLE_CLOUD_AVAILABLE
+)
+from rollback_controller import (
+    RollbackController, ErrorBudgetWebhookRequest, RollbackOperation,
+    RollbackStatus, RollbackTrigger
 )
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global agent instance
+# Global agent instances
 aiops_agent: Optional[AIOpsAgent] = None
+rollback_controller: Optional[RollbackController] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    global aiops_agent
+    global aiops_agent, rollback_controller
     
     # Startup
-    logger.info("Starting AIOps Agent service...")
+    logger.info("Starting AIOps Agent service with Auto-Rollback...")
     
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "saas-factory-prod")
+    region = os.getenv("GOOGLE_CLOUD_REGION", "us-central1")
+    
+    # Initialize agents
     aiops_agent = AIOpsAgent(project_id)
+    rollback_controller = RollbackController(project_id, region)
     
     # Start background cleanup task
     cleanup_task = asyncio.create_task(periodic_cleanup())
@@ -541,6 +550,131 @@ async def health_check():
         google_cloud_available=GOOGLE_CLOUD_AVAILABLE,
         agent_initialized=aiops_agent is not None
     )
+
+
+# Auto-Rollback Webhook Endpoints (Night 47)
+
+def get_rollback_controller() -> RollbackController:
+    """Dependency to get rollback controller instance"""
+    if rollback_controller is None:
+        raise HTTPException(status_code=503, detail="Rollback controller not initialized")
+    return rollback_controller
+
+
+@app.post("/webhook/error-budget-alert")
+async def error_budget_webhook(
+    request: ErrorBudgetWebhookRequest,
+    auth_token: str = Query(..., description="Webhook authentication token"),
+    controller: RollbackController = Depends(get_rollback_controller)
+):
+    """
+    Webhook endpoint for error budget alerts that trigger auto-rollback
+    Called when error budget > 1% in 1 hour
+    """
+    try:
+        response = await controller.handle_error_budget_webhook(request, auth_token)
+        return response
+    except Exception as e:
+        logger.error(f"Error budget webhook failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/rollback/status/{rollback_id}")
+async def get_rollback_status(
+    rollback_id: str,
+    controller: RollbackController = Depends(get_rollback_controller)
+):
+    """Get the status of a specific rollback operation"""
+    rollback_op = controller.get_rollback_status(rollback_id)
+    if not rollback_op:
+        raise HTTPException(status_code=404, detail="Rollback operation not found")
+    
+    return {
+        "rollback_id": rollback_op.rollback_id,
+        "service_name": rollback_op.service_name,
+        "status": rollback_op.status.value,
+        "trigger": rollback_op.trigger.value,
+        "created_at": rollback_op.created_at.isoformat(),
+        "started_at": rollback_op.started_at.isoformat() if rollback_op.started_at else None,
+        "completed_at": rollback_op.completed_at.isoformat() if rollback_op.completed_at else None,
+        "target_revision": rollback_op.target_revision,
+        "error_message": rollback_op.error_message
+    }
+
+
+@app.get("/rollback/recent")
+async def get_recent_rollbacks(
+    hours: int = Query(24, ge=1, le=168),
+    controller: RollbackController = Depends(get_rollback_controller)
+):
+    """Get recent rollback operations"""
+    recent_rollbacks = controller.get_recent_rollbacks(hours)
+    
+    return {
+        "count": len(recent_rollbacks),
+        "rollbacks": [
+            {
+                "rollback_id": rb.rollback_id,
+                "service_name": rb.service_name,
+                "status": rb.status.value,
+                "trigger": rb.trigger.value,
+                "created_at": rb.created_at.isoformat(),
+                "target_revision": rb.target_revision,
+                "error_message": rb.error_message
+            } for rb in recent_rollbacks
+        ]
+    }
+
+
+@app.get("/rollback/metrics")
+async def get_rollback_metrics(
+    controller: RollbackController = Depends(get_rollback_controller)
+):
+    """Get rollback controller metrics"""
+    return controller.get_metrics()
+
+
+@app.post("/rollback/manual/{service_name}")
+async def trigger_manual_rollback(
+    service_name: str,
+    target_revision: Optional[str] = None,
+    controller: RollbackController = Depends(get_rollback_controller)
+):
+    """Trigger a manual rollback for testing purposes"""
+    import time
+    from datetime import datetime
+    
+    # Create a mock alert for manual rollback
+    alert = type('MockAlert', (), {
+        'alert_id': f"manual-{int(time.time())}",
+        'service_name': service_name,
+        'error_rate': 0.05,  # 5% error rate
+        'duration_minutes': 60,
+        'timestamp': datetime.utcnow(),
+        'alert_policy': 'manual-trigger'
+    })()
+    
+    # Create decision for manual rollback
+    decision = type('MockDecision', (), {
+        'should_rollback': True,
+        'reason': 'Manual rollback requested',
+        'confidence': 1.0,
+        'target_revision': target_revision or 'latest-stable',
+        'estimated_impact': 'Manual intervention',
+        'rollback_strategy': 'immediate'
+    })()
+    
+    try:
+        rollback_op = await controller._trigger_rollback(alert, decision)
+        return {
+            "message": "Manual rollback triggered",
+            "rollback_id": rollback_op.rollback_id,
+            "service_name": service_name,
+            "target_revision": rollback_op.target_revision
+        }
+    except Exception as e:
+        logger.error(f"Manual rollback failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Error handlers

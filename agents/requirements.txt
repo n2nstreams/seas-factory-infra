@@ -13,6 +13,7 @@ google-cloud-storage==2.10.0
 google-cloud-aiplatform==1.38.0
 google-cloud-monitoring==2.16.0
 google-cloud-error-reporting==1.9.3
+google-cloud-deploy==1.16.0
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 asyncpg==0.29.0
