@@ -1,0 +1,7 @@
+# Agent services requirements
+# Inherits from requirements-base.txt with agent-specific additions
+
+-r requirements-base.txt
+
+# Agent-specific dependencies
+# Additional requirements for specialized agents 

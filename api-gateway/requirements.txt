@@ -1,4 +1,5 @@
-fastapi
-uvicorn
-httpx
-google-auth 
+# SaaS Factory - Unified Dependencies
+# This file uses unified dependency management
+# See requirements-agents.txt for actual dependencies
+
+-r ../requirements-agents.txt

@@ -1,0 +1,31 @@
+# Orchestrator-specific requirements
+# Inherits from requirements-base.txt with orchestrator-specific additions
+
+-r requirements-base.txt
+
+# Orchestrator-specific dependencies
+flask==3.1.1
+google-adk==1.5.0
+autogen-agentchat==0.2.40
+langgraph==0.5.1
+langgraph-sdk==0.1.72
+langsmith==0.4.4
+mcp==1.10.1
+
+# Additional dependencies for orchestrator
+numpy==1.26.4
+diskcache==5.6.3
+docker==7.1.0
+flaml==2.3.5
+graphviz==0.21
+
+# OpenTelemetry for monitoring
+opentelemetry-api==1.34.1
+opentelemetry-sdk==1.34.1
+opentelemetry-exporter-gcp-trace==1.9.0
+
+# Additional Google Cloud services
+google-cloud-bigquery==3.34.0
+google-cloud-resource-manager==1.14.2
+google-cloud-speech==2.33.0
+google-cloud-trace==1.16.2 

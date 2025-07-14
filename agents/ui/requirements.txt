@@ -1,16 +1,5 @@
-fastapi>=0.104.0
-uvicorn>=0.24.0
-pydantic>=2.5.0
-httpx>=0.25.0
-python-multipart>=0.0.6
+# SaaS Factory - Unified Dependencies
+# This file uses unified dependency management
+# See requirements-agents.txt for actual dependencies
 
-# Shared dependencies
-asyncpg>=0.29.0
-
-# Development dependencies
-pytest>=7.4.0
-pytest-cov>=4.1.0
-pytest-asyncio>=0.21.0
-
-# Optional dependencies for CLI tools
-# Note: html-to-react would be installed via npm, not pip 
+-r ../../requirements-agents.txt
