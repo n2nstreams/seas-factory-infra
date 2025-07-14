@@ -7,7 +7,8 @@ Provides type-safe, environment-specific configuration for all services
 import os
 import logging
 from typing import Dict, List, Optional, Any
-from pydantic import BaseSettings, Field, validator, SecretStr
+from pydantic import Field, field_validator, SecretStr
+from pydantic_settings import BaseSettings
 from enum import Enum
 
 
@@ -17,6 +18,7 @@ class Environment(str, Enum):
     STAGING = "staging"
     PRODUCTION = "production"
     LOCAL = "local"
+    TEST = "test"
 
 
 class LogLevel(str, Enum):
@@ -34,7 +36,7 @@ class DatabaseConfig(BaseSettings):
     port: int = Field(default=5432, env="DB_PORT")
     name: str = Field(default="factorydb", env="DB_NAME")
     user: str = Field(default="factoryadmin", env="DB_USER")
-    password: SecretStr = Field(env="DB_PASSWORD")
+    password: SecretStr = Field(default="", env="DB_PASSWORD")
     max_connections: int = Field(default=20, env="DB_MAX_CONNECTIONS")
     min_connections: int = Field(default=5, env="DB_MIN_CONNECTIONS")
     connection_timeout: int = Field(default=60, env="DB_CONNECTION_TIMEOUT")
@@ -69,7 +71,7 @@ class GoogleCloudConfig(BaseSettings):
 
 class AIConfig(BaseSettings):
     """AI/ML service configuration"""
-    openai_api_key: SecretStr = Field(env="OPENAI_API_KEY")
+    openai_api_key: SecretStr = Field(default="", env="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o", env="OPENAI_MODEL")
     openai_max_tokens: int = Field(default=4000, env="OPENAI_MAX_TOKENS")
     openai_temperature: float = Field(default=0.7, env="OPENAI_TEMPERATURE")
@@ -81,7 +83,7 @@ class AIConfig(BaseSettings):
     # Model provider selection
     model_provider: str = Field(default="openai", env="MODEL_PROVIDER")
     
-    @validator('model_provider')
+    @field_validator('model_provider')
     def validate_model_provider(cls, v):
         if v not in ['openai', 'google', 'gpt4o', 'gemini']:
             raise ValueError('model_provider must be one of: openai, google, gpt4o, gemini')
@@ -91,7 +93,7 @@ class AIConfig(BaseSettings):
 class SecurityConfig(BaseSettings):
     """Security configuration"""
     # JWT
-    jwt_secret_key: SecretStr = Field(env="JWT_SECRET_KEY")
+    jwt_secret_key: SecretStr = Field(default="test-secret-key", env="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     jwt_expiration_hours: int = Field(default=24, env="JWT_EXPIRATION_HOURS")
     
@@ -200,13 +202,13 @@ class Settings(BaseSettings):
         env_nested_delimiter = "__"
         case_sensitive = False
         
-    @validator('environment', pre=True)
+    @field_validator('environment', mode='before')
     def parse_environment(cls, v):
         if isinstance(v, str):
             return Environment(v.lower())
         return v
     
-    @validator('log_level', pre=True)
+    @field_validator('log_level', mode='before')
     def parse_log_level(cls, v):
         if isinstance(v, str):
             return LogLevel(v.upper())
