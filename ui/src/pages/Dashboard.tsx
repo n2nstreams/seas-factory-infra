@@ -1,458 +1,849 @@
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
-import { Button } from '../components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
-import CodeGenerationTracker from '../components/CodeGenerationTracker'
-import PullRequestsPanel from '../components/PullRequestsPanel'
-import { Activity, Code2, GitBranch, Clock, CheckCircle, XCircle, RefreshCw, BarChart3 } from 'lucide-react'
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Code2, 
+  Settings, 
+  CreditCard, 
+  Activity, 
+  Clock,
+  DollarSign,
+  ExternalLink,
+  MoreHorizontal,
+  Package,
+  Sparkles,
+  Globe,
+  ArrowRight,
+  RefreshCw,
+  Palette,
+  TestTube,
+  Rocket,
+  Plus,
+  Check,
+  Home,
+  User,
+  BarChart3
+} from 'lucide-react';
 
-interface AgentEvent {
-  type: string
-  timestamp: number
-  stage?: string
-  agent?: string
-  request_id?: string
-  status?: string
-  result?: any
-  error?: string
-  received_at?: string
-  message_id?: string
-  publish_time?: string
+// Types
+interface UserSubscription {
+  plan: 'starter' | 'pro' | 'growth';
+  buildHours: {
+    used: number;
+    total: number | 'unlimited';
+  };
+  projects: {
+    used: number;
+    total: number;
+  };
+  billing: {
+    amount: number;
+    period: 'monthly' | 'yearly';
+    nextBilling: string;
+  };
+  features: string[];
 }
 
-interface EventsResponse {
-  events: AgentEvent[]
-  total_count: number
-  last_updated: string
+interface Project {
+  id: string;
+  name: string;
+  status: 'active' | 'building' | 'deployed' | 'failed' | 'paused';
+  progress: number;
+  lastUpdated: string;
+  url?: string;
+  buildHours: number;
+  stage: 'idea' | 'design' | 'development' | 'testing' | 'deployment' | 'live';
+  revenue?: number;
+  users?: number;
 }
 
-interface DashboardStats {
-  active_generations: number
-  completed_generations: number
-  failed_generations: number
-  open_prs: number
-  merged_prs: number
-  total_events: number
-  last_activity: string
+interface Build {
+  id: string;
+  projectId: string;
+  projectName: string;
+  status: 'running' | 'completed' | 'failed' | 'queued';
+  stage: 'idea' | 'design' | 'development' | 'testing' | 'deployment';
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+  buildHours: number;
+  logs: string[];
+}
+
+interface ActivityItem {
+  id: string;
+  type: 'build_started' | 'build_completed' | 'build_failed' | 'project_created' | 'payment_processed' | 'user_joined';
+  message: string;
+  timestamp: string;
+  projectId?: string;
+  buildId?: string;
+  metadata?: any;
 }
 
 export default function Dashboard() {
-  const [events, setEvents] = useState<AgentEvent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
-  const [stats, setStats] = useState<DashboardStats>({
-    active_generations: 0,
-    completed_generations: 0,
-    failed_generations: 0,
-    open_prs: 0,
-    merged_prs: 0,
-    total_events: 0,
-    last_activity: new Date().toISOString()
-  })
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch('/api/events')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data: EventsResponse = await response.json()
-      setEvents(data.events)
-      setLastUpdate(new Date())
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-      console.error('Error fetching events:', err)
-    } finally {
-      setLoading(false)
+  // Mock data
+  const subscription: UserSubscription = {
+    plan: 'pro',
+    buildHours: {
+      used: 42,
+      total: 60
+    },
+    projects: {
+      used: 2,
+      total: 3
+    },
+    billing: {
+      amount: 99,
+      period: 'monthly',
+      nextBilling: '2024-02-15'
+    },
+    features: ['AI Design Generation', 'Advanced Analytics', 'Priority Support', 'Custom Integrations']
+  };
+
+  const projects: Project[] = [
+    {
+      id: '1',
+      name: 'TaskFlow Pro',
+      status: 'deployed',
+      progress: 100,
+      lastUpdated: '2024-01-15T10:30:00Z',
+      url: 'https://taskflow-pro.com',
+      buildHours: 24,
+      stage: 'live',
+      revenue: 2840,
+      users: 156
+    },
+    {
+      id: '2',
+      name: 'Invoice Genius',
+      status: 'building',
+      progress: 75,
+      lastUpdated: '2024-01-15T14:20:00Z',
+      buildHours: 18,
+      stage: 'development'
+    },
+    {
+      id: '3',
+      name: 'SocialSync',
+      status: 'active',
+      progress: 25,
+      lastUpdated: '2024-01-15T09:15:00Z',
+      buildHours: 8,
+      stage: 'design'
     }
-  }
+  ];
 
-  const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/dev/dashboard/stats')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data: DashboardStats = await response.json()
-      setStats(data)
-    } catch (err) {
-      console.error('Error fetching dashboard stats:', err)
+  const builds: Build[] = [
+    {
+      id: '1',
+      projectId: '2',
+      projectName: 'Invoice Genius',
+      status: 'running',
+      stage: 'development',
+      startedAt: '2024-01-15T13:00:00Z',
+      buildHours: 3.5,
+      logs: ['Started development phase', 'Generating API endpoints', 'Setting up database schema']
+    },
+    {
+      id: '2',
+      projectId: '1',
+      projectName: 'TaskFlow Pro',
+      status: 'completed',
+      stage: 'deployment',
+      startedAt: '2024-01-15T08:00:00Z',
+      completedAt: '2024-01-15T10:30:00Z',
+      duration: 2.5,
+      buildHours: 2.5,
+      logs: ['Deployment successful', 'SSL certificate configured', 'Domain linked']
+    },
+    {
+      id: '3',
+      projectId: '3',
+      projectName: 'SocialSync',
+      status: 'queued',
+      stage: 'design',
+      startedAt: '2024-01-15T16:00:00Z',
+      buildHours: 0,
+      logs: ['Waiting for design generation to start']
     }
-  }
+  ];
 
-  useEffect(() => {
-    // Initial fetch
-    fetchEvents()
-    fetchStats()
+  const activities: ActivityItem[] = [
+    {
+      id: '1',
+      type: 'build_completed',
+      message: 'TaskFlow Pro deployment completed successfully',
+      timestamp: '2024-01-15T10:30:00Z',
+      projectId: '1',
+      buildId: '2'
+    },
+    {
+      id: '2',
+      type: 'build_started',
+      message: 'Invoice Genius development phase started',
+      timestamp: '2024-01-15T13:00:00Z',
+      projectId: '2',
+      buildId: '1'
+    },
+    {
+      id: '3',
+      type: 'project_created',
+      message: 'New project SocialSync created',
+      timestamp: '2024-01-15T09:15:00Z',
+      projectId: '3'
+    },
+    {
+      id: '4',
+      type: 'payment_processed',
+      message: 'Monthly Pro plan payment processed ($99.00)',
+      timestamp: '2024-01-15T00:00:00Z'
+    },
+    {
+      id: '5',
+      type: 'user_joined',
+      message: '12 new users joined TaskFlow Pro',
+      timestamp: '2024-01-14T18:45:00Z',
+      projectId: '1'
+    }
+  ];
 
-    // Set up polling every 5 seconds
-    const interval = setInterval(() => {
-      fetchEvents()
-      fetchStats()
-    }, 5000)
-
-    // Cleanup
-    return () => clearInterval(interval)
-  }, [])
-
-  const formatTimestamp = (timestamp: number | string) => {
-    const date = typeof timestamp === 'number' ? new Date(timestamp * 1000) : new Date(timestamp)
-    return date.toLocaleString()
-  }
-
-  const getEventColor = (type: string) => {
-    switch (type) {
-      case 'START':
-        return 'text-blue-600 bg-blue-50/50'
-      case 'FINISH':
-        return 'text-green-600 bg-green-50/50'
-      case 'ERROR':
-        return 'text-red-600 bg-red-50/50'
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+      case 'deployed':
+      case 'completed':
+        return 'text-green-600 bg-green-100';
+      case 'building':
+      case 'running':
+        return 'text-blue-600 bg-blue-100';
+      case 'failed':
+        return 'text-red-600 bg-red-100';
+      case 'paused':
+      case 'queued':
+        return 'text-yellow-600 bg-yellow-100';
       default:
-        return 'text-gray-600 bg-gray-50/50'
+        return 'text-gray-600 bg-gray-100';
     }
-  }
+  };
 
-  const getEventIcon = (type: string) => {
-    switch (type) {
-      case 'START':
-        return <Clock className="w-4 h-4" />
-      case 'FINISH':
-        return <CheckCircle className="w-4 h-4" />
-      case 'ERROR':
-        return <XCircle className="w-4 h-4" />
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffMs = now.getTime() - time.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return time.toLocaleDateString();
+  };
+
+  const getStageIcon = (stage: string) => {
+    switch (stage) {
+      case 'idea':
+        return <Sparkles className="w-4 h-4" />;
+      case 'design':
+        return <Palette className="w-4 h-4" />;
+      case 'development':
+        return <Code2 className="w-4 h-4" />;
+      case 'testing':
+        return <TestTube className="w-4 h-4" />;
+      case 'deployment':
+        return <Rocket className="w-4 h-4" />;
+      case 'live':
+        return <Globe className="w-4 h-4" />;
       default:
-        return <Activity className="w-4 h-4" />
+        return <Clock className="w-4 h-4" />;
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-green-700 font-medium">Loading dashboard...</p>
-        </div>
-      </div>
-    )
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-green-900 mb-2">
-                🚀 SaaS Factory Dashboard
-              </h1>
-              <p className="text-green-700 text-lg">
-                Monitor code generation, pull requests, and agent activities
-              </p>
-              {lastUpdate && (
-                <p className="text-sm text-green-600 mt-2">
-                  Last updated: {lastUpdate.toLocaleString()}
-                </p>
-              )}
+    <div className="min-h-screen bg-homepage relative overflow-hidden">
+      {/* Glassmorphism Background Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-green-800/20 to-green-900/25 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-32 w-80 h-80 bg-gradient-to-bl from-slate-700/20 to-green-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-stone-600/20 to-green-700/25 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="glass-nav sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
+                <Code2 className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-heading">AI SaaS Factory</span>
             </div>
-            <Badge variant="outline" className="text-sm bg-white/80 backdrop-blur-sm border-green-200">
-              Live Dashboard
-            </Badge>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/60 backdrop-blur-sm border-green-200/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600">Active Generations</p>
-                  <p className="text-3xl font-bold text-green-900">{stats.active_generations}</p>
-                </div>
-                <div className="p-3 bg-blue-500/10 rounded-full">
-                  <Code2 className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/60 backdrop-blur-sm border-green-200/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600">Completed</p>
-                  <p className="text-3xl font-bold text-green-900">{stats.completed_generations}</p>
-                </div>
-                <div className="p-3 bg-green-500/10 rounded-full">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/60 backdrop-blur-sm border-green-200/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600">Open PRs</p>
-                  <p className="text-3xl font-bold text-green-900">{stats.open_prs}</p>
-                </div>
-                <div className="p-3 bg-purple-500/10 rounded-full">
-                  <GitBranch className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/60 backdrop-blur-sm border-green-200/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600">Total Events</p>
-                  <p className="text-3xl font-bold text-green-900">{stats.total_events}</p>
-                </div>
-                <div className="p-3 bg-gray-500/10 rounded-full">
-                  <BarChart3 className="w-6 h-6 text-gray-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-lg">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <XCircle className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <p className="text-sm text-red-700 mt-1">{error}</p>
-              </div>
-              <div className="ml-auto">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setError(null)
-                    fetchEvents()
-                    fetchStats()
-                  }}
-                  className="bg-white/40 backdrop-blur-sm border-red-200/50 hover:bg-white/60"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Retry
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="/" className="text-body hover:text-heading transition-colors font-medium">Home</a>
+              <a href="/pricing" className="text-body hover:text-heading transition-colors font-medium">Pricing</a>
+              <a href="/signup" className="text-body hover:text-heading transition-colors font-medium">Sign Up</a>
+              <a href="/dashboard" className="text-heading font-medium">Dashboard</a>
+              <div className="flex items-center space-x-2">
+                <Badge className="bg-accent text-white text-xs">
+                  Pro Plan
+                </Badge>
+                <Button size="sm" variant="outline" className="btn-ghost">
+                  <User className="w-4 h-4 mr-1" />
+                  Account
                 </Button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      </nav>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6 bg-white/60 backdrop-blur-sm border-green-200/50">
-            <TabsTrigger 
-              value="overview" 
-              className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-800"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="codegen" 
-              className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-800"
-            >
-              Code Generation
-            </TabsTrigger>
-            <TabsTrigger 
-              value="pulls" 
-              className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-800"
-            >
-              Pull Requests
-            </TabsTrigger>
-            <TabsTrigger 
-              value="events" 
-              className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-800"
-            >
-              Events
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <CodeGenerationTracker maxTasks={3} />
-              <PullRequestsPanel maxPRs={5} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="glass-card p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+              <div>
+                <h1 className="text-3xl font-bold text-heading">Dashboard</h1>
+                <p className="text-body mt-1">Manage your AI-powered SaaS projects</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Button className="btn-primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Project
+                </Button>
+                <Button variant="outline" className="btn-secondary">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Sync
+                </Button>
+              </div>
             </div>
+          </div>
 
-            {/* Recent Activity Summary */}
-            <Card className="bg-white/60 backdrop-blur-sm border-green-200/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-800">
-                  <Activity className="w-5 h-5" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {events.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Activity className="w-12 h-12 text-green-400 mx-auto mb-4 opacity-50" />
-                    <p className="text-green-700 font-medium">No recent activity</p>
-                    <p className="text-green-600 text-sm mt-1">
-                      Agent events will appear here as they occur
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="card-glass">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-body">Build Hours</p>
+                    <p className="text-2xl font-bold text-heading">
+                      {subscription.buildHours.used}
+                      <span className="text-sm text-body">
+                        /{subscription.buildHours.total === 'unlimited' ? '∞' : subscription.buildHours.total}
+                      </span>
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {events.slice(0, 5).map((event, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-white/40 backdrop-blur-sm rounded-lg border border-green-200/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${getEventColor(event.type)}`}>
-                            {getEventIcon(event.type)}
-                          </div>
+                  <div className="w-12 h-12 bg-accent-icon rounded-xl flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                {subscription.buildHours.total !== 'unlimited' && (
+                  <div className="mt-4">
+                    <Progress 
+                      value={(subscription.buildHours.used / subscription.buildHours.total) * 100} 
+                      className="h-2"
+                    />
+                    <p className="text-xs text-body mt-1">
+                      {Math.round((subscription.buildHours.used / subscription.buildHours.total) * 100)}% used
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="card-glass">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-body">Projects</p>
+                    <p className="text-2xl font-bold text-heading">
+                      {subscription.projects.used}
+                      <span className="text-sm text-body">/{subscription.projects.total}</span>
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-accent-secondary rounded-xl flex items-center justify-center">
+                    <Package className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <Progress 
+                    value={(subscription.projects.used / subscription.projects.total) * 100} 
+                    className="h-2"
+                  />
+                  <p className="text-xs text-body mt-1">
+                    {subscription.projects.total - subscription.projects.used} slots remaining
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="card-glass">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-body">Active Builds</p>
+                    <p className="text-2xl font-bold text-heading">
+                      {builds.filter(b => b.status === 'running').length}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-accent-tertiary rounded-xl flex items-center justify-center">
+                    <Activity className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="text-xs text-body">
+                    {builds.filter(b => b.status === 'queued').length} queued
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="card-glass">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-body">Monthly Spend</p>
+                    <p className="text-2xl font-bold text-heading">
+                      ${subscription.billing.amount}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="text-xs text-body">
+                    Next billing: {new Date(subscription.billing.nextBilling).toLocaleDateString()}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="glass-card p-1">
+              <TabsTrigger value="overview" className="btn-ghost">
+                <Home className="w-4 h-4 mr-2" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="projects" className="btn-ghost">
+                <Package className="w-4 h-4 mr-2" />
+                Projects
+              </TabsTrigger>
+              <TabsTrigger value="builds" className="btn-ghost">
+                <Activity className="w-4 h-4 mr-2" />
+                Builds
+              </TabsTrigger>
+              <TabsTrigger value="billing" className="btn-ghost">
+                <CreditCard className="w-4 h-4 mr-2" />
+                Billing
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="btn-ghost">
+                <Clock className="w-4 h-4 mr-2" />
+                Activity
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Projects */}
+                <Card className="card-glass">
+                  <CardHeader>
+                    <CardTitle className="text-heading flex items-center">
+                      <Package className="w-5 h-5 mr-2" />
+                      Recent Projects
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {projects.slice(0, 3).map((project) => (
+                      <div key={project.id} className="flex items-center justify-between p-4 glass-card">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            project.status === 'deployed' ? 'bg-green-500' :
+                            project.status === 'building' ? 'bg-blue-500' :
+                            project.status === 'active' ? 'bg-yellow-500' :
+                            'bg-gray-500'
+                          }`} />
                           <div>
-                            <p className="font-medium text-green-900">{event.type}</p>
-                            {event.stage && (
-                              <p className="text-sm text-green-600">{event.stage}</p>
-                            )}
-                            {event.agent && (
-                              <p className="text-xs text-green-500">by {event.agent}</p>
-                            )}
+                            <p className="font-medium text-heading">{project.name}</p>
+                            <p className="text-sm text-body">{formatTimeAgo(project.lastUpdated)}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-green-600">
-                            {formatTimestamp(event.timestamp)}
-                          </p>
-                          {event.request_id && (
-                            <p className="text-xs text-green-500">
-                              {event.request_id}
-                            </p>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`text-xs ${getStatusColor(project.status)}`}>
+                            {project.status}
+                          </Badge>
+                          {project.url && (
+                            <Button size="sm" variant="ghost" className="btn-ghost p-1">
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
                           )}
                         </div>
                       </div>
                     ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </CardContent>
+                </Card>
 
-          {/* Code Generation Tab */}
-          <TabsContent value="codegen" className="space-y-6">
-            <CodeGenerationTracker maxTasks={10} />
-          </TabsContent>
-
-          {/* Pull Requests Tab */}
-          <TabsContent value="pulls" className="space-y-6">
-            <PullRequestsPanel maxPRs={20} />
-          </TabsContent>
-
-          {/* Events Tab */}
-          <TabsContent value="events" className="space-y-6">
-            <Card className="bg-white/60 backdrop-blur-sm border-green-200/50">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-green-800">
-                    <Activity className="w-5 h-5" />
-                    Agent Events ({events.length})
-                  </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      fetchEvents()
-                      fetchStats()
-                    }}
-                    className="bg-white/40 backdrop-blur-sm border-green-200/50 hover:bg-white/60"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Refresh
-                  </Button>
-                </div>
-              </CardHeader>
-
-              <CardContent>
-                {events.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Activity className="w-12 h-12 text-green-400 mx-auto mb-4 opacity-50" />
-                    <p className="text-green-700 font-medium">No events yet</p>
-                    <p className="text-green-600 text-sm mt-1">
-                      Events will appear here as agents perform tasks
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {events.map((event, index) => (
-                      <div
-                        key={index}
-                        className="p-4 bg-white/40 backdrop-blur-sm rounded-lg border border-green-200/50"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full ${getEventColor(event.type)}`}>
-                                {getEventIcon(event.type)}
-                                {event.type}
-                              </span>
-                              {event.stage && (
-                                <span className="text-sm text-green-600">
-                                  {event.stage}
-                                </span>
-                              )}
-                              {event.agent && (
-                                <span className="text-sm text-green-500">
-                                  by {event.agent}
-                                </span>
-                              )}
-                            </div>
-                            
-                            <div className="text-sm text-green-600 mb-2">
-                              {event.timestamp && (
-                                <span>
-                                  {formatTimestamp(event.timestamp)}
-                                </span>
-                              )}
-                              {event.request_id && (
-                                <span className="ml-4 text-green-400">
-                                  ID: {event.request_id}
-                                </span>
-                              )}
-                            </div>
-
-                            {event.result && (
-                              <div className="text-sm">
-                                <pre className="text-green-700 bg-green-50/50 p-2 rounded overflow-x-auto">
-                                  {JSON.stringify(event.result, null, 2)}
-                                </pre>
-                              </div>
-                            )}
-
-                            {event.error && (
-                              <div className="text-sm text-red-700 bg-red-50/50 p-2 rounded">
-                                <span className="font-medium">Error:</span> {event.error}
-                              </div>
-                            )}
+                {/* Build Queue */}
+                <Card className="card-glass">
+                  <CardHeader>
+                    <CardTitle className="text-heading flex items-center">
+                      <Activity className="w-5 h-5 mr-2" />
+                      Build Queue
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {builds.slice(0, 3).map((build) => (
+                      <div key={build.id} className="flex items-center justify-between p-4 glass-card">
+                        <div className="flex items-center space-x-3">
+                          {getStageIcon(build.stage)}
+                          <div>
+                            <p className="font-medium text-heading">{build.projectName}</p>
+                            <p className="text-sm text-body capitalize">{build.stage}</p>
                           </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`text-xs ${getStatusColor(build.status)}`}>
+                            {build.status}
+                          </Badge>
+                          <span className="text-xs text-body">{build.buildHours}h</span>
                         </div>
                       </div>
                     ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Activity Feed */}
+              <Card className="card-glass">
+                <CardHeader>
+                  <CardTitle className="text-heading flex items-center">
+                    <Clock className="w-5 h-5 mr-2" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {activities.slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3 p-4 glass-card">
+                      <div className={`w-2 h-2 rounded-full mt-2 ${
+                        activity.type === 'build_completed' ? 'bg-green-500' :
+                        activity.type === 'build_started' ? 'bg-blue-500' :
+                        activity.type === 'build_failed' ? 'bg-red-500' :
+                        activity.type === 'project_created' ? 'bg-purple-500' :
+                        activity.type === 'payment_processed' ? 'bg-green-500' :
+                        'bg-gray-500'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="text-sm text-heading">{activity.message}</p>
+                        <p className="text-xs text-body">{formatTimeAgo(activity.timestamp)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="projects" className="space-y-6">
+              <Card className="card-glass">
+                <CardHeader>
+                  <CardTitle className="text-heading flex items-center justify-between">
+                    <span className="flex items-center">
+                      <Package className="w-5 h-5 mr-2" />
+                      Projects ({projects.length})
+                    </span>
+                    <Button className="btn-primary">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Project
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {projects.map((project) => (
+                    <div key={project.id} className="p-6 glass-card">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-4 h-4 rounded-full ${
+                            project.status === 'deployed' ? 'bg-green-500' :
+                            project.status === 'building' ? 'bg-blue-500' :
+                            project.status === 'active' ? 'bg-yellow-500' :
+                            'bg-gray-500'
+                          }`} />
+                          <div>
+                            <h3 className="font-semibold text-heading">{project.name}</h3>
+                            <p className="text-sm text-body capitalize">{project.stage} • {formatTimeAgo(project.lastUpdated)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`${getStatusColor(project.status)}`}>
+                            {project.status}
+                          </Badge>
+                          {project.url && (
+                            <Button size="sm" variant="outline" className="btn-secondary">
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline" className="btn-ghost">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-body">Progress</span>
+                          <span className="text-heading">{project.progress}%</span>
+                        </div>
+                        <Progress value={project.progress} className="h-2" />
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                          <div className="text-center">
+                            <div className="text-lg font-semibold text-heading">{project.buildHours}h</div>
+                            <div className="text-xs text-body">Build Hours</div>
+                          </div>
+                          {project.revenue && (
+                            <div className="text-center">
+                              <div className="text-lg font-semibold text-heading">${project.revenue}</div>
+                              <div className="text-xs text-body">Revenue</div>
+                            </div>
+                          )}
+                          {project.users && (
+                            <div className="text-center">
+                              <div className="text-lg font-semibold text-heading">{project.users}</div>
+                              <div className="text-xs text-body">Users</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="builds" className="space-y-6">
+              <Card className="card-glass">
+                <CardHeader>
+                  <CardTitle className="text-heading flex items-center">
+                    <Activity className="w-5 h-5 mr-2" />
+                    Build History
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {builds.map((build) => (
+                    <div key={build.id} className="p-6 glass-card">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          {getStageIcon(build.stage)}
+                          <div>
+                            <h3 className="font-semibold text-heading">{build.projectName}</h3>
+                            <p className="text-sm text-body capitalize">{build.stage} • {formatTimeAgo(build.startedAt)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={`${getStatusColor(build.status)}`}>
+                            {build.status}
+                          </Badge>
+                          <span className="text-sm text-body">{build.buildHours}h</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="glass-card p-4">
+                          <h4 className="font-medium text-heading mb-2">Build Logs</h4>
+                          <div className="space-y-1">
+                            {build.logs.map((log, index) => (
+                              <div key={index} className="text-sm text-body font-mono">
+                                {log}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {build.status === 'completed' && build.duration && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-body">Duration</span>
+                            <span className="text-heading">{build.duration}h</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="billing" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="card-glass">
+                  <CardHeader>
+                    <CardTitle className="text-heading flex items-center">
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      Current Plan
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 glass-card">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-heading capitalize">{subscription.plan} Plan</h3>
+                        <Badge className="bg-accent text-white">${subscription.billing.amount}/{subscription.billing.period}</Badge>
+                      </div>
+                      <div className="space-y-2">
+                        {subscription.features.map((feature, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <Check className="w-4 h-4 text-accent" />
+                            <span className="text-sm text-body">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <Button className="btn-primary flex-1">
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                        Upgrade Plan
+                      </Button>
+                      <Button variant="outline" className="btn-secondary">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Manage
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="card-glass">
+                  <CardHeader>
+                    <CardTitle className="text-heading flex items-center">
+                      <BarChart3 className="w-5 h-5 mr-2" />
+                      Usage Analytics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-body">Build Hours</span>
+                          <span className="text-sm text-heading">
+                            {subscription.buildHours.used} / {subscription.buildHours.total === 'unlimited' ? '∞' : subscription.buildHours.total}
+                          </span>
+                        </div>
+                        {subscription.buildHours.total !== 'unlimited' && (
+                          <Progress value={(subscription.buildHours.used / subscription.buildHours.total) * 100} className="h-2" />
+                        )}
+                      </div>
+                      
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-body">Projects</span>
+                          <span className="text-sm text-heading">
+                            {subscription.projects.used} / {subscription.projects.total}
+                          </span>
+                        </div>
+                        <Progress value={(subscription.projects.used / subscription.projects.total) * 100} className="h-2" />
+                      </div>
+                      
+                      <div className="pt-4 border-t border-stone-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-body">Next billing</span>
+                          <span className="text-sm text-heading">
+                            {new Date(subscription.billing.nextBilling).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="activity" className="space-y-6">
+              <Card className="card-glass">
+                <CardHeader>
+                  <CardTitle className="text-heading flex items-center">
+                    <Clock className="w-5 h-5 mr-2" />
+                    Activity Feed
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {activities.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-4 p-4 glass-card">
+                      <div className={`w-3 h-3 rounded-full mt-2 ${
+                        activity.type === 'build_completed' ? 'bg-green-500' :
+                        activity.type === 'build_started' ? 'bg-blue-500' :
+                        activity.type === 'build_failed' ? 'bg-red-500' :
+                        activity.type === 'project_created' ? 'bg-purple-500' :
+                        activity.type === 'payment_processed' ? 'bg-green-500' :
+                        'bg-gray-500'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="text-sm text-heading">{activity.message}</p>
+                        <p className="text-xs text-body">{formatTimeAgo(activity.timestamp)}</p>
+                        {activity.metadata && (
+                          <div className="mt-2 text-xs text-body bg-stone-100 p-2 rounded">
+                            {JSON.stringify(activity.metadata, null, 2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
+                  <Code2 className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold">AI SaaS Factory</span>
+              </div>
+              <p className="text-stone-300">
+                Turn any idea into a live SaaS business - no code required.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Product</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="/" className="block hover:text-white transition-colors">Features</a>
+                <a href="/pricing" className="block hover:text-white transition-colors">Pricing</a>
+                <a href="/dashboard" className="block hover:text-white transition-colors">Dashboard</a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Company</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="#" className="block hover:text-white transition-colors">About</a>
+                <a href="#" className="block hover:text-white transition-colors">Blog</a>
+                <a href="#" className="block hover:text-white transition-colors">Contact</a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Support</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="#" className="block hover:text-white transition-colors">Documentation</a>
+                <a href="#" className="block hover:text-white transition-colors">Community</a>
+                <a href="#" className="block hover:text-white transition-colors">Help Center</a>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-stone-700/50 mt-8 pt-8 text-center text-stone-300">
+            <p>&copy; 2024 AI SaaS Factory. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
-  )
+  );
 } 

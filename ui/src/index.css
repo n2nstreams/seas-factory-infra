@@ -52,19 +52,19 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 142 69% 58%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 142 69% 58%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 142 69% 58%;
     --radius: 0.5rem;
   }
 
@@ -98,4 +98,116 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+  /* Homepage-consistent glassmorphism utility classes */
+  .glass {
+    @apply bg-white/25 backdrop-blur-lg border border-stone-400/40 shadow-xl;
+  }
+  
+  .glass-nav {
+    @apply bg-white/15 backdrop-blur-md border-b border-stone-400/30;
+  }
+  
+  .glass-card {
+    @apply bg-white/25 backdrop-blur-lg border border-stone-400/40 rounded-xl shadow-lg;
+  }
+
+  .glass-button {
+    @apply bg-white/20 backdrop-blur-sm border border-stone-400/50 text-stone-700 hover:bg-white/30;
+  }
+
+  .glass-input {
+    @apply bg-white/20 backdrop-blur-sm border border-stone-400/50 text-stone-800 placeholder-stone-600;
+  }
+
+  /* Homepage-consistent background */
+  .bg-homepage {
+    @apply bg-gradient-to-br from-stone-100 via-neutral-200 to-stone-200;
+  }
+
+  /* Homepage-consistent button styles */
+  .btn-primary {
+    @apply bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-white shadow-lg backdrop-blur-sm border border-stone-400/40;
+  }
+  
+  .btn-secondary {
+    @apply bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40;
+  }
+
+  .btn-ghost {
+    @apply bg-white/20 backdrop-blur-sm text-stone-700 hover:bg-white/30;
+  }
+
+  /* Homepage-consistent card styles */
+  .card-glass {
+    @apply bg-white/25 backdrop-blur-lg border border-stone-400/40 hover:border-stone-500/60 transition-all duration-300 hover:shadow-xl hover:bg-white/35;
+  }
+
+  .card-glass-highlighted {
+    @apply bg-white/45 backdrop-blur-lg border-2 border-green-800/60 hover:shadow-2xl transition-all duration-300 hover:bg-white/55;
+  }
+
+  /* Homepage-consistent text colors */
+  .text-heading {
+    @apply text-stone-900;
+  }
+  
+  .text-body {
+    @apply text-stone-700;
+  }
+  
+  .text-muted {
+    @apply text-stone-600;
+  }
+
+  /* Homepage-consistent accent colors */
+  .text-accent {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900;
+  }
+
+  .bg-accent {
+    @apply bg-gradient-to-r from-green-800 to-green-900;
+  }
+
+  .bg-accent-icon {
+    @apply bg-gradient-to-r from-green-800 to-green-900;
+  }
+
+  .bg-accent-secondary {
+    @apply bg-gradient-to-r from-slate-700 to-green-800;
+  }
+
+  .bg-accent-tertiary {
+    @apply bg-gradient-to-r from-stone-700 to-green-800;
+  }
+
+  /* Progress bar with homepage theme */
+  .progress-bar {
+    @apply bg-stone-300/60 rounded-full h-3 overflow-hidden;
+  }
+  
+  .progress-fill {
+    @apply bg-gradient-to-r from-green-800 to-green-900 h-3 rounded-full animate-pulse shadow-inner;
+  }
+}
+
+/* Add homepage-style background elements */
+.bg-homepage-blurred::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 40%, rgba(71, 85, 105, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 33% 80%, rgba(120, 113, 108, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.2) 0%, transparent 50%);
+  animation: pulse 6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
