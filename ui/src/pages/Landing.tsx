@@ -247,8 +247,12 @@ export default function Landing() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40">
-                  Start My Business
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
+                  onClick={() => window.location.href = '/submit-idea'}
+                >
+                  Submit Your Idea
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button 

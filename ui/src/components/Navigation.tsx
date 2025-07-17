@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, Code2, User, Settings, LogOut, ChevronDown, Home, Package, Activity, CreditCard, Clock } from 'lucide-react';
+import { Menu, X, Code2, User, Settings, LogOut, ChevronDown, Home, Package, Activity, CreditCard, Clock, Lightbulb } from 'lucide-react';
 
 interface NavigationProps {
   currentPage?: string;
@@ -23,6 +23,7 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
 
   const navItems = [
     { name: 'Home', href: '/', icon: Home },
+    { name: 'Submit Idea', href: '/submit-idea', icon: Lightbulb },
     { name: 'Pricing', href: '/pricing', icon: Package },
     { name: 'Dashboard', href: '/dashboard', icon: Activity, requiresAuth: true },
   ];

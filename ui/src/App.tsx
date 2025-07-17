@@ -5,6 +5,7 @@ import EventDashboard from './pages/EventDashboard';
 import DesignDashboard from './pages/DesignDashboard';
 import Pricing from './pages/Pricing';
 import Signup from './pages/Signup';
+import SubmitIdea from './pages/SubmitIdea';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/submit-idea" element={<SubmitIdea />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/events" element={<EventDashboard />} />
         <Route path="/design" element={<DesignDashboard />} />
