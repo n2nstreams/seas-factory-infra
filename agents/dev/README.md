@@ -15,7 +15,7 @@ The DevAgent is a sophisticated AI-powered code generation agent that uses **GPT
 
 ## Architecture
 
-```
+```bash
 DevAgent
 ├── GPT-4o Function Calling
 ├── Pydantic Module Specifications
@@ -91,6 +91,7 @@ curl -X POST http://localhost:8083/generate \
 Generate code based on module specification.
 
 **Request Body:**
+
 ```json
 {
   "project_id": "optional-project-id",
@@ -129,6 +130,7 @@ Generate code based on module specification.
 ```
 
 **Response:**
+
 ```json
 {
   "module_name": "ModuleName",
@@ -344,4 +346,4 @@ This DevAgent implementation fulfills the **Night 36** requirements from the mas
 - ✅ **Production-ready**: Includes error handling, logging, validation, and testing
 - ✅ **Integration ready**: FastAPI service with proper endpoints and tenant support
 
-The DevAgent is now ready to be integrated into the larger SaaS Factory orchestration system and can generate high-quality code modules based on AI-powered specifications. 
+The DevAgent is now ready to be integrated into the larger SaaS Factory orchestration system and can generate high-quality code modules based on AI-powered specifications.

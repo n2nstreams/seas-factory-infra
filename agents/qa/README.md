@@ -14,7 +14,7 @@ The ReviewAgent is a sophisticated AI-powered code review agent that **runs Pyte
 
 ## Architecture
 
-```
+```bash
 ReviewAgent (Night 37)
 ├── Pytest Execution Engine
 │   ├── Local Execution (fallback)
@@ -84,6 +84,7 @@ curl -X POST http://localhost:8084/review \
 Review generated code using pytest in Cloud Build.
 
 **Request Body:**
+
 ```json
 {
   "project_id": "string",
@@ -106,6 +107,7 @@ Review generated code using pytest in Cloud Build.
 ```
 
 **Response:**
+
 ```json
 {
   "review_id": "uuid",
@@ -427,4 +429,4 @@ This ReviewAgent implementation fully satisfies the **Night 37** requirements:
 - ✅ **Production-ready**: Error handling, logging, monitoring, tenant support
 - ✅ **Scalable architecture**: Handles concurrent reviews and integrates with orchestrator
 
-The ReviewAgent is now ready to provide intelligent code review capabilities as part of the complete AI SaaS Factory pipeline, ensuring code quality through automated testing and continuous improvement feedback loops. 
+The ReviewAgent is now ready to provide intelligent code review capabilities as part of the complete AI SaaS Factory pipeline, ensuring code quality through automated testing and continuous improvement feedback loops.

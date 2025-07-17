@@ -14,7 +14,7 @@ This creates a complete automated development pipeline that can generate, test, 
 
 ## Architecture
 
-```
+```bash
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌──────────────┐
 │  DevAgent   │───▶│   GitHub    │───▶│ ReviewAgent │───▶│ Orchestrator │
 │             │    │     PR      │    │             │    │              │
@@ -29,6 +29,7 @@ This creates a complete automated development pipeline that can generate, test, 
 ### 1. GitHub Integration Module (`agents/shared/github_integration.py`)
 
 **Features:**
+
 - ✅ Complete GitHub API integration
 - ✅ PR creation and management
 - ✅ Branch operations
@@ -37,6 +38,7 @@ This creates a complete automated development pipeline that can generate, test, 
 - ✅ Auto-merge capabilities
 
 **Key Classes:**
+
 - `GitHubIntegration`: Main GitHub API client
 - `PullRequestConfig`: PR configuration model
 - `ReviewComment`: PR review comment model
@@ -44,6 +46,7 @@ This creates a complete automated development pipeline that can generate, test, 
 ### 2. Enhanced DevAgent (`agents/dev/main.py`)
 
 **New Features:**
+
 - ✅ GitHub integration initialization
 - ✅ `create_github_pull_request()` method
 - ✅ Auto-PR creation option in `/generate` endpoint
@@ -51,6 +54,7 @@ This creates a complete automated development pipeline that can generate, test, 
 - ✅ Environment-based configuration
 
 **Usage:**
+
 ```python
 # Generate code with automatic PR creation
 POST /generate?create_pr=true
@@ -66,6 +70,7 @@ POST /generate?create_pr=true
 ### 3. Enhanced ReviewAgent (`agents/qa/review_agent.py`)
 
 **New Features:**
+
 - ✅ GitHub integration initialization
 - ✅ `add_github_pr_comment()` method
 - ✅ `add_inline_pr_comments()` method
@@ -74,6 +79,7 @@ POST /generate?create_pr=true
 - ✅ Test result integration
 
 **Features:**
+
 - 🧪 Test execution and result parsing
 - 📊 Quality score calculation
 - 💬 Automated PR commenting
@@ -83,6 +89,7 @@ POST /generate?create_pr=true
 ### 4. Enhanced Orchestrator (`orchestrator/project_orchestrator.py`)
 
 **New Features:**
+
 - ✅ GitHub integration
 - ✅ `GitHubMergeAgent` for PR management
 - ✅ `check_pr_merge_status()` function
@@ -90,6 +97,7 @@ POST /generate?create_pr=true
 - ✅ `orchestrate_full_workflow()` function
 
 **Capabilities:**
+
 - 🔄 PR status monitoring
 - ⚖️ Merge eligibility checking
 - 🤖 Automated merging
@@ -98,6 +106,7 @@ POST /generate?create_pr=true
 ### 5. GitHub Actions Workflow (`.github/workflows/auto-commit.yml`)
 
 **Features:**
+
 - ✅ Auto-generated PR detection
 - ✅ Test execution
 - ✅ ReviewAgent integration
@@ -105,6 +114,7 @@ POST /generate?create_pr=true
 - ✅ Status monitoring
 
 **Triggers:**
+
 - PR opened/updated
 - PR review submitted
 - Status checks completed
@@ -135,6 +145,7 @@ CLOUD_BUILD_REGION=us-central1
 ### GitHub Repository Setup
 
 1. **Create GitHub Token:**
+
    ```bash
    # Create a personal access token with these permissions:
    # - repo (full access)
@@ -143,12 +154,14 @@ CLOUD_BUILD_REGION=us-central1
    ```
 
 2. **Set Repository Secrets:**
+
    ```bash
    # Add these secrets to your repository:
    GITHUB_TOKEN=your_token_here
    ```
 
 3. **Configure Branch Protection:**
+
    ```yaml
    # Enable branch protection on main branch
    # Require status checks to pass
@@ -298,6 +311,7 @@ python night38_demo.py
 ```
 
 This demonstrates:
+
 - ✅ Complete workflow with successful merge
 - ❌ Failure scenario with feedback loop
 - 🔄 Retry mechanism simulation
@@ -358,6 +372,7 @@ Each component logs structured events:
 ### Alerts
 
 Set up alerts for:
+
 - PR creation failures
 - Review process failures
 - Merge conflicts
@@ -503,4 +518,4 @@ Night 38 successfully implements the complete auto-commit workflow:
 
 The AI SaaS Factory now has a complete automated development pipeline that can generate, test, review, and deploy code with minimal human intervention, fulfilling the Night 38 masterplan requirements.
 
-**🎉 Night 38 Implementation Complete!** 
+**🎉 Night 38 Implementation Complete!**
