@@ -11,6 +11,8 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field, validator
 from enum import Enum
+import json
+from shared.tenant_db import TenantDatabase, TenantContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -95,6 +97,8 @@ class StripeIntegration:
         
         if not self.api_key:
             raise ValueError("STRIPE_API_KEY environment variable is required")
+        
+        self.tenant_db = TenantDatabase()
         
         # Price configurations for different tiers
         self.price_configs = {
@@ -373,17 +377,24 @@ class StripeIntegration:
             raise
     
     async def _handle_subscription_created(self, subscription_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle subscription created event"""
         subscription_id = subscription_data["id"]
         customer_id = subscription_data["customer"]
-        
-        logger.info(f"Subscription created: {subscription_id} for customer: {customer_id}")
-        
-        # TODO: Update tenant database with subscription info
-        # - Enable tenant features based on subscription tier
-        # - Send welcome email
-        # - Log subscription event
-        
+        metadata = subscription_data.get("metadata", {})
+        tenant_id = metadata.get("tenant_id")
+        tier = metadata.get("tier")
+        try:
+            if tenant_id and tier:
+                await self.tenant_db.init_pool()
+                async with self.tenant_db.get_tenant_connection(TenantContext(tenant_id)) as conn:
+                    await conn.execute(
+                        "UPDATE tenants SET plan = $1, status = 'active', settings = settings || $2::jsonb WHERE id = $3",
+                        tier,
+                        json.dumps({"stripe_subscription_id": subscription_id, "stripe_customer_id": customer_id}),
+                        tenant_id
+                    )
+            logger.info(f"Subscription created: {subscription_id} for customer: {customer_id}, tenant: {tenant_id}")
+        except Exception as e:
+            logger.error(f"Failed to update tenant on subscription created: {e}")
         return {
             "status": "handled",
             "event_type": "subscription.created",
@@ -392,18 +403,26 @@ class StripeIntegration:
         }
     
     async def _handle_subscription_updated(self, subscription_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle subscription updated event"""
         subscription_id = subscription_data["id"]
         customer_id = subscription_data["customer"]
         status = subscription_data["status"]
-        
-        logger.info(f"Subscription updated: {subscription_id} status: {status}")
-        
-        # TODO: Update tenant database with new subscription status
-        # - Adjust tenant features based on new tier
-        # - Handle downgrades/upgrades
-        # - Send notification emails
-        
+        metadata = subscription_data.get("metadata", {})
+        tenant_id = metadata.get("tenant_id")
+        tier = metadata.get("tier")
+        try:
+            if tenant_id and tier:
+                await self.tenant_db.init_pool()
+                async with self.tenant_db.get_tenant_connection(TenantContext(tenant_id)) as conn:
+                    await conn.execute(
+                        "UPDATE tenants SET plan = $1, status = $2, settings = settings || $3::jsonb WHERE id = $4",
+                        tier,
+                        status,
+                        json.dumps({"stripe_subscription_id": subscription_id, "stripe_customer_id": customer_id}),
+                        tenant_id
+                    )
+            logger.info(f"Subscription updated: {subscription_id} status: {status}, tenant: {tenant_id}")
+        except Exception as e:
+            logger.error(f"Failed to update tenant on subscription updated: {e}")
         return {
             "status": "handled",
             "event_type": "subscription.updated",
@@ -413,17 +432,22 @@ class StripeIntegration:
         }
     
     async def _handle_subscription_deleted(self, subscription_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle subscription deleted event"""
         subscription_id = subscription_data["id"]
         customer_id = subscription_data["customer"]
-        
-        logger.info(f"Subscription deleted: {subscription_id} for customer: {customer_id}")
-        
-        # TODO: Update tenant database
-        # - Disable premium features
-        # - Archive or delete tenant data based on policy
-        # - Send cancellation confirmation
-        
+        metadata = subscription_data.get("metadata", {})
+        tenant_id = metadata.get("tenant_id")
+        try:
+            if tenant_id:
+                await self.tenant_db.init_pool()
+                async with self.tenant_db.get_tenant_connection(TenantContext(tenant_id)) as conn:
+                    await conn.execute(
+                        "UPDATE tenants SET status = 'cancelled', settings = settings || $1::jsonb WHERE id = $2",
+                        json.dumps({"stripe_subscription_id": subscription_id, "stripe_customer_id": customer_id}),
+                        tenant_id
+                    )
+            logger.info(f"Subscription deleted: {subscription_id} for customer: {customer_id}, tenant: {tenant_id}")
+        except Exception as e:
+            logger.error(f"Failed to update tenant on subscription deleted: {e}")
         return {
             "status": "handled",
             "event_type": "subscription.deleted",

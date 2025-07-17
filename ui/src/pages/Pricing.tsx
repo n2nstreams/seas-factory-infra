@@ -4,9 +4,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Check, Star, ArrowRight, Code2, Sparkles, Shield, Zap, Users, CreditCard, HeadphonesIcon } from "lucide-react";
+import { loadStripe } from '@stripe/stripe-js';
 
 export default function Pricing() {
   const [isYearly, setIsYearly] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  // TODO: Replace with real customer_id from auth context
+  const customerId = 'cus_test123';
+
+  const handleCheckout = async (planId: string) => {
+    setLoadingPlan(planId);
+    try {
+      // Map planId to SubscriptionTier
+      const tier = planId.toUpperCase(); // 'starter' -> 'STARTER'
+      const response = await fetch('/api/billing/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_id: customerId,
+          tier,
+          success_url: window.location.origin + '/dashboard',
+          cancel_url: window.location.origin + '/pricing',
+          metadata: {}
+        })
+      });
+      if (!response.ok) throw new Error('Failed to create checkout session');
+      const data = await response.json();
+      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+      if (!stripe) throw new Error('Stripe.js failed to load');
+      await stripe.redirectToCheckout({ sessionId: data.id });
+    } catch (err) {
+      alert('Error starting checkout: ' + (err as Error).message);
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   const plans = [
     {
@@ -237,9 +270,10 @@ export default function Pricing() {
 
                   <Button 
                     className={plan.popular ? 'btn-primary w-full' : 'btn-secondary w-full'}
-                    onClick={() => window.location.href = '/signup'}
+                    onClick={() => handleCheckout(plan.id)}
+                    disabled={loadingPlan === plan.id}
                   >
-                    {plan.popular ? 'Get Started' : 'Choose Plan'}
+                    {loadingPlan === plan.id ? 'Redirecting...' : (plan.popular ? 'Get Started' : 'Choose Plan')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </CardContent>

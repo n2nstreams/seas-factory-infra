@@ -7,6 +7,7 @@ ORCH_ENDPOINT = os.getenv("ORCH_ENDPOINT")  # Vertex AI Agent URL
 DESIGN_AGENT_URL = os.getenv("DESIGN_AGENT_URL", "http://localhost:8082")
 TECHSTACK_AGENT_URL = os.getenv("TECHSTACK_AGENT_URL", "http://localhost:8081")
 TIMEOUT = int(os.getenv("ORCH_TIMEOUT", "30"))
+BILLING_AGENT_URL = os.getenv("BILLING_AGENT_URL", "http://localhost:8084")
 
 app = FastAPI(title="SaaS Factory API Gateway", version="1.0.0")
 
@@ -116,6 +117,46 @@ async def get_techstack_categories():
                 raise HTTPException(status_code=r.status_code, detail=r.text)
         except httpx.RequestError as e:
             raise HTTPException(status_code=503, detail=f"TechStack service unavailable: {str(e)}")
+
+@app.post("/api/billing/create-customer")
+async def billing_create_customer(req: Request):
+    try:
+        payload = await req.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            r = await client.post(f"{BILLING_AGENT_URL}/create-customer", json=payload)
+            return r.json() if r.status_code == 200 else HTTPException(status_code=r.status_code, detail=r.text)
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=503, detail=f"Billing service unavailable: {str(e)}")
+
+@app.post("/api/billing/create-checkout-session")
+async def billing_create_checkout_session(req: Request):
+    try:
+        payload = await req.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            r = await client.post(f"{BILLING_AGENT_URL}/create-checkout-session", json=payload)
+            return r.json() if r.status_code == 200 else HTTPException(status_code=r.status_code, detail=r.text)
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=503, detail=f"Billing service unavailable: {str(e)}")
+
+@app.post("/api/billing/webhook")
+async def billing_webhook(req: Request):
+    try:
+        payload = await req.body()
+        signature = req.headers.get("stripe-signature")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid request")
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        try:
+            r = await client.post(f"{BILLING_AGENT_URL}/webhook", content=payload, headers={"stripe-signature": signature or ""})
+            return r.json() if r.status_code == 200 else HTTPException(status_code=r.status_code, detail=r.text)
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=503, detail=f"Billing service unavailable: {str(e)}")
 
 @app.get("/health")
 async def health():

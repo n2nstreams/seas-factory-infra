@@ -13,4 +13,23 @@ services:
   adminer:
     image: adminer
     ports:
-      - "8080:8080" 
+      - "8080:8080"
+  billing-agent:
+    build:
+      context: ../
+      dockerfile: agents/billing/Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_placeholder}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      - STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY:-pk_test_placeholder}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=factorydb
+      - DB_USER=factoryadmin
+      - DB_PASSWORD=localpass
+    depends_on:
+      - postgres
+    networks:
+      - saas-factory 

@@ -1,30 +1,96 @@
-y/
-.DS_Store
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
 .Python
 env/
 venv/
 .venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node.js
 node_modules/
-dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.idea/
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# IDE
 .vscode/
+.idea/
 *.swp
 *.swo
 
-# Terraform files
-.terraform/
-*.tfplan
-tf.plan
-*.tfstate
-*.tfstate.backup
+# Logs
+logs/
+*.log
 
-# Plan files
-night4plan.md
-night_5_plan.md 
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Docker
+.dockerignore
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Test outputs
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Development artifacts
+*.tmp
+*.temp y/
