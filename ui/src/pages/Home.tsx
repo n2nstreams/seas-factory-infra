@@ -11,8 +11,6 @@ import {
   Lightbulb,
   CheckCircle,
   Shield,
-  Building,
-  Database,
   Users,
   Settings,
   TrendingUp
@@ -21,7 +19,7 @@ import IdeaSubmissionForm from "@/components/IdeaSubmissionForm";
 
 export default function Home() {
   const [showIdeaForm, setShowIdeaForm] = useState(false);
-  const [isAdminUser, setIsAdminUser] = useState(false); // This would come from auth context
+  const [isAdminUser] = useState(false); // This would come from auth context
 
   if (showIdeaForm) {
     return (

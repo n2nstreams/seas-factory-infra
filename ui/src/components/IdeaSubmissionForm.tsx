@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { 
   Lightbulb, 
   Rocket, 
@@ -13,7 +12,6 @@ import {
   ArrowRight,
   Loader2
 } from "lucide-react";
-import { type TenantContext } from "@/lib/api";
 
 interface IdeaFormData {
   projectName: string;

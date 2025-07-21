@@ -22,8 +22,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Building,
-  Activity,
-  DollarSign
+  Activity
 } from 'lucide-react';
 
 // Types for admin data
@@ -85,7 +84,6 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   
   // Filters
-  const [ideaFilter, setIdeaFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
