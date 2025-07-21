@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
@@ -9,6 +9,12 @@ import os
 import logging
 from contextlib import asynccontextmanager
 import base64
+import sys
+
+# Add shared modules to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
+from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from access_control import require_subscription, AccessLevel, TenantSubscription
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -381,8 +387,16 @@ async def health_check():
     return {"status": "OK", "agent": "design", "version": "1.0.0"}
 
 @app.post("/generate", response_model=DesignRecommendation)
-async def generate_design(request: DesignRequest):
-    """Generate wireframes and design recommendations"""
+async def generate_design(
+    request: DesignRequest,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    subscription: TenantSubscription = Depends(require_subscription(
+        required_level=AccessLevel.STARTER,
+        feature="basic_design",
+        check_limits=True
+    ))
+):
+    """Generate wireframes and design recommendations (Requires Starter+ subscription)"""
     try:
         recommendation = await design_agent.generate_design(request)
         return recommendation

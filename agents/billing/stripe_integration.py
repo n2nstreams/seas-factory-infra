@@ -463,9 +463,42 @@ class StripeIntegration:
         
         logger.info(f"Payment succeeded: {payment_id} amount: {amount}")
         
+        # Send payment receipt email
+        try:
+            if customer_id:
+                # Get customer information
+                customer = await self.get_customer(customer_id)
+                if customer:
+                    from email_service import get_email_service, EmailRecipient, PaymentReceiptData
+                    from datetime import datetime
+                    
+                    email_service = get_email_service()
+                    recipient = EmailRecipient(email=customer.email, name=customer.name)
+                    
+                    # Generate invoice number
+                    invoice_number = f"INV-{datetime.now().strftime('%Y%m%d')}-{payment_id[-8:]}"
+                    
+                    # Create payment receipt data
+                    receipt_data = PaymentReceiptData(
+                        user_name=customer.name or customer.email.split('@')[0],
+                        user_email=customer.email,
+                        invoice_number=invoice_number,
+                        invoice_date=datetime.now().strftime('%B %d, %Y'),
+                        amount=amount / 100.0,  # Convert from cents
+                        currency="USD",
+                        plan_name="Subscription Plan",  # Will be enhanced with actual plan data
+                        billing_period="Monthly"
+                    )
+                    
+                    # Send payment receipt email
+                    email_result = await email_service.send_payment_receipt_email(recipient, receipt_data)
+                    logger.info(f"Payment receipt email result: {email_result}")
+                    
+        except Exception as e:
+            logger.error(f"Error sending payment receipt email: {e}")
+        
         # TODO: Update tenant database
         # - Log successful payment
-        # - Send payment receipt
         # - Update billing status
         
         return {
@@ -503,9 +536,38 @@ class StripeIntegration:
         
         logger.info(f"Checkout completed: {session_id} subscription: {subscription_id}")
         
+        # Send welcome email for new subscriptions
+        try:
+            if customer_id and subscription_id:
+                # Get customer and subscription information
+                customer = await self.get_customer(customer_id)
+                subscription = await self.get_subscription(subscription_id)
+                
+                if customer and subscription:
+                    from email_service import get_email_service, EmailRecipient, WelcomeEmailData
+                    
+                    email_service = get_email_service()
+                    recipient = EmailRecipient(email=customer.email, name=customer.name)
+                    
+                    # Create welcome email data
+                    welcome_data = WelcomeEmailData(
+                        user_name=customer.name or customer.email.split('@')[0],
+                        user_email=customer.email,
+                        login_url=os.getenv("LOGIN_URL", "https://app.saasfactory.com/login"),
+                        dashboard_url=os.getenv("DASHBOARD_URL", "https://app.saasfactory.com/dashboard"),
+                        plan_name=subscription.tier.value.title(),
+                        trial_days=14
+                    )
+                    
+                    # Send welcome email
+                    email_result = await email_service.send_welcome_email(recipient, welcome_data)
+                    logger.info(f"Welcome email result: {email_result}")
+                    
+        except Exception as e:
+            logger.error(f"Error sending welcome email: {e}")
+        
         # TODO: Update tenant database
         # - Activate subscription
-        # - Send welcome email
         # - Log successful signup
         
         return {

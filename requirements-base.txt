@@ -60,6 +60,7 @@ celery==5.4.0
 
 # External Services
 stripe==12.3.0
+sendgrid==6.11.0
 
 # Configuration format
 python-decouple==3.8 

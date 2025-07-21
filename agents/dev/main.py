@@ -20,6 +20,7 @@ from pathlib import Path
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from access_control import require_subscription, AccessLevel, TenantSubscription
 from github_integration import (
     create_github_integration, GitHubFile, PullRequestConfig,
     generate_branch_name, generate_pr_title, generate_pr_body
@@ -1005,9 +1006,14 @@ async def health_check():
 async def generate_code_endpoint(
     request: CodeGenerationRequest,
     create_pr: bool = False,
-    tenant_context: TenantContext = Depends(get_tenant_context)
+    tenant_context: TenantContext = Depends(get_tenant_context),
+    subscription: TenantSubscription = Depends(require_subscription(
+        required_level=AccessLevel.STARTER,
+        feature="basic_codegen", 
+        check_limits=True
+    ))
 ):
-    """Generate code based on module specification"""
+    """Generate code based on module specification (Requires Starter+ subscription)"""
     result = await dev_agent.generate_code(request, tenant_context)
     
     # Optionally create GitHub PR
@@ -1111,9 +1117,14 @@ async def receive_review_feedback(
 @app.post("/regenerate")
 async def regenerate_code_with_feedback(
     regenerate_request: Dict[str, Any],
-    tenant_context: TenantContext = Depends(get_tenant_context)
+    tenant_context: TenantContext = Depends(get_tenant_context),
+    subscription: TenantSubscription = Depends(require_subscription(
+        required_level=AccessLevel.STARTER,
+        feature="basic_codegen",
+        check_limits=True
+    ))
 ):
-    """Regenerate code based on review feedback"""
+    """Regenerate code based on review feedback (Requires Starter+ subscription)"""
     try:
         original_request_id = regenerate_request.get("original_request_id")
         feedback = regenerate_request.get("feedback", {})
@@ -1200,7 +1211,12 @@ async def get_generation_history(
 @app.post("/create-pr")
 async def create_pull_request_endpoint(
     pr_request: Dict[str, Any],
-    tenant_context: TenantContext = Depends(get_tenant_context)
+    tenant_context: TenantContext = Depends(get_tenant_context),
+    subscription: TenantSubscription = Depends(require_subscription(
+        required_level=AccessLevel.STARTER,
+        feature="github_integration",
+        check_limits=True
+    ))
 ):
     """Create a GitHub pull request for generated code"""
     try:
@@ -1384,9 +1400,13 @@ def get_current_stage_description(stage: str, status: str) -> str:
 async def get_pull_requests(
     limit: int = 10,
     auto_generated: bool = False,
-    tenant_context: TenantContext = Depends(get_tenant_context)
+    tenant_context: TenantContext = Depends(get_tenant_context),
+    subscription: TenantSubscription = Depends(require_subscription(
+        required_level=AccessLevel.STARTER,
+        feature="github_integration"
+    ))
 ):
-    """Get pull requests created by agents"""
+    """Get pull requests created by agents (Requires Starter+ subscription)"""
     try:
         # Query for PR events
         query = """

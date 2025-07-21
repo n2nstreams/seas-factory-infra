@@ -17,6 +17,7 @@ from datetime import datetime
 
 # Import admin routes
 from admin_routes import admin_router
+from user_routes import router as user_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -39,6 +40,7 @@ app.add_middleware(
 
 # Add admin routes
 app.include_router(admin_router)
+app.include_router(user_router)
 
 # Health check endpoint
 @app.get("/health")

@@ -25,6 +25,8 @@ import {
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -64,11 +66,41 @@ export default function Signup() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log('Form submitted:', formData);
-      // Handle form submission here
+      try {
+        setIsSubmitting(true);
+        setErrors({});
+        
+        // Submit registration to API
+        const response = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Registration failed');
+        }
+        
+        const result = await response.json();
+        console.log('Registration successful:', result);
+        
+        // Show success message and redirect
+        setRegistrationSuccess(true);
+        
+      } catch (error) {
+        console.error('Registration error:', error);
+        setErrors({ 
+          submit: error instanceof Error ? error.message : 'Registration failed. Please try again.' 
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -397,11 +429,29 @@ export default function Signup() {
                 <Button 
                   type="submit" 
                   className="w-full btn-primary"
-                  disabled={!formData.agreeToTerms}
+                  disabled={!formData.agreeToTerms || isSubmitting}
                 >
-                  Create Account
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                  {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
+                
+                {errors.submit && (
+                  <p className="text-red-500 text-sm mt-2 text-center">{errors.submit}</p>
+                )}
+                
+                {registrationSuccess && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                      <div>
+                        <p className="text-green-800 font-medium">Account created successfully!</p>
+                        <p className="text-green-600 text-sm mt-1">
+                          Check your email for a welcome message with next steps.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </form>
 
               <div className="text-center">
