@@ -1,35 +1,67 @@
+version: '3.8'
+
+networks:
+  saas-factory:
+    driver: bridge
+
 services:
-  db:
+  postgres:
     image: pgvector/pgvector:pg15
+    container_name: saas_factory_postgres
     environment:
-      POSTGRES_DB: factorydb
-      POSTGRES_USER: factoryadmin
-      POSTGRES_PASSWORD: localpass
+      POSTGRES_DB: saas_factory
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Use different port to avoid conflicts
     volumes:
-      - "./init.sql:/docker-entrypoint-initdb.d/init.sql:ro"
-      - "./migrations:/docker-entrypoint-initdb.d/migrations:ro"
-  adminer:
-    image: adminer
-    ports:
-      - "8080:8080"
-  billing-agent:
-    build:
-      context: ../
-      dockerfile: agents/billing/Dockerfile
-    ports:
-      - "8084:8084"
-    environment:
-      - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_placeholder}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
-      - STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY:-pk_test_placeholder}
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=factorydb
-      - DB_USER=factoryadmin
-      - DB_PASSWORD=localpass
-    depends_on:
-      - postgres
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - ./migrations/001_create_tenant_model.sql:/docker-entrypoint-initdb.d/002_create_tenant_model.sql
+      - ./migrations/002_create_security_scan_results.sql:/docker-entrypoint-initdb.d/003_create_security_scan_results.sql
+      - ./migrations/003_create_ideas_table.sql:/docker-entrypoint-initdb.d/004_create_ideas_table.sql
     networks:
-      - saas-factory 
+      - saas-factory
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: saas_factory_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - saas-factory
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Development API Gateway
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: saas_factory_api_gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/saas_factory
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - saas-factory
+    volumes:
+      - ../api-gateway:/app
+    command: ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+volumes:
+  postgres_data: 

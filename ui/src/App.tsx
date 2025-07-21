@@ -1,24 +1,28 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Landing from './pages/Landing';
-import Dashboard from './pages/Dashboard';
-import EventDashboard from './pages/EventDashboard';
-import DesignDashboard from './pages/DesignDashboard';
-import Pricing from './pages/Pricing';
-import Signup from './pages/Signup';
-import SubmitIdea from './pages/SubmitIdea';
+import Home from '@/pages/Home';
+import Dashboard from '@/pages/Dashboard';
+import EventDashboard from '@/pages/EventDashboard';
+import DesignDashboard from '@/pages/DesignDashboard';
+import AdminDashboard from '@/pages/AdminDashboard';
+import ProjectView from '@/pages/ProjectView';
+import QADashboard from '@/pages/QADashboard';
+import OpsDashboard from '@/pages/OpsDashboard';
+import TechStackDashboard from '@/pages/TechStackDashboard';
 import './App.css';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/submit-idea" element={<SubmitIdea />} />
+        <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/events" element={<EventDashboard />} />
         <Route path="/design" element={<DesignDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/project/:projectId" element={<ProjectView />} />
+        <Route path="/qa" element={<QADashboard />} />
+        <Route path="/ops" element={<OpsDashboard />} />
+        <Route path="/techstack" element={<TechStackDashboard />} />
       </Routes>
     </Router>
   );
