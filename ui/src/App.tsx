@@ -6,6 +6,7 @@ import DesignDashboard from '@/pages/DesignDashboard';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Pricing from '@/pages/Pricing';
 import Signup from '@/pages/Signup';
+import SignIn from '@/pages/SignIn';
 import SubmitIdea from '@/pages/SubmitIdea';
 import ChatWidget from './components/ChatWidget';
 import FAQPage from './pages/FAQ';
@@ -23,7 +24,7 @@ function App() {
             <Route path="/submit-idea" element={<SubmitIdea />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/signin" element={<Signup />} />
+            <Route path="/signin" element={<SignIn />} />
             <Route path="/faq" element={<FAQPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/events" element={<EventDashboard />} />
