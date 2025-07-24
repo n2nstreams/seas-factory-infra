@@ -2,37 +2,18 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Zap, 
   Bot, 
   ChevronRight, 
-  Globe, 
-  Code, 
   Rocket, 
   Lightbulb,
-  CheckCircle,
-  Shield,
-  Users,
-  Settings,
   TrendingUp
 } from "lucide-react";
 import IdeaSubmissionForm from "@/components/IdeaSubmissionForm";
-import { useExperiment, useFeature, useGrowthBook } from '@growthbook/growthbook-react';
 
 export default function Home() {
   const [showIdeaForm, setShowIdeaForm] = useState(false);
-  const [isAdminUser] = useState(false); // This would come from auth context
-
-  const proBadge = useFeature("pro-badge");
-  const ctaExperiment = useExperiment({
-    key: "cta-text",
-    variations: ["Submit Your Idea", "Launch Your Idea Now"],
-  });
-  const growthbook = useGrowthBook();
 
   const handleCTAClick = () => {
-    if (growthbook) {
-      growthbook.track("cta-click");
-    }
     setShowIdeaForm(true);
   };
 
@@ -90,12 +71,7 @@ export default function Home() {
                 onClick={handleCTAClick}
               >
                 <Lightbulb className="w-5 h-5 mr-2" />
-                {ctaExperiment.inExperiment ? ctaExperiment.value : "Submit Your Idea"}
-                {proBadge.on && (
-                  <span className="ml-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    PRO
-                  </span>
-                )}
+                Submit Your Idea
                 <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
               <Button 

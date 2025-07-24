@@ -5,9 +5,14 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquare, X, Send, Loader2 } from 'lucide-react';
 
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -23,7 +28,7 @@ export default function ChatWidget() {
 
   const handleSendMessage = async () => {
     if (input.trim() && !isLoading) {
-      const userMessage = { role: 'user', content: input };
+      const userMessage: Message = { role: 'user', content: input };
       setMessages((prev) => [...prev, userMessage]);
       setInput('');
       setIsLoading(true);
@@ -46,7 +51,7 @@ export default function ChatWidget() {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let assistantMessage = { role: 'assistant', content: '' };
+        let assistantMessage: Message = { role: 'assistant', content: '' };
         setMessages((prev) => [...prev, assistantMessage]);
 
         while (true) {

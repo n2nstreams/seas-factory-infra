@@ -25,7 +25,7 @@ export default function AnalyticsPanel({ experimentKey }: { experimentKey: strin
         const result = await response.json();
         setData(result);
       } catch (err) {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
         setIsLoading(false);
       }

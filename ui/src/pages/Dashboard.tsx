@@ -25,7 +25,6 @@ import {
   Plus,
   Check,
   Home,
-  User,
   BarChart3
 } from 'lucide-react';
 

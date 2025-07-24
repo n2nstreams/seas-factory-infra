@@ -89,7 +89,8 @@ export default function FAQPage() {
         setFaq(data);
         setUsingFallback(false);
       } catch (err) {
-        console.log('Using default FAQs as fallback:', err.message);
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        console.log('Using default FAQs as fallback:', errorMessage);
         setFaq(defaultFAQs);
         setUsingFallback(true);
         setError(null); // Don't show error since we have fallback

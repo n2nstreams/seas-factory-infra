@@ -11,17 +11,6 @@ import {
 } from "lucide-react";
 import { tenantUtils, type TenantContext } from "@/lib/api";
 
-// Mock user data - in a real app this would come from authentication context
-const mockUser = {
-  name: "John Developer",
-  email: "john@example.com",
-  plan: 'pro' as const,
-  buildHours: {
-    used: 42,
-    total: 60
-  }
-};
-
 export default function SubmitIdea() {
   const [tenantContext, setTenantContext] = useState<TenantContext | null>(null);
 
@@ -37,11 +26,6 @@ export default function SubmitIdea() {
     
     // The form component handles the actual API call
     // This is just for any additional processing
-  };
-
-  const handleSignOut = () => {
-    // Handle sign out logic
-    console.log('Signing out...');
   };
 
   return (
