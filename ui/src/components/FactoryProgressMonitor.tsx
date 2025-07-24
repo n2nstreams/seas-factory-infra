@@ -9,8 +9,7 @@ import {
   CheckCircle, 
   XCircle, 
   AlertCircle, 
-  Pause, 
-  Play,
+  Pause,
   Wifi,
   WifiOff,
   Sparkles,
@@ -173,7 +172,7 @@ const FactoryProgressMonitor: React.FC<FactoryProgressMonitorProps> = ({
   }, []);
 
   // Handle new pipeline from WebSocket
-  const handleNewPipeline = useCallback((data: any) => {
+  const handleNewPipeline = useCallback((_data: any) => {
     fetchPipelines(); // Refresh the entire list
   }, [fetchPipelines]);
 
