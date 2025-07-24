@@ -1,36 +1,13 @@
-import { useState, useEffect } from 'react';
-import IdeaSubmissionForm from '../components/IdeaSubmissionForm';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Lightbulb,
-  Rocket,
-  CheckCircle,
-  Users,
-  Zap
-} from "lucide-react";
-import { tenantUtils, type TenantContext } from "@/lib/api";
+import { Lightbulb, Clock, Target, Rocket, Code2 } from 'lucide-react';
+import IdeaSubmissionForm from "@/components/IdeaSubmissionForm";
 
 export default function SubmitIdea() {
-  const [tenantContext, setTenantContext] = useState<TenantContext | null>(null);
-
-  // Initialize tenant context on mount
-  useEffect(() => {
-    const context = tenantUtils.initializeTenantContext();
-    setTenantContext(context);
-  }, []);
-
-  const handleIdeaSubmit = async (formData: any) => {
-    // Custom submission logic if needed
-    console.log('Submitting idea:', formData);
-    
-    // The form component handles the actual API call
-    // This is just for any additional processing
-  };
-
   return (
     <div className="min-h-screen bg-homepage relative overflow-hidden">
-      {/* Glassmorphism background elements */}
+      {/* Glassmorphism Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-green-800/20 to-green-900/25 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-40 right-32 w-80 h-80 bg-gradient-to-bl from-slate-700/20 to-green-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -38,124 +15,138 @@ export default function SubmitIdea() {
         <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 pt-8 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Section */}
-          <div className="text-center mb-12">
-            <div className="relative">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center shadow-2xl">
-                  <Lightbulb className="w-8 h-8 text-white" />
-                </div>
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl font-bold text-heading mb-4">
-                Turn Your Idea Into Reality
-              </h1>
-              
-              <p className="text-xl text-body max-w-3xl mx-auto leading-relaxed">
-                Submit your SaaS idea and watch our AI Factory transform it into a fully-functional application. 
-                From concept to deployment, we handle the entire development process.
-              </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <Badge className="glass-button mb-6">
+            <Lightbulb className="w-4 h-4 mr-2" />
+            Idea Submission Portal
+          </Badge>
+          <h1 className="text-4xl lg:text-5xl font-bold text-heading mb-6">
+            Transform Your{" "}
+            <span className="text-accent">
+              Vision
+            </span>{" "}
+            Into Reality
+          </h1>
+          <p className="text-xl text-body max-w-3xl mx-auto mb-8">
+            Describe your SaaS idea and let our AI agents handle the entire development process. 
+            From concept to deployment, we've got you covered.
+          </p>
+        </div>
 
-              {/* Feature highlights */}
-              <div className="flex flex-wrap justify-center gap-4 mt-8">
-                <Badge variant="outline" className="glass-button text-stone-700 px-4 py-2">
-                  <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
-                  AI-Powered Development
-                </Badge>
-                <Badge variant="outline" className="glass-button text-stone-700 px-4 py-2">
-                  <Rocket className="w-4 h-4 mr-2 text-green-600" />
-                  24h to Deployment
-                </Badge>
-                <Badge variant="outline" className="glass-button text-stone-700 px-4 py-2">
-                  <Users className="w-4 h-4 mr-2 text-green-600" />
-                  Production Ready
-                </Badge>
-                <Badge variant="outline" className="glass-button text-stone-700 px-4 py-2">
-                  <Zap className="w-4 h-4 mr-2 text-green-600" />
-                  Auto Scaling
-                </Badge>
+        {/* Process Overview */}
+        <div className="glass-card p-8 mb-12">
+          <h2 className="text-2xl font-bold text-heading text-center mb-8">Your Idea's Journey</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Lightbulb className="w-8 h-8 text-white" />
               </div>
+              <h3 className="font-semibold text-heading mb-2">1. Submit Idea</h3>
+              <p className="text-sm text-body">Describe your SaaS concept and target market</p>
             </div>
-          </div>
-
-          {/* How it works section */}
-          <div className="mb-12">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {[
-                {
-                  step: '1',
-                  title: 'Submit',
-                  description: 'Tell us about your idea',
-                  icon: <Lightbulb className="w-6 h-6" />
-                },
-                {
-                  step: '2',
-                  title: 'Validate',
-                  description: 'AI validates and researches',
-                  icon: <CheckCircle className="w-6 h-6" />
-                },
-                {
-                  step: '3',
-                  title: 'Build',
-                  description: 'Automated development',
-                  icon: <Rocket className="w-6 h-6" />
-                },
-                {
-                  step: '4',
-                  title: 'Deploy',
-                  description: 'Live on the web',
-                  icon: <Zap className="w-6 h-6" />
-                }
-              ].map((item, index) => (
-                <div key={index} className="text-center">
-                  <div className="w-12 h-12 bg-accent-icon rounded-xl flex items-center justify-center text-white shadow-lg mx-auto mb-3">
-                    {item.icon}
-                  </div>
-                  <div className="text-sm text-green-700 font-semibold mb-1">Step {item.step}</div>
-                  <div className="font-semibold text-heading mb-1">{item.title}</div>
-                  <div className="text-sm text-body">{item.description}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Idea Submission Form */}
-          <IdeaSubmissionForm 
-            onSubmit={handleIdeaSubmit}
-            tenantId={tenantContext?.tenantId}
-            userId={tenantContext?.userId}
-          />
-
-          {/* Support Section */}
-          <div className="mt-16 text-center">
-            <div className="glass-card p-8 max-w-2xl mx-auto">
-              <h3 className="text-xl font-semibold text-heading mb-4">Need Help?</h3>
-              <p className="text-body mb-6">
-                Our team is here to help you refine your idea and get the most out of our AI Factory.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  variant="outline"
-                  className="btn-secondary"
-                  onClick={() => window.open('mailto:support@saas-factory.com')}
-                >
-                  Contact Support
-                </Button>
-                <Button
-                  variant="outline"
-                  className="btn-secondary"
-                  onClick={() => window.open('/docs', '_blank')}
-                >
-                  View Documentation
-                </Button>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-accent-secondary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Target className="w-8 h-8 text-white" />
               </div>
+              <h3 className="font-semibold text-heading mb-2">2. AI Analysis</h3>
+              <p className="text-sm text-body">Our agents analyze and plan your application</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-accent-tertiary rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-semibold text-heading mb-2">3. Development</h3>
+              <p className="text-sm text-body">Automated design, coding, and testing</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Rocket className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="font-semibold text-heading mb-2">4. Launch</h3>
+              <p className="text-sm text-body">Deploy your production-ready SaaS</p>
             </div>
           </div>
         </div>
+
+        {/* Main Form */}
+        <IdeaSubmissionForm />
+
+        {/* Support Links */}
+        <div className="mt-12 text-center">
+          <h3 className="text-xl font-semibold text-heading mb-6">Need Help Getting Started?</h3>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button 
+              variant="outline" 
+              className="btn-secondary"
+              onClick={() => window.open('/examples', '_blank')}
+            >
+              View Example Ideas
+            </Button>
+            <Button 
+              variant="outline" 
+              className="btn-secondary"
+              onClick={() => window.open('/pricing', '_blank')}
+            >
+              Check Pricing
+            </Button>
+            <Button 
+              variant="outline" 
+              className="btn-secondary"
+              onClick={() => window.open('/docs', '_blank')}
+            >
+              View Documentation
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
+                  <Code2 className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold">AI SaaS Factory</span>
+              </div>
+              <p className="text-stone-300">
+                Turn any idea into a live SaaS business - no code required.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Product</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="/" className="block hover:text-white transition-colors">Features</a>
+                <a href="/pricing" className="block hover:text-white transition-colors">Pricing</a>
+                <a href="/dashboard" className="block hover:text-white transition-colors">Dashboard</a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Company</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="#" className="block hover:text-white transition-colors">About</a>
+                <a href="#" className="block hover:text-white transition-colors">Blog</a>
+                <a href="#" className="block hover:text-white transition-colors">Contact</a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Support</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="#" className="block hover:text-white transition-colors">Documentation</a>
+                <a href="#" className="block hover:text-white transition-colors">Community</a>
+                <a href="#" className="block hover:text-white transition-colors">Help Center</a>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-stone-700/50 mt-8 pt-8 text-center text-stone-300">
+            <p>&copy; 2024 AI SaaS Factory. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 

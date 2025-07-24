@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, Code2 } from 'lucide-react';
 
 interface FAQItem {
   question: string;
@@ -180,6 +180,52 @@ export default function FAQPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
+                  <Code2 className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold">AI SaaS Factory</span>
+              </div>
+              <p className="text-stone-300">
+                Turn any idea into a live SaaS business - no code required.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Product</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="/" className="block hover:text-white transition-colors">Features</a>
+                <a href="/pricing" className="block hover:text-white transition-colors">Pricing</a>
+                <a href="/dashboard" className="block hover:text-white transition-colors">Dashboard</a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Company</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="#" className="block hover:text-white transition-colors">About</a>
+                <a href="#" className="block hover:text-white transition-colors">Blog</a>
+                <a href="#" className="block hover:text-white transition-colors">Contact</a>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-stone-200">Support</h4>
+              <div className="space-y-2 text-stone-400">
+                <a href="#" className="block hover:text-white transition-colors">Documentation</a>
+                <a href="#" className="block hover:text-white transition-colors">Community</a>
+                <a href="#" className="block hover:text-white transition-colors">Help Center</a>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-stone-700/50 mt-8 pt-8 text-center text-stone-300">
+            <p>&copy; 2024 AI SaaS Factory. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 
