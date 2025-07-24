@@ -274,34 +274,7 @@ export default function Dashboard() {
         <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
       </div>
 
-      {/* Navigation */}
-      <nav className="glass-nav sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
-                <Code2 className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-heading">AI SaaS Factory</span>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-body hover:text-heading transition-colors font-medium">Home</a>
-              <a href="/pricing" className="text-body hover:text-heading transition-colors font-medium">Pricing</a>
-              <a href="/signup" className="text-body hover:text-heading transition-colors font-medium">Sign Up</a>
-              <a href="/dashboard" className="text-heading font-medium">Dashboard</a>
-              <div className="flex items-center space-x-2">
-                <Badge className="bg-accent text-white text-xs">
-                  Pro Plan
-                </Badge>
-                <Button size="sm" variant="outline" className="btn-ghost">
-                  <User className="w-4 h-4 mr-1" />
-                  Account
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="space-y-8">
@@ -428,7 +401,7 @@ export default function Dashboard() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="glass-card p-1">
+            <TabsList className="glass-card p-1 w-full">
               <TabsTrigger value="overview" className="btn-ghost">
                 <Home className="w-4 h-4 mr-2" />
                 Overview

@@ -1,0 +1,8 @@
+fastapi
+pydantic
+uvicorn
+psycopg2-binary
+google-cloud-pubsub
+google-cloud-secret-manager
+pgvector
+sentence-transformers 

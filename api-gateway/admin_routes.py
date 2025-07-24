@@ -29,6 +29,10 @@ from access_control import (
     subscription_verifier, AccessControlError, TenantSubscription
 )
 
+from fastapi import APIRouter, Depends, HTTPException, Request
+from .access_control import verify_admin_access
+from google.cloud import bigquery
+
 logger = logging.getLogger(__name__)
 
 # Initialize router and database
@@ -508,6 +512,42 @@ async def get_tenant_analytics(
     except Exception as e:
         logger.error(f"Error fetching tenant analytics: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch analytics: {str(e)}")
+
+@admin_router.get("/analytics/experiment/{experiment_key}")
+async def get_experiment_analytics(request: Request, experiment_key: str, admin_user: dict = Depends(verify_admin_access)):
+    """
+    Retrieves and aggregates analytics data for a specific experiment from BigQuery.
+    """
+    bq_client = request.app.state.bq_client
+    if not bq_client:
+        raise HTTPException(status_code=500, detail="BigQuery client not configured.")
+
+    query = f"""
+        SELECT
+            variation_id,
+            COUNT(DISTINCT user_id) as users,
+            COUNTIF(event_name = 'cta-click') as conversions
+        FROM
+            `saas-factory-experiments.experiment_events`
+        WHERE
+            experiment_key = @experiment_key
+        GROUP BY
+            variation_id
+    """
+    
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("experiment_key", "STRING", experiment_key),
+        ]
+    )
+
+    try:
+        query_job = bq_client.query(query, job_config=job_config)
+        results = query_job.to_dataframe()
+        return results.to_dict("records")
+    except Exception as e:
+        logger.error(f"Error querying BigQuery for experiment analytics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve experiment analytics.")
 
 # Health and Status Endpoints
 

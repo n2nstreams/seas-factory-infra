@@ -1,0 +1,12 @@
+fastapi
+pydantic
+uvicorn
+openai
+sentence-transformers
+scikit-learn
+google-cloud-secret-manager
+python-dotenv
+tiktoken
+langchain
+langchain-openai
+faiss-cpu 

@@ -24,6 +24,7 @@ import {
   Building,
   Activity
 } from 'lucide-react';
+import AnalyticsPanel from '@/components/AnalyticsPanel';
 
 // Types for admin data
 interface Idea {
@@ -269,26 +270,7 @@ export default function AdminDashboard() {
         <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-stone-600/20 to-green-700/25 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
-      {/* Navigation */}
-      <nav className="glass-nav sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-heading">AI SaaS Factory - Admin</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Badge className="bg-red-600 text-white">Admin Access</Badge>
-              <Button variant="outline" className="btn-secondary" onClick={loadAdminData}>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Error Display */}
@@ -707,66 +689,34 @@ export default function AdminDashboard() {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="card-glass">
-                <CardHeader>
-                  <CardTitle className="text-heading">Idea Status Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {stats && (
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-body">Pending</span>
-                        <span className="font-semibold text-heading">{stats.pending_ideas}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-body">Approved</span>
-                        <span className="font-semibold text-heading text-green-600">{stats.approved_ideas}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-body">Rejected</span>
-                        <span className="font-semibold text-heading text-red-600">{stats.rejected_ideas}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-body">In Review</span>
-                        <span className="font-semibold text-heading text-yellow-600">{stats.in_review_ideas}</span>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="card-glass">
-                <CardHeader>
-                  <CardTitle className="text-heading">Tenant Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-body">Total Tenants</span>
-                      <span className="font-semibold text-heading">{tenants.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-body">Active Tenants</span>
-                      <span className="font-semibold text-heading text-green-600">
-                        {tenants.filter(t => t.status === 'active').length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-body">Isolated Tenants</span>
-                      <span className="font-semibold text-heading text-purple-600">
-                        {tenants.filter(t => t.isolation_mode === 'isolated').length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-body">Total Projects</span>
-                      <span className="font-semibold text-heading">
-                        {tenants.reduce((sum, t) => sum + t.project_count, 0)}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {stats && (
+                <div className="flex justify-between items-center">
+                  <span className="text-body">Pending</span>
+                  <span className="font-semibold text-heading">{stats.pending_ideas}</span>
+                </div>
+              )}
+              {stats && (
+                <div className="flex justify-between items-center">
+                  <span className="text-body">Approved</span>
+                  <span className="font-semibold text-heading text-green-600">{stats.approved_ideas}</span>
+                </div>
+              )}
+              {stats && (
+                <div className="flex justify-between items-center">
+                  <span className="text-body">Rejected</span>
+                  <span className="font-semibold text-heading text-red-600">{stats.rejected_ideas}</span>
+                </div>
+              )}
+              {stats && (
+                <div className="flex justify-between items-center">
+                  <span className="text-body">In Review</span>
+                  <span className="font-semibold text-heading text-yellow-600">{stats.in_review_ideas}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-8">
+              <AnalyticsPanel experimentKey="cta-text" />
             </div>
           </TabsContent>
         </Tabs>

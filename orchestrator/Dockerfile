@@ -8,14 +8,14 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker layer caching
-COPY requirements.txt requirements.in ./
+ARG REQ_FILE=requirements-orchestrator.txt
+COPY ${REQ_FILE} ./requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . .
+COPY orchestrator/ .
 
 # Set environment variables
 ENV PYTHONPATH=/app

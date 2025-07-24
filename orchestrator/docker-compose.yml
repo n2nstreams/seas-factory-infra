@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   orchestrator:
     build:
       context: .
       dockerfile: Dockerfile
-      platforms:
-        - linux/amd64  # Force AMD64 for Cloud Run compatibility
+      args:
+        REQ_FILE: ../requirements-orchestrator.txt
     image: us-central1-docker.pkg.dev/summer-nexus-463503-e1/saas-factory/orchestrator:latest
     platform: linux/amd64
     ports:

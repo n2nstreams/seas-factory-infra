@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Menu, X, Code2, User, Settings, LogOut, ChevronDown, Home, Package, Activity, CreditCard, Clock, Lightbulb } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface NavigationProps {
   currentPage?: string;
@@ -75,140 +76,131 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
-              if (item.requiresAuth && !user) return null;
-              
-              const isActive = currentPage === item.href || 
-                             (item.href === '/' && currentPage === '/') ||
-                             (item.href !== '/' && currentPage?.startsWith(item.href));
-              
-              return (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={`font-medium transition-colors ${
-                    isActive 
-                      ? 'text-heading' 
-                      : 'text-body hover:text-heading'
-                  }`}
-                >
-                  {item.name}
-                </a>
-              );
-            })}
-
-            {/* User Section */}
-            {user ? (
-              <div className="flex items-center space-x-4">
-                {/* Plan Badge */}
-                <Badge className={`text-xs ${getPlanColor(user.plan)}`}>
-                  {getPlanDisplayName(user.plan)}
-                </Badge>
-
-                {/* Build Hours Indicator */}
-                <div className="hidden lg:flex items-center space-x-2 glass-card px-3 py-1">
-                  <Clock className="w-4 h-4 text-accent" />
-                  <span className={`text-sm font-medium ${getBuildHoursColor(user.buildHours.used, user.buildHours.total)}`}>
-                    {user.buildHours.used}
-                    {user.buildHours.total !== 'unlimited' && `/${user.buildHours.total}`}
-                  </span>
-                </div>
-
-                {/* User Menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 btn-ghost p-2 rounded-xl"
-                    aria-label="Toggle user menu"
-                  >
-                    <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-body" />
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-64 card-glass py-2 shadow-lg">
-                      <div className="px-4 py-3 border-b border-stone-200/50">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-heading">{user.name}</p>
-                            <p className="text-sm text-body">{user.email}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="px-4 py-3 border-b border-stone-200/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-body">Plan</span>
-                          <Badge className={`text-xs ${getPlanColor(user.plan)}`}>
-                            {getPlanDisplayName(user.plan)}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-body">Build Hours</span>
-                          <span className={`text-sm font-medium ${getBuildHoursColor(user.buildHours.used, user.buildHours.total)}`}>
-                            {user.buildHours.used}
-                            {user.buildHours.total !== 'unlimited' && `/${user.buildHours.total}`}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="py-2">
-                        <a
-                          href="/dashboard"
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                        >
-                          <Activity className="w-4 h-4" />
-                          <span>Dashboard</span>
-                        </a>
-                        <a
-                          href="/billing"
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                        >
-                          <CreditCard className="w-4 h-4" />
-                          <span>Billing</span>
-                        </a>
-                        <a
-                          href="/settings"
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                        >
-                          <Settings className="w-4 h-4" />
-                          <span>Settings</span>
-                        </a>
-                      </div>
-
-                      <div className="border-t border-stone-200/50 pt-2">
-                        <button
-                          onClick={onSignOut}
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors w-full text-left"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          <span>Sign Out</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <a
-                  href="/signin"
-                  className="text-body hover:text-heading transition-colors font-medium"
-                >
-                  Sign In
-                </a>
-                <Button asChild className="btn-primary">
-                  <a href="/signup">Get Started</a>
-                </Button>
-              </div>
-            )}
+          <div className="ml-6 hidden md:flex items-center space-x-6 text-sm">
+            <Link to="/" className="text-muted-foreground transition-colors hover:text-primary">
+              Home
+            </Link>
+            <Link to="/submit-idea" className="text-muted-foreground transition-colors hover:text-primary">
+              Submit Idea
+            </Link>
+            <Link to="/pricing" className="text-muted-foreground transition-colors hover:text-primary">
+              Pricing
+            </Link>
+            <Link to="/faq" className="text-muted-foreground transition-colors hover:text-primary">
+              FAQ
+            </Link>
           </div>
+
+          {/* User Section */}
+          {user ? (
+            <div className="flex items-center space-x-4">
+              {/* Plan Badge */}
+              <Badge className={`text-xs ${getPlanColor(user.plan)}`}>
+                {getPlanDisplayName(user.plan)}
+              </Badge>
+
+              {/* Build Hours Indicator */}
+              <div className="hidden lg:flex items-center space-x-2 glass-card px-3 py-1">
+                <Clock className="w-4 h-4 text-accent" />
+                <span className={`text-sm font-medium ${getBuildHoursColor(user.buildHours.used, user.buildHours.total)}`}>
+                  {user.buildHours.used}
+                  {user.buildHours.total !== 'unlimited' && `/${user.buildHours.total}`}
+                </span>
+              </div>
+
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center space-x-2 btn-ghost p-2 rounded-xl"
+                  aria-label="Toggle user menu"
+                >
+                  <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-body" />
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-64 card-glass py-2 shadow-lg">
+                    <div className="px-4 py-3 border-b border-stone-200/50">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-heading">{user.name}</p>
+                          <p className="text-sm text-body">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="px-4 py-3 border-b border-stone-200/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-body">Plan</span>
+                        <Badge className={`text-xs ${getPlanColor(user.plan)}`}>
+                          {getPlanDisplayName(user.plan)}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-body">Build Hours</span>
+                        <span className={`text-sm font-medium ${getBuildHoursColor(user.buildHours.used, user.buildHours.total)}`}>
+                          {user.buildHours.used}
+                          {user.buildHours.total !== 'unlimited' && `/${user.buildHours.total}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="py-2">
+                      <a
+                        href="/dashboard"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </a>
+                      <a
+                        href="/billing"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>Billing</span>
+                      </a>
+                      <a
+                        href="/settings"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </a>
+                    </div>
+
+                    <div className="border-t border-stone-200/50 pt-2">
+                      <button
+                        onClick={onSignOut}
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors w-full text-left"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-4">
+              <a
+                href="/signin"
+                className="text-body hover:text-heading transition-colors font-medium"
+              >
+                Sign In
+              </a>
+              <Button asChild className="btn-primary">
+                <a href="/signup">Get Started</a>
+              </Button>
+            </div>
+          )}
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -226,6 +218,14 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
         {isOpen && (
           <div className="md:hidden pb-4">
             <div className="glass-card p-4 space-y-4">
+              <Link to="/" className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-body hover:bg-stone-100/50 hover:text-heading">
+                <Home className="w-5 h-5" />
+                <span className="font-medium">Home</span>
+              </Link>
+              <Link to="/submit-idea" className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-body hover:bg-stone-100/50 hover:text-heading">
+                <Lightbulb className="w-5 h-5" />
+                <span className="font-medium">Submit Idea</span>
+              </Link>
               {navItems.map((item) => {
                 if (item.requiresAuth && !user) return null;
                 
@@ -249,6 +249,10 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                   </a>
                 );
               })}
+              <Link to="/faq" className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-body hover:bg-stone-100/50 hover:text-heading">
+                <Lightbulb className="w-5 h-5" />
+                <span className="font-medium">FAQ</span>
+              </Link>
 
               {user ? (
                 <div className="pt-4 border-t border-stone-200/50 space-y-4">
@@ -286,7 +290,7 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                     </a>
                     <a
                       href="/settings"
-                      className="flex items-center space-x-3 p-3 text-body hover:bg-stone-100/50 hover:text-heading transition-colors rounded-lg"
+                      className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-body hover:bg-stone-100/50 hover:text-heading"
                       onClick={() => setIsOpen(false)}
                     >
                       <Settings className="w-5 h-5" />

@@ -197,3 +197,21 @@ module "techstack_agent" {
   max_instances = 5
   create_neg    = true
 } 
+
+resource "google_cloud_scheduler_job" "marketing_drip_campaign" {
+  name        = "marketing-drip-campaign"
+  description = "Triggers the daily email drip campaign for inactive users."
+  schedule    = "0 9 * * *" # Runs every day at 9:00 AM
+  time_zone   = "UTC"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://marketing-agent-your-project-id.a.run.app/trigger-drip" # Replace with your actual URL
+    
+    oidc_token {
+      service_account_email = google_service_account.cloud_run_invoker.email
+    }
+  }
+
+  attempt_deadline = "320s"
+} 

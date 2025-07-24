@@ -14,6 +14,7 @@ import os
 from typing import Optional, Dict, Any
 import httpx
 from datetime import datetime
+from google.cloud import bigquery
 
 # Import admin routes
 from admin_routes import admin_router

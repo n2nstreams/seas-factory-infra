@@ -23,6 +23,7 @@ redis==5.2.0
 google-cloud-logging==3.12.1
 google-cloud-secret-manager==2.24.0
 google-auth==2.40.3
+google-cloud-bigquery
 
 # AI & ML
 openai==1.93.0

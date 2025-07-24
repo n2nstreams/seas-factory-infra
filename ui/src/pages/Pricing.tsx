@@ -134,28 +134,7 @@ export default function Pricing() {
         <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
       </div>
 
-      {/* Navigation */}
-      <nav className="glass-nav sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
-                <Code2 className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-heading">AI SaaS Factory</span>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-body hover:text-heading transition-colors font-medium">Home</a>
-              <a href="/pricing" className="text-heading font-medium">Pricing</a>
-              <a href="/signup" className="text-body hover:text-heading transition-colors font-medium">Sign Up</a>
-              <a href="/dashboard" className="text-body hover:text-heading transition-colors font-medium">Dashboard</a>
-              <Button size="sm" className="btn-primary">
-                Get Started
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+
 
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32">
