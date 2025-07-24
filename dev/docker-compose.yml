@@ -20,6 +20,7 @@ services:
       - ./migrations/001_create_tenant_model.sql:/docker-entrypoint-initdb.d/002_create_tenant_model.sql
       - ./migrations/002_create_security_scan_results.sql:/docker-entrypoint-initdb.d/003_create_security_scan_results.sql
       - ./migrations/003_create_ideas_table.sql:/docker-entrypoint-initdb.d/004_create_ideas_table.sql
+      - ./migrations/004_create_factory_pipelines_table.sql:/docker-entrypoint-initdb.d/005_create_factory_pipelines_table.sql
     networks:
       - saas-factory
     healthcheck:

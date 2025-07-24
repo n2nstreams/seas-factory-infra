@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FactoryProgressMonitor from "@/components/FactoryProgressMonitor";
 import { 
   Code2, 
   Settings, 
@@ -448,6 +449,10 @@ export default function Dashboard() {
                 <Clock className="w-4 h-4 mr-2" />
                 Activity
               </TabsTrigger>
+              <TabsTrigger value="factory" className="btn-ghost">
+                <Activity className="w-4 h-4 mr-2" />
+                Factory
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -794,6 +799,14 @@ export default function Dashboard() {
                   ))}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="factory" className="space-y-6">
+              <FactoryProgressMonitor 
+                tenantId="default"
+                userId="default-user"
+                className="w-full"
+              />
             </TabsContent>
           </Tabs>
         </div>
