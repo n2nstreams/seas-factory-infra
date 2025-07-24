@@ -1,128 +1,135 @@
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Check, Star, ArrowRight, Code2, Sparkles, Shield, Zap, Users, CreditCard, HeadphonesIcon } from "lucide-react";
-import { loadStripe } from '@stripe/stripe-js';
+import { Button } from "@/components/ui/button";
+import { 
+  Check, 
+  Sparkles, 
+  Star, 
+  ArrowRight, 
+  CreditCard,
+  Settings,
+  Zap,
+  Shield,
+  Code2,
+  Users,
+  Globe,
+  BarChart3,
+  Headphones,
+  Clock
+} from 'lucide-react';
+
+interface Plan {
+  name: string;
+  price: number;
+  period: string;
+  description: string;
+  features: string[];
+  popular?: boolean;
+  ctaText: string;
+  ctaVariant: 'default' | 'outline';
+}
+
+interface FAQ {
+  question: string;
+  answer: string;
+}
 
 export default function Pricing() {
-  const [isYearly, setIsYearly] = useState(false);
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
-  // TODO: Replace with real customer_id from auth context
-  const customerId = 'cus_test123';
+  const plans: Plan[] = [
+    {
+      name: 'Starter',
+      price: billingPeriod === 'monthly' ? 29 : 290,
+      period: billingPeriod === 'monthly' ? 'month' : 'year',
+      description: 'Perfect for individual entrepreneurs testing ideas',
+      features: [
+        '1 Active Project',
+        '20 Build Hours/month',
+        'Basic AI Agents',
+        'Community Support',
+        'Standard Deployment',
+        'Basic Analytics'
+      ],
+      ctaText: 'Start Free Trial',
+      ctaVariant: 'outline'
+    },
+    {
+      name: 'Pro',
+      price: billingPeriod === 'monthly' ? 99 : 990,
+      period: billingPeriod === 'monthly' ? 'month' : 'year',
+      description: 'Ideal for serious entrepreneurs building multiple SaaS',
+      features: [
+        '5 Active Projects',
+        '100 Build Hours/month',
+        'Advanced AI Agents',
+        'Priority Support',
+        'Auto-scaling Infrastructure',
+        'Advanced Analytics',
+        'Custom Integrations',
+        'A/B Testing Tools'
+      ],
+      popular: true,
+      ctaText: 'Get Started',
+      ctaVariant: 'default'
+    },
+    {
+      name: 'Enterprise',
+      price: billingPeriod === 'monthly' ? 299 : 2990,
+      period: billingPeriod === 'monthly' ? 'month' : 'year',
+      description: 'For teams building multiple high-scale SaaS products',
+      features: [
+        'Unlimited Projects',
+        'Unlimited Build Hours',
+        'Premium AI Agents',
+        'Dedicated Support',
+        'Enterprise Infrastructure',
+        'White-label Options',
+        'Custom AI Training',
+        'SLA Guarantees',
+        'Multi-tenant Architecture'
+      ],
+      ctaText: 'Contact Sales',
+      ctaVariant: 'outline'
+    }
+  ];
 
-  const handleCheckout = async (planId: string) => {
-    setLoadingPlan(planId);
-    try {
-      // Map planId to SubscriptionTier
-      const tier = planId.toUpperCase(); // 'starter' -> 'STARTER'
-      const response = await fetch('/api/billing/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_id: customerId,
-          tier,
-          success_url: window.location.origin + '/dashboard',
-          cancel_url: window.location.origin + '/pricing',
-          metadata: {}
-        })
-      });
-      if (!response.ok) throw new Error('Failed to create checkout session');
-      const data = await response.json();
-      const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
-      if (!stripe) throw new Error('Stripe.js failed to load');
-      await stripe.redirectToCheckout({ sessionId: data.id });
-    } catch (err) {
-      alert('Error starting checkout: ' + (err as Error).message);
-    } finally {
-      setLoadingPlan(null);
+  const faqs: FAQ[] = [
+    {
+      question: 'What are build hours?',
+      answer: 'Build hours represent the time our AI agents spend developing your SaaS application. This includes design generation, code development, testing, and deployment activities.'
+    },
+    {
+      question: 'Can I change my plan anytime?',
+      answer: 'Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and we\'ll prorate any billing adjustments.'
+    },
+    {
+      question: 'What happens if I exceed my build hours?',
+      answer: 'If you exceed your monthly build hours, we\'ll notify you and pause builds until the next billing cycle, or you can purchase additional hours as needed.'
+    },
+    {
+      question: 'Do I own the code generated?',
+      answer: 'Absolutely! You have full ownership of all generated code, designs, and intellectual property. You can export, modify, or migrate your applications at any time.'
+    },
+    {
+      question: 'Is there a free trial?',
+      answer: 'Yes! We offer a 14-day free trial with 10 build hours so you can experience the full power of our AI SaaS factory before committing.'
+    }
+  ];
+
+  const getPlanIcon = (planName: string) => {
+    switch (planName) {
+      case 'Starter':
+        return <Zap className="w-8 h-8 text-white" />;
+      case 'Pro':
+        return <Star className="w-8 h-8 text-white" />;
+      case 'Enterprise':
+        return <Shield className="w-8 h-8 text-white" />;
+      default:
+        return <Sparkles className="w-8 h-8 text-white" />;
     }
   };
-
-  const plans = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      description: 'Perfect for trying out the platform',
-      monthlyPrice: 29,
-      yearlyPrice: 23,
-      features: [
-        '1 project included',
-        '15 build hours per month',
-        'Basic design templates',
-        'Email support',
-        'Community access'
-      ],
-      buildHours: 15,
-      projects: 1,
-      support: 'Community forum',
-      popular: false
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      description: 'For growing businesses',
-      monthlyPrice: 99,
-      yearlyPrice: 79,
-      features: [
-        '3 projects included',
-        '60 build hours per month',
-        'Advanced design system',
-        'Priority email support',
-        'Analytics dashboard',
-        'Custom integrations'
-      ],
-      buildHours: 60,
-      projects: 3,
-      support: 'Email, 48h SLA',
-      popular: true
-    },
-    {
-      id: 'growth',
-      name: 'Growth',
-      description: 'For scaling teams',
-      monthlyPrice: 299,
-      yearlyPrice: 239,
-      features: [
-        '5 projects included',
-        'Unlimited build hours',
-        'Custom design system',
-        'Slack support',
-        'Advanced analytics',
-        'White-label options',
-        'API access'
-      ],
-      buildHours: 'Unlimited',
-      projects: 5,
-      support: 'Slack, 24h SLA',
-      popular: false
-    }
-  ];
-
-  const faqs = [
-    {
-      question: "What are build hours?",
-      answer: "Build hours represent the computational time our AI agents spend creating your application. This includes design generation, code development, testing, and deployment processes."
-    },
-    {
-      question: "Can I change plans anytime?",
-      answer: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll pro-rate your billing accordingly."
-    },
-    {
-      question: "Do you offer refunds?",
-      answer: "We offer a 14-day money-back guarantee. If you're not satisfied within the first 14 days, we'll provide a full refund."
-    },
-    {
-      question: "What happens if I exceed my build hours?",
-      answer: "Your projects will be paused until the next billing cycle. You can upgrade your plan or purchase additional build hours if needed."
-    },
-    {
-      question: "Is there a free trial?",
-      answer: "Yes! All plans come with a 7-day free trial. No credit card required to start."
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-homepage relative overflow-hidden">
@@ -138,57 +145,70 @@ export default function Pricing() {
 
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="text-center space-y-8 max-w-5xl mx-auto">
             <div className="space-y-6">
               <Badge className="glass-button">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Simple, Transparent Pricing
               </Badge>
-              <h1 className="text-4xl lg:text-6xl font-bold text-heading leading-tight">
+              <h1 className="text-4xl lg:text-6xl xl:text-7xl font-bold text-heading leading-tight">
                 Choose Your{" "}
                 <span className="text-accent">
                   Perfect Plan
                 </span>
               </h1>
-              <p className="text-xl text-body leading-relaxed max-w-3xl mx-auto">
+              <p className="text-xl lg:text-2xl text-body leading-relaxed max-w-4xl mx-auto">
                 Start building your AI-powered SaaS business today. All plans include our complete platform with different levels of usage and support.
               </p>
             </div>
 
             {/* Billing Toggle */}
-            <div className="flex items-center justify-center space-x-4 p-1 glass-card max-w-sm mx-auto">
-              <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-heading' : 'text-body'}`}>
+            <div className="flex items-center justify-center space-x-4">
+              <span className={`text-sm ${billingPeriod === 'monthly' ? 'text-heading font-semibold' : 'text-body'}`}>
                 Monthly
               </span>
               <button
-                onClick={() => setIsYearly(!isYearly)}
-                className={`relative w-12 h-6 rounded-full transition-all duration-200 ${
-                  isYearly ? 'bg-accent' : 'bg-stone-300'
+                onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
+                  billingPeriod === 'yearly' ? 'bg-accent' : 'bg-stone-300'
                 }`}
-                aria-label={`Switch to ${isYearly ? 'monthly' : 'yearly'} billing`}
+                aria-label={`Switch to ${billingPeriod === 'monthly' ? 'yearly' : 'monthly'} billing`}
               >
-                <div className={`absolute w-5 h-5 bg-white rounded-full shadow-md top-0.5 transition-all duration-200 ${
-                  isYearly ? 'left-6' : 'left-0.5'
-                }`} />
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    billingPeriod === 'yearly' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
               </button>
-              <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-heading' : 'text-body'}`}>
-                Yearly
-              </span>
-              <Badge className="bg-accent text-white text-xs">
-                Save 20%
-              </Badge>
+              <div className="flex items-center space-x-2">
+                <span className={`text-sm ${billingPeriod === 'yearly' ? 'text-heading font-semibold' : 'text-body'}`}>
+                  Yearly
+                </span>
+                {billingPeriod === 'yearly' && (
+                  <Badge className="bg-accent text-white text-xs">
+                    Save 20%
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Plans */}
-      <section className="py-20 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {plans.map((plan) => (
-              <Card key={plan.id} className={plan.popular ? 'card-glass-highlighted relative' : 'card-glass'}>
+      {/* Pricing Cards */}
+      <section className="relative py-16">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 xl:gap-12 max-w-7xl mx-auto">
+            {plans.map((plan, index) => (
+              <Card 
+                key={plan.name}
+                className={`relative overflow-hidden ${
+                  plan.popular 
+                    ? 'card-glass border-2 border-accent shadow-2xl scale-105 lg:scale-110' 
+                    : 'card-glass hover:shadow-xl transition-all duration-300 hover:scale-105'
+                }`}
+              >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-accent text-white shadow-lg">
@@ -197,63 +217,48 @@ export default function Pricing() {
                     </Badge>
                   </div>
                 )}
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl font-bold text-heading">{plan.name}</CardTitle>
-                  <CardDescription className="text-body">{plan.description}</CardDescription>
-                  <div className="mt-6 p-4 glass-card">
-                    <span className="text-4xl font-bold text-accent">
-                      ${isYearly ? plan.yearlyPrice : plan.monthlyPrice}
-                    </span>
-                    <span className="text-body">/month</span>
-                    {isYearly && (
-                      <div className="text-sm text-muted mt-1">
-                        Billed annually (${plan.yearlyPrice * 12})
-                      </div>
+                
+                <CardHeader className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                    {getPlanIcon(plan.name)}
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-heading">{plan.name}</CardTitle>
+                    <CardDescription className="text-body mt-2">{plan.description}</CardDescription>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-baseline justify-center space-x-1">
+                      <span className="text-4xl lg:text-5xl font-bold text-accent">${plan.price}</span>
+                      <span className="text-body">/{plan.period}</span>
+                    </div>
+                    {billingPeriod === 'yearly' && plan.name !== 'Enterprise' && (
+                      <p className="text-sm text-body">
+                        ${Math.round(plan.price / 12)}/month billed annually
+                      </p>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 glass-card">
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-4 h-4 text-accent" />
-                        <span className="text-sm font-medium text-heading">Projects</span>
-                      </div>
-                      <span className="text-accent font-bold">{plan.projects}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 glass-card">
-                      <div className="flex items-center space-x-2">
-                        <Zap className="w-4 h-4 text-accent" />
-                        <span className="text-sm font-medium text-heading">Build Hours</span>
-                      </div>
-                      <span className="text-accent font-bold">{plan.buildHours}</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 glass-card">
-                      <div className="flex items-center space-x-2">
-                        <HeadphonesIcon className="w-4 h-4 text-accent" />
-                        <span className="text-sm font-medium text-heading">Support</span>
-                      </div>
-                      <span className="text-body text-sm">{plan.support}</span>
-                    </div>
-                  </div>
 
+                <CardContent className="space-y-6">
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-heading">Everything included:</h4>
-                    {plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-2 rounded-lg glass-card">
-                        <Check className="w-5 h-5 text-accent" />
-                        <span className="text-sm text-body">{feature}</span>
+                    {plan.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-start space-x-3">
+                        <Check className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
+                        <span className="text-body text-sm leading-relaxed">{feature}</span>
                       </div>
                     ))}
                   </div>
-
+                  
                   <Button 
-                    className={plan.popular ? 'btn-primary w-full' : 'btn-secondary w-full'}
-                    onClick={() => handleCheckout(plan.id)}
-                    disabled={loadingPlan === plan.id}
+                    className={`w-full ${
+                      plan.ctaVariant === 'default' 
+                        ? 'btn-primary text-lg py-6' 
+                        : 'btn-secondary text-lg py-6'
+                    }`}
+                    onClick={() => console.log(`Selected ${plan.name} plan`)}
                   >
-                    {loadingPlan === plan.id ? 'Redirecting...' : (plan.popular ? 'Get Started' : 'Choose Plan')}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {plan.ctaText}
+                    <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </CardContent>
               </Card>
@@ -263,140 +268,104 @@ export default function Pricing() {
       </section>
 
       {/* Features Comparison */}
-      <section className="py-20 bg-stone-200/60 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-heading">
-              Compare All Features
+      <section className="py-16 bg-white/10 backdrop-blur-sm">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-heading mb-4">
+              Everything You Need to Succeed
             </h2>
-            <p className="text-xl text-body">
-              See what's included in each plan
+            <p className="text-xl lg:text-2xl text-body max-w-3xl mx-auto">
+              All plans include these core features to turn your ideas into profitable SaaS businesses
             </p>
           </div>
 
-          <div className="glass-card p-8 overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-stone-300/50">
-                  <th className="text-left p-4 text-heading font-semibold">Feature</th>
-                  <th className="text-center p-4 text-heading font-semibold">Starter</th>
-                  <th className="text-center p-4 text-heading font-semibold">Pro</th>
-                  <th className="text-center p-4 text-heading font-semibold">Growth</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-300/50">
-                <tr>
-                  <td className="p-4 text-body font-medium">Projects</td>
-                  <td className="text-center p-4 text-accent font-bold">1</td>
-                  <td className="text-center p-4 text-accent font-bold">3</td>
-                  <td className="text-center p-4 text-accent font-bold">5</td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-body font-medium">Build Hours</td>
-                  <td className="text-center p-4 text-accent font-bold">15/month</td>
-                  <td className="text-center p-4 text-accent font-bold">60/month</td>
-                  <td className="text-center p-4 text-accent font-bold">Unlimited</td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-body font-medium">AI Design Generation</td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-body font-medium">Code Generation</td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-body font-medium">Stripe Integration</td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-body font-medium">Analytics Dashboard</td>
-                  <td className="text-center p-4 text-muted">-</td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-body font-medium">API Access</td>
-                  <td className="text-center p-4 text-muted">-</td>
-                  <td className="text-center p-4 text-muted">-</td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                </tr>
-                <tr>
-                  <td className="p-4 text-body font-medium">White-label Options</td>
-                  <td className="text-center p-4 text-muted">-</td>
-                  <td className="text-center p-4 text-muted">-</td>
-                  <td className="text-center p-4"><Check className="w-5 h-5 text-accent mx-auto" /></td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                <Code2 className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-heading">AI Development</h3>
+              <p className="text-body">
+                Full-stack application generation from your ideas using advanced AI agents
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-accent-secondary rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                <CreditCard className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-heading">Payment Integration</h3>
+              <p className="text-body">
+                Stripe payment processing, subscriptions, and billing automatically configured
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-accent-tertiary rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                <Globe className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-heading">Global Deployment</h3>
+              <p className="text-body">
+                Automatic deployment to Google Cloud with global CDN and auto-scaling
+              </p>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                <BarChart3 className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-heading">Business Analytics</h3>
+              <p className="text-body">
+                Real-time dashboards, user analytics, and revenue tracking built-in
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
       <section className="py-20 relative">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-heading">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="text-center mb-16 max-w-4xl mx-auto">
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-heading mb-4">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-body">
-              Everything you need to know about our pricing
+            <p className="text-xl lg:text-2xl text-body">
+              Get answers to common questions about our pricing and features
             </p>
           </div>
 
-          <Accordion type="single" collapsible className="space-y-4">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
             {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="card-glass px-6">
-                <AccordionTrigger className="text-left text-heading font-semibold">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-body">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
+              <div key={index} className="glass-card p-6 space-y-4">
+                <h3 className="text-lg font-semibold text-heading">{faq.question}</h3>
+                <p className="text-body leading-relaxed">{faq.answer}</p>
+              </div>
             ))}
-          </Accordion>
+          </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-stone-200/60 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="glass-card p-12 space-y-6">
-            <div className="space-y-4">
-              <h2 className="text-3xl lg:text-4xl font-bold text-heading">
-                Ready to Build Your SaaS?
-              </h2>
-              <p className="text-xl text-body">
-                Join thousands of entrepreneurs who've launched their businesses with AI SaaS Factory
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <section className="py-16 bg-gradient-to-r from-green-800/20 to-green-900/20 backdrop-blur-sm">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="text-center space-y-8 max-w-4xl mx-auto">
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-heading">
+              Ready to Build Your SaaS?
+            </h2>
+            <p className="text-xl lg:text-2xl text-body">
+              Join thousands of entrepreneurs who have already launched their AI-powered businesses
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button size="lg" className="btn-primary text-lg px-8 py-6">
-                Start Your Free Trial
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start Free Trial
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <Button size="lg" variant="outline" className="btn-secondary text-lg px-8 py-6">
-                <CreditCard className="w-5 h-5 mr-2" />
-                View Live Demo
+                <Headphones className="w-5 h-5 mr-2" />
+                Talk to Sales
               </Button>
-            </div>
-            <div className="flex items-center justify-center space-x-6 pt-6">
-              <div className="flex items-center space-x-2">
-                <Shield className="w-5 h-5 text-accent" />
-                <span className="text-sm text-body">14-day money-back guarantee</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CreditCard className="w-5 h-5 text-accent" />
-                <span className="text-sm text-body">No credit card required</span>
-              </div>
             </div>
           </div>
         </div>
@@ -404,11 +373,11 @@ export default function Pricing() {
 
       {/* Footer */}
       <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
                   <Code2 className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-xl font-bold">AI SaaS Factory</span>

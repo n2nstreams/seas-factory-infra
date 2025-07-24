@@ -205,7 +205,7 @@ export default function Landing() {
 
       {/* Navigation */}
       <nav className="bg-white/15 backdrop-blur-md border-b border-stone-400/30 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm">
@@ -227,22 +227,22 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-20 lg:py-32">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-none">
             <div className="space-y-8 relative z-10">
               <div className="space-y-6">
                 <Badge className="bg-stone-300/60 backdrop-blur-sm text-stone-800 border border-stone-400/50 shadow-lg">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Powered by AI
                 </Badge>
-                <h1 className="text-4xl lg:text-6xl font-bold text-stone-900 leading-tight">
+                <h1 className="text-4xl lg:text-6xl xl:text-7xl font-bold text-stone-900 leading-tight">
                   Go From Idea to{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900">
                     Live Business
                   </span>{" "}
                   in Hours! 🎯🚀
                 </h1>
-                <p className="text-xl text-stone-700 leading-relaxed">
+                <p className="text-xl lg:text-2xl text-stone-700 leading-relaxed max-w-3xl">
                   Describe your SaaS idea. Our AI factory builds the app, configures payments, and automates your operations, launching a ready-to-run business on Google Cloud.
                 </p>
               </div>
@@ -310,10 +310,10 @@ export default function Landing() {
 
       {/* Social Proof Banner */}
       <section className="py-16 bg-white/15 backdrop-blur-md border-y border-stone-400/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="text-center space-y-8">
             <p className="text-stone-700 font-semibold">Built on the world's most trusted platforms</p>
-            <div className="flex justify-center items-center space-x-16 opacity-80">
+            <div className="flex justify-center items-center space-x-8 lg:space-x-16 opacity-80">
               <div className="text-2xl font-bold text-stone-800">Google Cloud</div>
               <div className="text-2xl font-bold text-stone-800">Stripe</div>
               <div className="text-2xl font-bold text-stone-800">OpenAI</div>
@@ -325,17 +325,17 @@ export default function Landing() {
 
       {/* Feature Highlights */}
       <section id="features" className="py-20 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-stone-900">
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-stone-900">
               More Than Code, A Complete Business System
             </h2>
-            <p className="text-xl text-stone-700 max-w-3xl mx-auto">
+            <p className="text-xl lg:text-2xl text-stone-700 max-w-4xl mx-auto">
               We don't just build apps - we launch complete businesses with everything you need to start selling immediately.
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8 xl:gap-12">
             <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 hover:border-stone-500/60 transition-all duration-300 hover:shadow-xl hover:bg-white/35">
               <CardHeader>
                 <div className="w-14 h-14 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
@@ -383,17 +383,17 @@ export default function Landing() {
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20 bg-gradient-to-br from-stone-200/60 to-neutral-200/60 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-stone-900">
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-stone-900">
               Choose Your Level of Automation
             </h2>
-            <p className="text-xl text-stone-700">
+            <p className="text-xl lg:text-2xl text-stone-700">
               Start with launching your business, then scale with advanced automation
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8 xl:gap-12">
             {/* Launch Tier */}
             <Card className="bg-white/35 backdrop-blur-lg border border-stone-400/60 hover:border-stone-500/80 transition-all duration-300 hover:shadow-xl hover:bg-white/45">
               <CardHeader className="text-center">
@@ -511,68 +511,70 @@ export default function Landing() {
 
       {/* FAQ Section */}
       <section id="faq" className="py-20 relative">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-stone-900">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="text-center space-y-4 mb-16 max-w-4xl mx-auto">
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-stone-900">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-stone-700">
+            <p className="text-xl lg:text-2xl text-stone-700">
               Everything you need to know about launching your AI-powered business
             </p>
           </div>
 
-          <Accordion type="single" collapsible className="space-y-4">
-            <AccordionItem value="item-1" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
-              <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                How does the payment processing work?
-              </AccordionTrigger>
-              <AccordionContent className="text-stone-700">
-                We integrate Stripe Checkout directly into your application, handling subscriptions, one-time payments, and customer billing automatically. You'll get your own Stripe account and keep 100% of your revenue minus standard Stripe fees.
-              </AccordionContent>
-            </AccordionItem>
+          <div className="max-w-4xl mx-auto">
+            <Accordion type="single" collapsible className="space-y-4">
+              <AccordionItem value="item-1" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  How does the payment processing work?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  We integrate Stripe Checkout directly into your application, handling subscriptions, one-time payments, and customer billing automatically. You'll get your own Stripe account and keep 100% of your revenue minus standard Stripe fees.
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="item-2" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
-              <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                Do I need my own Stripe account?
-              </AccordionTrigger>
-              <AccordionContent className="text-stone-700">
-                Yes, you'll need your own Stripe account. This ensures you have complete control over your payments and customer data. We'll help you set it up and integrate it seamlessly into your application.
-              </AccordionContent>
-            </AccordionItem>
+              <AccordionItem value="item-2" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  Do I need my own Stripe account?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  Yes, you'll need your own Stripe account. This ensures you have complete control over your payments and customer data. We'll help you set it up and integrate it seamlessly into your application.
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="item-3" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
-              <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                What business metrics can I see on my dashboard?
-              </AccordionTrigger>
-              <AccordionContent className="text-stone-700">
-                Your dashboard includes revenue tracking, user analytics, subscription metrics, system uptime, cost monitoring, and performance insights. Everything you need to understand and grow your business.
-              </AccordionContent>
-            </AccordionItem>
+              <AccordionItem value="item-3" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  What business metrics can I see on my dashboard?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  Your dashboard includes revenue tracking, user analytics, subscription metrics, system uptime, cost monitoring, and performance insights. Everything you need to understand and grow your business.
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="item-4" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
-              <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                Can I export my customer and user data?
-              </AccordionTrigger>
-              <AccordionContent className="text-stone-700">
-                Absolutely. You own all your data completely. You can export customer data, user information, and application data at any time. No vendor lock-in - it's your business, your data.
-              </AccordionContent>
-            </AccordionItem>
+              <AccordionItem value="item-4" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  Can I export my customer and user data?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  Absolutely. You own all your data completely. You can export customer data, user information, and application data at any time. No vendor lock-in - it's your business, your data.
+                </AccordionContent>
+              </AccordionItem>
 
-            <AccordionItem value="item-5" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
-              <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                What happens if my cloud costs get too high?
-              </AccordionTrigger>
-              <AccordionContent className="text-stone-700">
-                Our CostGuardAgent monitors your Google Cloud spending in real-time and alerts you before costs spike. You can set budget limits and get automated recommendations for cost optimization.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              <AccordionItem value="item-5" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  What happens if my cloud costs get too high?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  Our CostGuardAgent monitors your Google Cloud spending in real-time and alerts you before costs spike. You can set budget limits and get automated recommendations for cost optimization.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">

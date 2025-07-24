@@ -275,13 +275,13 @@ export default function Dashboard() {
 
 
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 relative z-10">
         <div className="space-y-8">
           {/* Header */}
           <div className="glass-card p-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
               <div>
-                <h1 className="text-3xl font-bold text-heading">Dashboard</h1>
+                <h1 className="text-3xl xl:text-4xl font-bold text-heading">Dashboard</h1>
                 <p className="text-body mt-1">Manage your AI-powered SaaS projects</p>
               </div>
               <div className="flex items-center space-x-4">
@@ -298,7 +298,7 @@ export default function Dashboard() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             <Card className="card-glass">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -428,7 +428,7 @@ export default function Dashboard() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Recent Projects */}
                 <Card className="card-glass">
                   <CardHeader>
@@ -541,65 +541,67 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {projects.map((project) => (
-                    <div key={project.id} className="p-6 glass-card">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-4 h-4 rounded-full ${
-                            project.status === 'deployed' ? 'bg-green-500' :
-                            project.status === 'building' ? 'bg-blue-500' :
-                            project.status === 'active' ? 'bg-yellow-500' :
-                            'bg-gray-500'
-                          }`} />
-                          <div>
-                            <h3 className="font-semibold text-heading">{project.name}</h3>
-                            <p className="text-sm text-body capitalize">{project.stage} • {formatTimeAgo(project.lastUpdated)}</p>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
+                    {projects.map((project) => (
+                      <div key={project.id} className="p-6 glass-card">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-4 h-4 rounded-full ${
+                              project.status === 'deployed' ? 'bg-green-500' :
+                              project.status === 'building' ? 'bg-blue-500' :
+                              project.status === 'active' ? 'bg-yellow-500' :
+                              'bg-gray-500'
+                            }`} />
+                            <div>
+                              <h3 className="font-semibold text-heading">{project.name}</h3>
+                              <p className="text-sm text-body capitalize">{project.stage} • {formatTimeAgo(project.lastUpdated)}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={`${getStatusColor(project.status)}`}>
-                            {project.status}
-                          </Badge>
-                          {project.url && (
-                            <Button size="sm" variant="outline" className="btn-secondary">
-                              <ExternalLink className="w-4 h-4 mr-1" />
-                              View
+                          <div className="flex items-center space-x-2">
+                            <Badge className={`${getStatusColor(project.status)}`}>
+                              {project.status}
+                            </Badge>
+                            {project.url && (
+                              <Button size="sm" variant="outline" className="btn-secondary">
+                                <ExternalLink className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" className="btn-ghost">
+                              <MoreHorizontal className="w-4 h-4" />
                             </Button>
-                          )}
-                          <Button size="sm" variant="outline" className="btn-ghost">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-body">Progress</span>
-                          <span className="text-heading">{project.progress}%</span>
-                        </div>
-                        <Progress value={project.progress} className="h-2" />
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-heading">{project.buildHours}h</div>
-                            <div className="text-xs text-body">Build Hours</div>
                           </div>
-                          {project.revenue && (
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-body">Progress</span>
+                            <span className="text-heading">{project.progress}%</span>
+                          </div>
+                          <Progress value={project.progress} className="h-2" />
+                          
+                          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                             <div className="text-center">
-                              <div className="text-lg font-semibold text-heading">${project.revenue}</div>
-                              <div className="text-xs text-body">Revenue</div>
+                              <div className="text-lg font-semibold text-heading">{project.buildHours}h</div>
+                              <div className="text-xs text-body">Build Hours</div>
                             </div>
-                          )}
-                          {project.users && (
-                            <div className="text-center">
-                              <div className="text-lg font-semibold text-heading">{project.users}</div>
-                              <div className="text-xs text-body">Users</div>
-                            </div>
-                          )}
+                            {project.revenue && (
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-heading">${project.revenue}</div>
+                                <div className="text-xs text-body">Revenue</div>
+                              </div>
+                            )}
+                            {project.users && (
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-heading">{project.users}</div>
+                                <div className="text-xs text-body">Users</div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -613,51 +615,53 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {builds.map((build) => (
-                    <div key={build.id} className="p-6 glass-card">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          {getStageIcon(build.stage)}
-                          <div>
-                            <h3 className="font-semibold text-heading">{build.projectName}</h3>
-                            <p className="text-sm text-body capitalize">{build.stage} • {formatTimeAgo(build.startedAt)}</p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {builds.map((build) => (
+                      <div key={build.id} className="p-6 glass-card">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            {getStageIcon(build.stage)}
+                            <div>
+                              <h3 className="font-semibold text-heading">{build.projectName}</h3>
+                              <p className="text-sm text-body capitalize">{build.stage} • {formatTimeAgo(build.startedAt)}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge className={`${getStatusColor(build.status)}`}>
-                            {build.status}
-                          </Badge>
-                          <span className="text-sm text-body">{build.buildHours}h</span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <div className="glass-card p-4">
-                          <h4 className="font-medium text-heading mb-2">Build Logs</h4>
-                          <div className="space-y-1">
-                            {build.logs.map((log, index) => (
-                              <div key={index} className="text-sm text-body font-mono">
-                                {log}
-                              </div>
-                            ))}
+                          <div className="flex items-center space-x-2">
+                            <Badge className={`${getStatusColor(build.status)}`}>
+                              {build.status}
+                            </Badge>
+                            <span className="text-sm text-body">{build.buildHours}h</span>
                           </div>
                         </div>
                         
-                        {build.status === 'completed' && build.duration && (
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-body">Duration</span>
-                            <span className="text-heading">{build.duration}h</span>
+                        <div className="space-y-3">
+                          <div className="glass-card p-4">
+                            <h4 className="font-medium text-heading mb-2">Build Logs</h4>
+                            <div className="space-y-1">
+                              {build.logs.map((log, index) => (
+                                <div key={index} className="text-sm text-body font-mono">
+                                  {log}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        )}
+                          
+                          {build.status === 'completed' && build.duration && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-body">Duration</span>
+                              <span className="text-heading">{build.duration}h</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="billing" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <Card className="card-glass">
                   <CardHeader>
                     <CardTitle className="text-heading flex items-center">
@@ -748,27 +752,29 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {activities.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-4 p-4 glass-card">
-                      <div className={`w-3 h-3 rounded-full mt-2 ${
-                        activity.type === 'build_completed' ? 'bg-green-500' :
-                        activity.type === 'build_started' ? 'bg-blue-500' :
-                        activity.type === 'build_failed' ? 'bg-red-500' :
-                        activity.type === 'project_created' ? 'bg-purple-500' :
-                        activity.type === 'payment_processed' ? 'bg-green-500' :
-                        'bg-gray-500'
-                      }`} />
-                      <div className="flex-1">
-                        <p className="text-sm text-heading">{activity.message}</p>
-                        <p className="text-xs text-body">{formatTimeAgo(activity.timestamp)}</p>
-                        {activity.metadata && (
-                          <div className="mt-2 text-xs text-body bg-stone-100 p-2 rounded">
-                            {JSON.stringify(activity.metadata, null, 2)}
-                          </div>
-                        )}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {activities.map((activity) => (
+                      <div key={activity.id} className="flex items-start space-x-4 p-4 glass-card">
+                        <div className={`w-3 h-3 rounded-full mt-2 ${
+                          activity.type === 'build_completed' ? 'bg-green-500' :
+                          activity.type === 'build_started' ? 'bg-blue-500' :
+                          activity.type === 'build_failed' ? 'bg-red-500' :
+                          activity.type === 'project_created' ? 'bg-purple-500' :
+                          activity.type === 'payment_processed' ? 'bg-green-500' :
+                          'bg-gray-500'
+                        }`} />
+                        <div className="flex-1">
+                          <p className="text-sm text-heading">{activity.message}</p>
+                          <p className="text-xs text-body">{formatTimeAgo(activity.timestamp)}</p>
+                          {activity.metadata && (
+                            <div className="mt-2 text-xs text-body bg-stone-100 p-2 rounded">
+                              {JSON.stringify(activity.metadata, null, 2)}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -786,7 +792,7 @@ export default function Dashboard() {
 
       {/* Footer */}
       <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">

@@ -27,7 +27,7 @@ export default function Home() {
           <div className="absolute top-40 right-32 w-80 h-80 bg-gradient-to-bl from-slate-700/20 to-green-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
           <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-stone-600/20 to-green-700/25 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 relative z-10">
           <div className="mb-8">
             <Button
               variant="outline"
@@ -51,18 +51,18 @@ export default function Home() {
         <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-stone-600/20 to-green-700/25 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
       <section className="relative z-10 pt-16 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-4xl mx-auto">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="text-center max-w-6xl mx-auto">
             <Badge className="bg-accent-glow text-white mb-6 px-4 py-2 text-sm">
               ✨ AI-Powered SaaS Generation
             </Badge>
-            <h1 className="text-5xl md:text-6xl font-bold text-heading mb-6 leading-tight">
+            <h1 className="text-5xl md:text-6xl xl:text-7xl font-bold text-heading mb-6 leading-tight">
               Turn Your Ideas Into
               <span className="block bg-gradient-to-r from-green-700 to-green-900 bg-clip-text text-transparent">
                 Production-Ready SaaS
               </span>
             </h1>
-            <p className="text-xl text-body mb-10 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl lg:text-2xl text-body mb-10 max-w-4xl mx-auto leading-relaxed">
               Submit your idea and watch our AI agents design, develop, and deploy your complete SaaS application. 
               From concept to customer-ready product in record time.
             </p>
@@ -90,16 +90,16 @@ export default function Home() {
         </div>
       </section>
       <section className="relative z-10 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-heading mb-4">
+            <h2 className="text-3xl md:text-4xl xl:text-5xl font-bold text-heading mb-4">
               How It Works
             </h2>
-            <p className="text-lg text-body max-w-2xl mx-auto">
+            <p className="text-lg lg:text-xl text-body max-w-3xl mx-auto">
               Our AI agents handle every aspect of SaaS development, from initial concept to deployment.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 xl:gap-12 max-w-7xl mx-auto">
             <div className="glass-card p-8 text-center group hover:scale-105 transition-transform duration-300">
               <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                 <Lightbulb className="w-8 h-8 text-white" />
@@ -133,7 +133,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
