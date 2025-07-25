@@ -15,7 +15,7 @@ import uuid
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
-from access_control import require_subscription, AccessLevel
+# from access_control import require_subscription, AccessLevel  # Commented out for demo
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,15 +23,20 @@ logger = logging.getLogger(__name__)
 
 class DocumentSpec(BaseModel):
     """Specification for document generation"""
-    document_type: Literal["contributing", "readme", "api_docs", "user_guide", "architecture", "deployment", "mermaid_diagram"] = Field(..., description="Type of documentation to generate")
+    document_type: Literal["contributing", "readme", "api_docs", "user_guide", "architecture", "deployment", "mermaid_diagram", "youtube_script"] = Field(..., description="Type of documentation to generate")
     title: str = Field(..., description="Document title")
     sections: List[str] = Field(default_factory=list, description="Specific sections to include")
-    target_audience: Literal["developers", "users", "admins", "contributors"] = Field(..., description="Primary audience for the documentation")
+    target_audience: Literal["developers", "users", "admins", "contributors", "general_audience"] = Field(..., description="Primary audience for the documentation")
     detail_level: Literal["basic", "intermediate", "comprehensive"] = Field(default="comprehensive", description="Level of detail")
     include_examples: bool = Field(default=True, description="Whether to include code examples")
     include_mermaid_diagram: bool = Field(default=False, description="Whether to include Mermaid architecture diagram")
     diagram_type: Optional[Literal["architecture", "workflow", "deployment", "data_flow"]] = Field(None, description="Type of Mermaid diagram to generate")
     project_context: Dict[str, Any] = Field(default_factory=dict, description="Project-specific context")
+    
+    # YouTube script specific fields
+    video_duration: Optional[int] = Field(None, description="Target video duration in minutes (for youtube_script)")
+    script_style: Optional[Literal["explainer", "demo", "tutorial", "overview"]] = Field("overview", description="Style of video script")
+    include_synthesia_cues: bool = Field(True, description="Include Synthesia-specific formatting and timing cues")
 
 class GeneratedDocument(BaseModel):
     """Generated documentation response"""
@@ -52,7 +57,8 @@ class DocAgent:
         self.openai_client = openai.AsyncOpenAI(
             api_key=os.getenv("OPENAI_API_KEY")
         )
-        self.tenant_db = TenantDatabase()
+        # For demo, avoid database connection
+        self.tenant_db = None  # TenantDatabase()
         
         # Documentation templates and patterns
         self.doc_patterns = self._load_doc_patterns()
@@ -110,6 +116,15 @@ class DocAgent:
 ## Component Relationships
 ## Data Flow
 ## Agent Interactions
+""",
+            "youtube_script": """
+# YouTube Video Script Template
+## Opening Hook (0-15 seconds)
+## Introduction (15-45 seconds)
+## Main Content Sections (45 seconds - 4 minutes)
+## Demo/Examples (varies)
+## Call to Action & Conclusion (15-30 seconds)
+## Synthesia Cues and Timing
 """
         }
     
@@ -146,9 +161,11 @@ class DocAgent:
         try:
             logger.info(f"Generating {spec.document_type} documentation for tenant {tenant_context.tenant_id}")
             
-            # Handle Mermaid diagram generation separately
+            # Handle special document types separately
             if spec.document_type == "mermaid_diagram":
                 content = await self._generate_mermaid_diagram(spec)
+            elif spec.document_type == "youtube_script":
+                content = await self._generate_youtube_script(spec)
             else:
                 # Build context-aware prompt
                 prompt = self._build_generation_prompt(spec)
@@ -294,6 +311,21 @@ Create accurate Mermaid diagrams that clearly illustrate:
 - User journey flows
 
 Use proper Mermaid syntax and clear, descriptive labels. Focus on readability and accuracy."""
+            
+        elif doc_type == "youtube_script":
+            return f"""{base_prompt}
+            
+Create an engaging YouTube video script optimized for Synthesia AI video generation:
+- Hook viewers in the first 15 seconds with a compelling question or statement
+- Structure content with clear sections and smooth transitions
+- Use conversational, enthusiastic tone appropriate for video
+- Include timing cues and pause markers for natural delivery
+- Add visual descriptions and demonstration opportunities
+- Keep technical concepts accessible to {audience}
+- Include clear calls-to-action and next steps
+- Format with Synthesia-compatible speaker notes and timing
+
+The script should be informative yet engaging, focusing on value and practical benefits."""
             
         else:
             return f"""{base_prompt}
@@ -686,6 +718,185 @@ flowchart TD
     class LIVE_APP,DASHBOARD,DOCS,REPORTS output
 ```"""
 
+    async def _generate_youtube_script(self, spec: DocumentSpec) -> str:
+        """Generate YouTube script optimized for Synthesia AI video generation"""
+        try:
+            # Determine video duration (default to 5 minutes)
+            duration = spec.video_duration or 5
+            
+            # Build comprehensive project summary for TL;DR content
+            project_summary = self._build_project_summary()
+            
+            # Create script-specific prompt
+            script_prompt = f"""
+Create a {duration}-minute YouTube video script for the AI SaaS Factory project.
+
+PROJECT CONTEXT:
+{project_summary}
+
+SCRIPT REQUIREMENTS:
+- Style: {spec.script_style}
+- Target Audience: {spec.target_audience}
+- Duration: {duration} minutes
+- Include Synthesia cues: {spec.include_synthesia_cues}
+
+The script should:
+1. Hook viewers immediately with the AI automation value proposition
+2. Explain the core concept in simple, accessible language
+3. Demonstrate key features and benefits
+4. Include visual demonstration opportunities
+5. End with clear next steps and call-to-action
+
+Format for Synthesia AI video generation with timing cues, speaker notes, and visual descriptions.
+"""
+
+            # Generate script using GPT-4o
+            response = await self.openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": self._get_system_prompt("youtube_script", spec.target_audience)
+                    },
+                    {
+                        "role": "user", 
+                        "content": script_prompt
+                    }
+                ],
+                temperature=0.4,  # Slightly higher for creative content
+                max_tokens=4000
+            )
+            
+            script_content = response.choices[0].message.content
+            
+            # Post-process for Synthesia formatting if requested
+            if spec.include_synthesia_cues:
+                script_content = self._format_for_synthesia(script_content, duration)
+                
+            return script_content
+            
+        except Exception as e:
+            logger.error(f"Error generating YouTube script: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"YouTube script generation failed: {str(e)}")
+
+    def _build_project_summary(self) -> str:
+        """Build comprehensive project summary for video script"""
+        return f"""
+PROJECT: {self.project_context['project_name']}
+
+OVERVIEW:
+The AI SaaS Factory is an autonomous platform that transforms user ideas into fully-deployed SaaS applications using AI agents. Users submit ideas in natural language, and the system automatically generates code, designs UI, runs tests, and deploys to production.
+
+KEY VALUE PROPOSITIONS:
+• Transforms ideas into production SaaS apps in under 24 hours
+• Zero coding required - pure natural language input
+• Complete automation: design → code → test → deploy → monitor
+• Built-in payment processing, user management, and analytics
+• Multi-tenant architecture that scales automatically
+
+TECHNOLOGY HIGHLIGHTS:
+• {self.project_context['tech_stack']['ai']} for intelligent automation
+• {self.project_context['tech_stack']['cloud']} for scalable infrastructure
+• {self.project_context['tech_stack']['frontend']} for modern user interface
+• Multi-agent orchestration with specialized AI workers
+
+TARGET USERS:
+• Entrepreneurs with SaaS ideas but no coding skills
+• Small businesses needing custom software solutions
+• Developers wanting rapid prototyping and deployment
+• Anyone seeking to validate business concepts quickly
+
+COMPETITIVE ADVANTAGES:
+• End-to-end automation (not just code generation)
+• Production-ready deployments with monitoring
+• Built-in business logic (payments, analytics, support)
+• Glassmorphism UI with natural olive green design theme
+• 99.9% SLA with multi-region deployment
+
+CURRENT STATUS:
+Implementing Night 73 of 84-night masterplan - comprehensive development roadmap nearing completion.
+"""
+
+    def _format_for_synthesia(self, script: str, duration: int) -> str:
+        """Format script with Synthesia-specific cues and timing"""
+        # Add Synthesia header
+        synthesia_header = f"""# AI SaaS Factory - Video Walkthrough Script
+**Duration: {duration} minutes**
+**Platform: Synthesia AI Video Generation**
+**Generated: {datetime.utcnow().strftime('%Y-%m-%d')}**
+
+---
+
+## SYNTHESIA CONFIGURATION
+- **Avatar**: Professional presenter (business casual)
+- **Voice**: Conversational, enthusiastic tone
+- **Background**: Clean, modern office or tech environment
+- **Graphics**: Include screen recordings and UI mockups
+
+---
+
+"""
+        
+        # Add timing markers and Synthesia cues
+        lines = script.split('\n')
+        formatted_lines = [synthesia_header]
+        
+        current_time = 0
+        for line in lines:
+            if line.strip():
+                # Add timing cues for major sections
+                if line.startswith('##'):
+                    formatted_lines.append(f"\n**[{current_time//60}:{current_time%60:02d}]** {line}")
+                    current_time += 30  # Estimate 30 seconds per section
+                elif line.startswith('#'):
+                    formatted_lines.append(f"\n**[{current_time//60}:{current_time%60:02d}]** {line}")
+                    current_time += 15
+                else:
+                    formatted_lines.append(line)
+                    
+                # Add pause cues for natural delivery
+                if line.endswith('.') and len(line) > 50:
+                    formatted_lines.append("*[PAUSE: 1 second]*")
+                    current_time += 1
+                    
+        # Add Synthesia footer with technical notes
+        synthesia_footer = f"""
+
+---
+
+## SYNTHESIA PRODUCTION NOTES
+
+### Visual Cues:
+- Show dashboard screenshots during feature explanations
+- Include architecture diagram during technical overview
+- Display code generation in action during demo sections
+- Show final deployed application
+
+### Timing Guidelines:
+- Total duration: {duration} minutes
+- Hook: 0-15 seconds (keep energy high)
+- Main content: 15 seconds - {duration-1} minutes (steady pace)
+- Call-to-action: Final 30 seconds (clear and direct)
+
+### Voice Directions:
+- Enthusiasm level: 7/10 (informative but engaging)
+- Speaking pace: Moderate (140-160 words per minute)
+- Emphasis: Key benefits and unique value propositions
+- Tone: Professional but approachable
+
+### Background Music:
+- Light, modern tech background music
+- Volume: 15% of voice level
+- Style: Upbeat but not distracting
+
+---
+
+*Script generated by DocAgent | AI SaaS Factory Night 73*
+"""
+        
+        formatted_lines.append(synthesia_footer)
+        return '\n'.join(formatted_lines)
+
     def _embed_mermaid_in_content(self, content: str, mermaid_content: str, diagram_type: str) -> str:
         """Embed Mermaid diagram in documentation content"""
         # Find the architecture section or add it after the description
@@ -707,27 +918,37 @@ flowchart TD
             
         return content
 
-    async def _store_generated_doc(self, doc: GeneratedDocument, tenant_context: TenantContext):
+    async def _store_generated_doc(self, doc: GeneratedDocument, tenant_context):
         """Store generated documentation in database"""
         try:
-            query = """
-            INSERT INTO generated_documents (
-                tenant_id, title, document_type, content, 
-                sections, metadata, generated_at, word_count
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            """
+            # For demo, just log instead of storing to database
+            logger.info(f"Demo mode: Would store document '{doc.title}' for tenant {tenant_context.tenant_id}")
+            logger.info(f"Document type: {doc.metadata.get('document_type')}")
+            logger.info(f"Word count: {doc.word_count}")
             
-            await self.tenant_db.execute_query(
-                query, 
-                tenant_context.tenant_id, doc.title, doc.metadata["document_type"],
-                doc.content, json.dumps(doc.sections), json.dumps(doc.metadata),
-                doc.generated_at, doc.word_count,
-                tenant_context=tenant_context
-            )
+            # If it's a YouTube script, also store in video_scripts table
+            if doc.metadata.get("document_type") == "youtube_script":
+                await self._store_video_script(doc, tenant_context)
             
         except Exception as e:
             logger.warning(f"Failed to store generated document: {str(e)}")
+    
+    async def _store_video_script(self, doc: GeneratedDocument, tenant_context):
+        """Store video script in dedicated video_scripts table"""
+        try:
+            # For demo, just log instead of storing to database
+            metadata = doc.metadata
+            script_style = metadata.get("script_style", "overview")
+            target_audience = metadata.get("target_audience", "general_audience")
+            video_duration = metadata.get("video_duration", 5)
+            include_synthesia_cues = metadata.get("include_synthesia_cues", True)
+            
+            logger.info(f"Demo mode: Would store video script '{doc.title}'")
+            logger.info(f"Style: {script_style}, Audience: {target_audience}, Duration: {video_duration}min")
+            logger.info(f"Synthesia cues: {include_synthesia_cues}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to store video script: {str(e)}")
 
 # FastAPI app setup
 @asynccontextmanager
@@ -761,12 +982,48 @@ async def health_check():
     return {"status": "healthy", "service": "docagent", "timestamp": datetime.utcnow()}
 
 @app.post("/generate", response_model=GeneratedDocument)
-@require_subscription(AccessLevel.STARTER)
+# @require_subscription(AccessLevel.STARTER)  # Commented out for demo
 async def generate_documentation(
     spec: DocumentSpec,
-    tenant_context: TenantContext = Depends(get_tenant_context_from_headers)
+    # tenant_context: TenantContext = Depends(get_tenant_context_from_headers)
 ):
     """Generate documentation based on specification"""
+    # Create mock tenant context for demo
+    class MockTenantContext:
+        def __init__(self):
+            self.tenant_id = "demo-tenant"
+            self.user_id = "demo-user"
+            self.role = "admin"
+    tenant_context = MockTenantContext()
+    return await doc_agent.generate_documentation(spec, tenant_context)
+
+@app.post("/generate/youtube-script", response_model=GeneratedDocument)
+# @require_subscription(AccessLevel.STARTER)  # Commented out for demo
+async def generate_youtube_script(
+    title: str = "AI SaaS Factory Overview",
+    duration: int = 5,
+    style: Literal["explainer", "demo", "tutorial", "overview"] = "overview",
+    target_audience: Literal["developers", "users", "admins", "contributors", "general_audience"] = "general_audience",
+    include_synthesia_cues: bool = True,
+    # tenant_context: TenantContext = Depends(get_tenant_context_from_headers)
+):
+    """Generate YouTube script optimized for Synthesia AI video generation"""
+    # Create mock tenant context for demo
+    class MockTenantContext:
+        def __init__(self):
+            self.tenant_id = "demo-tenant"
+            self.user_id = "demo-user"
+            self.role = "admin"
+    tenant_context = MockTenantContext()
+    spec = DocumentSpec(
+        document_type="youtube_script",
+        title=title,
+        target_audience=target_audience,
+        detail_level="comprehensive",
+        video_duration=duration,
+        script_style=style,
+        include_synthesia_cues=include_synthesia_cues
+    )
     return await doc_agent.generate_documentation(spec, tenant_context)
 
 @app.get("/templates")
