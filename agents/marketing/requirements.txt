@@ -2,4 +2,7 @@ fastapi
 pydantic
 uvicorn
 python-dotenv
-sendgrid 
+sendgrid
+openai
+pytest
+pytest-asyncio 
