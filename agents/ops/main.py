@@ -14,7 +14,7 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 # FastAPI imports
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query
@@ -36,6 +36,10 @@ from rollback_controller import (
     RollbackController, ErrorBudgetWebhookRequest, RollbackOperation,
     RollbackStatus, RollbackTrigger
 )
+from database_failover_agent import (
+    DatabaseFailoverAgent, FailoverRequest, FailoverResponse,
+    DatabaseHealthResponse
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,15 +48,16 @@ logger = logging.getLogger(__name__)
 # Global agent instances
 aiops_agent: Optional[AIOpsAgent] = None
 rollback_controller: Optional[RollbackController] = None
+database_failover_agent: Optional[DatabaseFailoverAgent] = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    global aiops_agent, rollback_controller
+    global aiops_agent, rollback_controller, database_failover_agent
     
     # Startup
-    logger.info("Starting AIOps Agent service with Auto-Rollback...")
+    logger.info("Starting AIOps Agent service with Auto-Rollback and Database Failover...")
     
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "saas-factory-prod")
     region = os.getenv("GOOGLE_CLOUD_REGION", "us-central1")
@@ -60,6 +65,7 @@ async def lifespan(app: FastAPI):
     # Initialize agents
     aiops_agent = AIOpsAgent(project_id)
     rollback_controller = RollbackController(project_id, region)
+    database_failover_agent = DatabaseFailoverAgent(project_id)
     
     # Start background cleanup task
     cleanup_task = asyncio.create_task(periodic_cleanup())
@@ -916,18 +922,125 @@ async def global_exception_handler(request, exc):
     return HTTPException(status_code=500, detail="Internal server error")
 
 
+# Database Failover Endpoints - Night 70
+
+def get_database_failover_agent() -> DatabaseFailoverAgent:
+    """Get the global Database Failover agent instance"""
+    if database_failover_agent is None:
+        raise HTTPException(status_code=503, detail="Database Failover agent not initialized")
+    return database_failover_agent
+
+
+@app.get("/database/health", response_model=Dict[str, Any])
+async def get_database_health(
+    instance_name: Optional[str] = Query(None, description="Specific instance name"),
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: DatabaseFailoverAgent = Depends(get_database_failover_agent)
+):
+    """Get database instance health status"""
+    try:
+        health_data = await agent.get_database_health(instance_name)
+        return {
+            "status": "success",
+            "data": health_data,
+            "tenant_id": tenant_context.tenant_id if tenant_context else "shared"
+        }
+    except Exception as e:
+        logger.error(f"Failed to get database health: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/database/failover", response_model=FailoverResponse)
+async def trigger_database_failover(
+    request: FailoverRequest,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: DatabaseFailoverAgent = Depends(get_database_failover_agent)
+):
+    """Trigger manual database failover"""
+    try:
+        logger.info(f"Manual failover requested by tenant {tenant_context.tenant_id if tenant_context else 'shared'}")
+        response = await agent.trigger_manual_failover(request)
+        return response
+    except Exception as e:
+        logger.error(f"Failed to trigger failover: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/database/failover/{operation_id}")
+async def get_failover_status(
+    operation_id: str,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: DatabaseFailoverAgent = Depends(get_database_failover_agent)
+):
+    """Get status of failover operation"""
+    try:
+        status = await agent.get_failover_status(operation_id)
+        return {
+            "status": "success",
+            "data": status,
+            "tenant_id": tenant_context.tenant_id if tenant_context else "shared"
+        }
+    except Exception as e:
+        logger.error(f"Failed to get failover status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/database/failover/metrics")
+async def get_failover_metrics(
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: DatabaseFailoverAgent = Depends(get_database_failover_agent)
+):
+    """Get database failover metrics and statistics"""
+    try:
+        metrics = await agent.get_failover_metrics()
+        return {
+            "status": "success",
+            "data": metrics,
+            "tenant_id": tenant_context.tenant_id if tenant_context else "shared"
+        }
+    except Exception as e:
+        logger.error(f"Failed to get failover metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/database/failover/drill")
+async def run_failover_drill(
+    target_replica: Optional[str] = Query(None, description="Target replica for drill"),
+    force: bool = Query(False, description="Force drill even if conditions not met"),
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: DatabaseFailoverAgent = Depends(get_database_failover_agent)
+):
+    """Run a database failover drill"""
+    try:
+        logger.info(f"Failover drill requested by tenant {tenant_context.tenant_id if tenant_context else 'shared'}")
+        
+        drill_request = FailoverRequest(
+            trigger="scheduled_drill",
+            target_replica=target_replica,
+            force=force,
+            reason="Manual failover drill"
+        )
+        
+        response = await agent.trigger_manual_failover(drill_request)
+        return {
+            "status": "success",
+            "message": "Failover drill initiated",
+            "data": response,
+            "tenant_id": tenant_context.tenant_id if tenant_context else "shared"
+        }
+    except Exception as e:
+        logger.error(f"Failed to run failover drill: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
     
-    port = int(os.getenv("PORT", 8086))
-    host = os.getenv("HOST", "0.0.0.0")
-    
-    logger.info(f"Starting AIOps Agent service on {host}:{port}")
-    
+    port = int(os.getenv("PORT", 8080))
     uvicorn.run(
-        app,
-        host=host,
+        "main:app",
+        host="0.0.0.0",
         port=port,
         log_level="info",
-        access_log=True
+        reload=os.getenv("ENVIRONMENT") == "development"
     ) 

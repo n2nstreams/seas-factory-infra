@@ -28,6 +28,17 @@ module "cloudsql_postgres" {
 
   database_version = "POSTGRES_15"
 
+  # Enhanced backup configuration for primary instance
+  backup_configuration = {
+    enabled                        = true
+    start_time                     = "02:00"
+    point_in_time_recovery_enabled = true
+    backup_retention_settings = {
+      retained_backups = 7
+      retention_unit   = "COUNT"
+    }
+  }
+
   ip_configuration = {
     ipv4_enabled         = false
     private_network      = module.network_base.network_self_link
@@ -35,6 +46,14 @@ module "cloudsql_postgres" {
     authorized_networks  = []
     require_ssl          = false
   }
+
+  # Enable pgvector extension
+  database_flags = [
+    {
+      name  = "shared_preload_libraries"
+      value = "pgvector"
+    }
+  ]
 
   user_name     = var.db_user
   user_password = var.db_password
@@ -58,4 +77,145 @@ resource "google_sql_user" "app" {
 resource "random_password" "appuser" {
   length  = 16
   special = true
+}
+
+# Failover configuration and monitoring
+resource "google_monitoring_alert_policy" "database_failover" {
+  project      = var.project_id
+  display_name = "Database Instance Failover Alert"
+  
+  conditions {
+    display_name = "Database instance is down"
+    condition_threshold {
+      filter         = "resource.type=\"gce_instance\" AND resource.labels.instance_id=\"${module.cloudsql_postgres.instance_name}\""
+      comparison     = "COMPARISON_LESS_THAN"
+      threshold_value = 1
+      duration       = "60s"
+      
+      aggregations {
+        alignment_period     = "60s"
+        per_series_aligner   = "ALIGN_MEAN"
+        cross_series_reducer = "REDUCE_MEAN"
+      }
+    }
+  }
+
+  notification_channels = []
+  
+  alert_strategy {
+    auto_close = "1800s"
+  }
+}
+
+# Cloud SQL Read Replica in us-east1 for disaster recovery
+resource "google_sql_database_instance" "read_replica_east" {
+  project             = var.project_id
+  name                = "psql-saas-factory-replica-east"
+  region              = "us-east1"
+  database_version    = "POSTGRES_15"
+  master_instance_name = module.cloudsql_postgres.instance_name
+
+  replica_configuration {
+    failover_target = true
+  }
+
+  settings {
+    tier                        = "db-custom-1-3840"
+    disk_size                   = 20
+    disk_autoresize            = true
+    disk_autoresize_limit      = 100
+    availability_type          = "REGIONAL"
+    backup_configuration {
+      enabled                        = true
+      start_time                     = "03:00"
+      point_in_time_recovery_enabled = true
+      backup_retention_settings {
+        retained_backups = 7
+        retention_unit   = "COUNT"
+      }
+    }
+    
+    ip_configuration {
+      ipv4_enabled         = false
+      private_network      = module.network_base.network_self_link
+      allocated_ip_range   = ""
+      authorized_networks  = []
+      require_ssl          = false
+    }
+
+    database_flags {
+      name  = "shared_preload_libraries"
+      value = "pgvector"
+    }
+  }
+
+  depends_on = [
+    module.cloudsql_postgres,
+    google_service_networking_connection.private_vpc_connection
+  ]
+}
+
+# Additional read replica in us-central1 for load distribution
+resource "google_sql_database_instance" "read_replica_central" {
+  project             = var.project_id
+  name                = "psql-saas-factory-replica-central"
+  region              = var.region
+  database_version    = "POSTGRES_15"
+  master_instance_name = module.cloudsql_postgres.instance_name
+
+  replica_configuration {
+    failover_target = false  # This is just for read load distribution
+  }
+
+  settings {
+    tier                        = "db-custom-1-3840"
+    disk_size                   = 20
+    disk_autoresize            = true
+    disk_autoresize_limit      = 100
+    availability_type          = "REGIONAL"
+    
+    ip_configuration {
+      ipv4_enabled         = false
+      private_network      = module.network_base.network_self_link
+      allocated_ip_range   = ""
+      authorized_networks  = []
+      require_ssl          = false
+    }
+
+    database_flags {
+      name  = "shared_preload_libraries"
+      value = "pgvector"
+    }
+  }
+
+  depends_on = [
+    module.cloudsql_postgres,
+    google_service_networking_connection.private_vpc_connection
+  ]
+}
+
+# Output the replica instances for configuration
+output "primary_instance_name" {
+  description = "Name of the primary Cloud SQL instance"
+  value       = module.cloudsql_postgres.instance_name
+}
+
+output "read_replica_east_name" {
+  description = "Name of the us-east1 read replica instance"
+  value       = google_sql_database_instance.read_replica_east.name
+}
+
+output "read_replica_central_name" {
+  description = "Name of the us-central1 read replica instance" 
+  value       = google_sql_database_instance.read_replica_central.name
+}
+
+output "primary_instance_ip" {
+  description = "Private IP of the primary instance"
+  value       = module.cloudsql_postgres.private_ip_address
+}
+
+output "read_replica_east_ip" {
+  description = "Private IP of the us-east1 replica"
+  value       = google_sql_database_instance.read_replica_east.private_ip_address
 } 
