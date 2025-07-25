@@ -82,20 +82,25 @@ export default function ChatWidget() {
     <>
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-lg z-50"
+        className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-xl z-50 bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 backdrop-blur-sm border border-stone-400/40"
       >
-        {isOpen ? <X /> : <MessageSquare />}
+        {isOpen ? <X className="w-6 h-6 text-white" /> : <MessageSquare className="w-6 h-6 text-white" />}
       </Button>
 
       {isOpen && (
-        <Card className="fixed bottom-28 right-8 w-96 h-[600px] flex flex-col shadow-2xl z-50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Chat with our AI</CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+        <Card className="fixed bottom-28 right-8 w-96 h-[600px] flex flex-col shadow-2xl z-50 bg-white/25 backdrop-blur-lg border border-stone-400/40">
+          <CardHeader className="flex flex-row items-center justify-between bg-white/15 backdrop-blur-sm border-b border-stone-400/30">
+            <CardTitle className="text-stone-900 font-bold">Chat with our AI</CardTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsOpen(false)}
+              className="hover:bg-white/20 text-stone-700 hover:text-stone-900"
+            >
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
-          <CardContent className="flex-grow">
+          <CardContent className="flex-grow p-4">
             <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
               <div className="flex flex-col space-y-4">
                 {messages.map((msg, index) => (
@@ -108,8 +113,8 @@ export default function ChatWidget() {
                     <div
                       className={`px-4 py-2 rounded-lg max-w-xs ${
                         msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                          ? 'bg-gradient-to-r from-green-800 to-green-900 text-white shadow-lg backdrop-blur-sm'
+                          : 'bg-white/40 backdrop-blur-sm text-stone-800 border border-stone-400/30'
                       }`}
                     >
                       {msg.content}
@@ -118,15 +123,15 @@ export default function ChatWidget() {
                 ))}
                 {isLoading && (
                   <div className="flex items-end justify-start">
-                    <div className="px-4 py-2 rounded-lg max-w-xs bg-muted">
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                    <div className="px-4 py-2 rounded-lg max-w-xs bg-white/40 backdrop-blur-sm border border-stone-400/30">
+                      <Loader2 className="h-5 w-5 animate-spin text-green-800" />
                     </div>
                   </div>
                 )}
               </div>
             </ScrollArea>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="bg-white/15 backdrop-blur-sm border-t border-stone-400/30">
             <div className="flex w-full items-center space-x-2">
               <Input
                 value={input}
@@ -134,8 +139,13 @@ export default function ChatWidget() {
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder="Type a message..."
                 disabled={isLoading}
+                className="bg-white/40 backdrop-blur-sm border border-stone-400/50 text-stone-800 placeholder-stone-600"
               />
-              <Button onClick={handleSendMessage} disabled={isLoading}>
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={isLoading}
+                className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </div>

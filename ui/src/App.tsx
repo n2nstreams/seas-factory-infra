@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Home from '@/pages/Home';
 import Dashboard from '@/pages/Dashboard';
 import EventDashboard from '@/pages/EventDashboard';
@@ -13,27 +13,36 @@ import FAQPage from './pages/FAQ';
 import Navigation from './components/Navigation';
 import './App.css';
 
+function AppContent() {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {!isHomePage && <Navigation />}
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/submit-idea" element={<SubmitIdea />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/events" element={<EventDashboard />} />
+          <Route path="/design" element={<DesignDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Routes>
+      </main>
+      <ChatWidget />
+    </div>
+  );
+}
+
 function App() {
   return (
     <Router>
-      <div className="flex flex-col min-h-screen">
-        <Navigation />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/submit-idea" element={<SubmitIdea />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/events" element={<EventDashboard />} />
-            <Route path="/design" element={<DesignDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
-        </main>
-        <ChatWidget />
-      </div>
+      <AppContent />
     </Router>
   );
 }
