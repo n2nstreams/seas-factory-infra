@@ -1,0 +1,9 @@
+# DocAgent requirements
+# Inherits from requirements-base.txt with doc-specific additions
+
+-r ../requirements.txt
+
+# Documentation-specific dependencies
+markdown>=3.5.0
+pypandoc>=1.12
+python-docx>=1.1.0 
