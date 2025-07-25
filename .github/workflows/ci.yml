@@ -89,7 +89,20 @@ jobs:
           TEST_FILES=$(find . -name "*test*.py" -o -name "test_*.py" 2>/dev/null | grep -v -E "(\.venv|venv|env|y/google-cloud-sdk|orchestrator/\.venv)" | head -1)
           if [ -n "$TEST_FILES" ]; then
             echo "Test files found, running pytest..."
-            pytest --cov=. --cov-report=xml --cov-report=term-missing
+            
+            # Run all tests including smoke tests
+            pytest --cov=. --cov-report=xml --cov-report=term-missing \
+              --tb=short \
+              -v \
+              --durations=10
+              
+            # Run specific smoke tests for marketplace signup flow
+            echo "🚨 Running critical path smoke tests..."
+            pytest tests/integration/test_marketplace_signup_smoke.py::test_end_to_end_marketplace_signup \
+              -v \
+              --tb=short \
+              -x
+              
           else
             echo "No test files found in project directories, skipping tests"
             echo "This is expected for projects without tests yet."
@@ -104,6 +117,9 @@ jobs:
           DB_PASS: localpass
           DB_NAME: factorydb
           DB_PORT: 5432
+          # Enable smoke test mode
+          SMOKE_TEST_MODE: true
+          MOCK_EMAIL_SERVICE: true
           
       - name: Setup Snyk CLI
         uses: snyk/actions/setup@master
