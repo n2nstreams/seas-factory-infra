@@ -10,6 +10,8 @@ import SignIn from '@/pages/SignIn';
 import SubmitIdea from '@/pages/SubmitIdea';
 import ChatWidget from './components/ChatWidget';
 import FAQPage from './pages/FAQ';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import DPA from '@/pages/DPA';
 import Navigation from './components/Navigation';
 import './App.css';
 
@@ -28,6 +30,8 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/dpa" element={<DPA />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/events" element={<EventDashboard />} />
           <Route path="/design" element={<DesignDashboard />} />

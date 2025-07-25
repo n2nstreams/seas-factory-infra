@@ -19,6 +19,7 @@ from google.cloud import bigquery
 # Import admin routes
 from admin_routes import admin_router
 from user_routes import router as user_router
+from privacy_routes import router as privacy_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +43,7 @@ app.add_middleware(
 # Add admin routes
 app.include_router(admin_router)
 app.include_router(user_router)
+app.include_router(privacy_router)
 
 # Health check endpoint
 @app.get("/health")

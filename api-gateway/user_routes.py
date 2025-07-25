@@ -17,7 +17,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from pydantic import BaseModel, EmailStr, validator
 import asyncpg
 import bcrypt
@@ -42,6 +42,7 @@ class UserRegistrationRequest(BaseModel):
     password: str
     confirmPassword: str
     agreeToTerms: bool = False
+    gdprConsent: bool = False
     tenant_id: Optional[str] = None
     
     @validator('password')
@@ -60,6 +61,12 @@ class UserRegistrationRequest(BaseModel):
     def must_agree_to_terms(cls, v):
         if not v:
             raise ValueError('You must agree to the terms of service')
+        return v
+    
+    @validator('gdprConsent')
+    def must_consent_to_gdpr(cls, v):
+        if not v:
+            raise ValueError('GDPR consent is required')
         return v
 
 class UserLoginRequest(BaseModel):
@@ -111,7 +118,7 @@ def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 @router.post("/register", response_model=UserResponse)
-async def register_user(user_data: UserRegistrationRequest):
+async def register_user(user_data: UserRegistrationRequest, request: Request):
     """Register a new user and send welcome email"""
     try:
         await tenant_db.init_pool()
@@ -137,10 +144,19 @@ async def register_user(user_data: UserRegistrationRequest):
             password_hash = hash_password(user_data.password)
             full_name = f"{user_data.firstName} {user_data.lastName}"
             
+            # Get client IP for GDPR compliance tracking
+            client_ip = request.client.host if request.client else "unknown"
+            user_agent = request.headers.get("user-agent", "unknown")
+            now = datetime.utcnow()
+            
             await conn.execute(
                 """
-                INSERT INTO users (id, tenant_id, email, name, role, status, password_hash, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                INSERT INTO users (
+                    id, tenant_id, email, name, role, status, password_hash, 
+                    created_at, updated_at, gdpr_consent_given, gdpr_consent_date, 
+                    gdpr_consent_ip, privacy_policy_version, dpa_version
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
                 """,
                 user_id,
                 tenant_id,
@@ -149,8 +165,53 @@ async def register_user(user_data: UserRegistrationRequest):
                 "user",  # Default role
                 "active",
                 password_hash,
-                datetime.utcnow(),
-                datetime.utcnow()
+                now,
+                now,
+                user_data.gdprConsent,
+                now if user_data.gdprConsent else None,
+                client_ip if user_data.gdprConsent else None,
+                "1.0",  # Privacy policy version
+                "1.0"   # DPA version
+            )
+            
+            # Create consent audit record for GDPR compliance
+            await conn.execute(
+                """
+                INSERT INTO privacy_consent_audit (
+                    user_id, tenant_id, consent_type, consent_given, consent_date,
+                    consent_ip, document_version, user_agent, notes
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                """,
+                user_id,
+                tenant_id,
+                "gdpr",
+                user_data.gdprConsent,
+                now,
+                client_ip,
+                "1.0",
+                user_agent,
+                f"Initial registration consent for user {full_name}"
+            )
+            
+            # Also track terms of service acceptance
+            await conn.execute(
+                """
+                INSERT INTO privacy_consent_audit (
+                    user_id, tenant_id, consent_type, consent_given, consent_date,
+                    consent_ip, document_version, user_agent, notes
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                """,
+                user_id,
+                tenant_id,
+                "terms",
+                user_data.agreeToTerms,
+                now,
+                client_ip,
+                "1.0",
+                user_agent,
+                f"Terms of service acceptance for user {full_name}"
             )
             
             # Get tenant info for plan details

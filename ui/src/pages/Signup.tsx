@@ -33,7 +33,8 @@ export default function Signup() {
     email: '',
     password: '',
     confirmPassword: '',
-    agreeToTerms: false
+    agreeToTerms: false,
+    gdprConsent: false
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -61,6 +62,7 @@ export default function Signup() {
     if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms';
+    if (!formData.gdprConsent) newErrors.gdprConsent = 'GDPR consent is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -383,32 +385,57 @@ export default function Signup() {
                   {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                 </div>
 
-                <div className="flex items-start space-x-2">
-                  <input
-                    type="checkbox"
-                    id="agreeToTerms"
-                    name="agreeToTerms"
-                    checked={formData.agreeToTerms}
-                    onChange={handleInputChange}
-                    className="mt-1 h-4 w-4 text-green-800 focus:ring-green-800 border-stone-300 rounded"
-                  />
-                  <label htmlFor="agreeToTerms" className="text-sm text-body">
-                    I agree to the{" "}
-                    <a href="#" className="text-accent hover:underline">
-                      Terms of Service
-                    </a>{" "}
-                    and{" "}
-                    <a href="#" className="text-accent hover:underline">
-                      Privacy Policy
-                    </a>
-                  </label>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-2">
+                    <input
+                      type="checkbox"
+                      id="agreeToTerms"
+                      name="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onChange={handleInputChange}
+                      className="mt-1 h-4 w-4 text-green-800 focus:ring-green-800 border-stone-300 rounded"
+                    />
+                    <label htmlFor="agreeToTerms" className="text-sm text-body">
+                      I agree to the{" "}
+                      <a href="#" className="text-accent hover:underline">
+                        Terms of Service
+                      </a>{" "}
+                      and{" "}
+                      <a href="/privacy" className="text-accent hover:underline">
+                        Privacy Policy
+                      </a>
+                    </label>
+                  </div>
+                  {errors.agreeToTerms && <p className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
+                  
+                  <div className="flex items-start space-x-2">
+                    <input
+                      type="checkbox"
+                      id="gdprConsent"
+                      name="gdprConsent"
+                      checked={formData.gdprConsent}
+                      onChange={handleInputChange}
+                      className="mt-1 h-4 w-4 text-green-800 focus:ring-green-800 border-stone-300 rounded"
+                    />
+                    <label htmlFor="gdprConsent" className="text-sm text-body">
+                      I consent to the processing of my personal data as described in the{" "}
+                      <a href="/privacy" className="text-accent hover:underline">
+                        Privacy Policy
+                      </a>{" "}
+                      and{" "}
+                      <a href="/dpa" className="text-accent hover:underline">
+                        Data Processing Agreement
+                      </a>{" "}
+                      (required for GDPR compliance)
+                    </label>
+                  </div>
+                  {errors.gdprConsent && <p className="text-red-500 text-xs">{errors.gdprConsent}</p>}
                 </div>
-                {errors.agreeToTerms && <p className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
 
                 <Button 
                   type="submit" 
                   className="w-full btn-primary"
-                  disabled={!formData.agreeToTerms || isSubmitting}
+                  disabled={!formData.agreeToTerms || !formData.gdprConsent || isSubmitting}
                 >
                   {isSubmitting ? 'Creating Account...' : 'Create Account'}
                   {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
