@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FactoryProgressMonitor from "@/components/FactoryProgressMonitor";
+import OnboardingWizard from "@/components/OnboardingWizard";
+import { onboardingUtils } from "@/lib/userPreferences";
 import { 
   Code2, 
   Settings, 
@@ -25,7 +27,8 @@ import {
   Plus,
   Check,
   Home,
-  BarChart3
+  BarChart3,
+  Lightbulb
 } from 'lucide-react';
 
 // Types
@@ -85,6 +88,26 @@ interface ActivityItem {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user needs onboarding on component mount
+  useEffect(() => {
+    const needsOnboarding = !onboardingUtils.isCompleted();
+    if (needsOnboarding) {
+      // Small delay to ensure the dashboard has rendered
+      setTimeout(() => setShowOnboarding(true), 500);
+    }
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    onboardingUtils.complete();
+    setShowOnboarding(false);
+  };
+
+  const handleOnboardingSkip = () => {
+    onboardingUtils.complete();
+    setShowOnboarding(false);
+  };
 
   // Mock data
   const subscription: UserSubscription = {
@@ -400,7 +423,7 @@ export default function Dashboard() {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="glass-card p-1 w-full">
+            <TabsList className="glass-card p-1 w-full" data-onboarding="dashboard-tabs">
               <TabsTrigger value="overview" className="btn-ghost">
                 <Home className="w-4 h-4 mr-2" />
                 Overview
@@ -428,9 +451,38 @@ export default function Dashboard() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
+              {/* Quick Start Actions */}
+              <Card className="card-glass" data-onboarding="submit-idea">
+                <CardHeader>
+                  <CardTitle className="text-heading flex items-center">
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Quick Start
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-green-900 mb-2">Got a SaaS idea?</h3>
+                      <p className="text-sm text-green-800/70 mb-4">
+                        Describe your idea and watch our AI factory build it into a real application in 24 hours.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        className="bg-green-800 hover:bg-green-900 text-white shadow-lg"
+                        onClick={() => window.location.href = '/submit-idea'}
+                      >
+                        <Lightbulb className="w-4 h-4 mr-2" />
+                        Submit Your Idea
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Recent Projects */}
-                <Card className="card-glass">
+                <Card className="card-glass" data-onboarding="project-stages">
                   <CardHeader>
                     <CardTitle className="text-heading flex items-center">
                       <Package className="w-5 h-5 mr-2" />
@@ -835,6 +887,13 @@ export default function Dashboard() {
           </div>
         </div>
       </footer>
+      
+      {/* Onboarding Wizard */}
+      <OnboardingWizard
+        isOpen={showOnboarding}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
     </div>
   );
 } 

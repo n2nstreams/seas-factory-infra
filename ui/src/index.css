@@ -211,3 +211,70 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
 }
+
+/* Onboarding Wizard Glassmorphism Styles */
+.onboarding-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: 
+    0 8px 32px 0 rgba(34, 197, 94, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.onboarding-card-content {
+  background: rgba(240, 253, 244, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.onboarding-highlight {
+  position: relative;
+  z-index: 60;
+}
+
+.onboarding-highlight::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(45deg, rgba(34, 197, 94, 0.3), rgba(21, 128, 61, 0.3));
+  border-radius: 12px;
+  z-index: -1;
+  animation: onboarding-pulse 2s ease-in-out infinite;
+}
+
+@keyframes onboarding-pulse {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+}
+
+/* Ensure backdrop blur works across browsers */
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Enhanced button styles for onboarding */
+.onboarding-btn-primary {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.9), rgba(21, 128, 61, 0.9));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  transition: all 0.3s ease;
+}
+
+.onboarding-btn-primary:hover {
+  background: linear-gradient(135deg, rgba(21, 128, 61, 0.95), rgba(15, 118, 110, 0.95));
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+}

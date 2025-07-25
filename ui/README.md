@@ -1,69 +1,77 @@
-# React + TypeScript + Vite
+# AI SaaS Factory - Frontend Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based dashboard for the AI SaaS Factory platform, featuring a glassmorphism design with natural olive green theming.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🎯 **Night 74: Onboarding Wizard** 
+**First-time user experience with interactive dashboard tour**
 
-## Expanding the ESLint configuration
+The onboarding wizard provides new users with a guided introduction to the AI SaaS Factory dashboard:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Automatic Detection**: Shows automatically on first dashboard login
+- **5-Step Interactive Tour**:
+  1. **Welcome** - Introduction to AI SaaS Factory capabilities
+  2. **Submit Ideas** - How to submit your first SaaS idea
+  3. **Project Stages** - Understanding the AI factory pipeline
+  4. **Dashboard Navigation** - Key features and tabs
+  5. **Support Resources** - Where to get help
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Glassmorphism Design**: Consistent with the platform's natural olive green theme
+- **Element Highlighting**: Interactive highlights of key dashboard elements
+- **User Preferences**: Persistent tracking via localStorage
+- **Development Tools**: Built-in testing utilities for development
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+#### Usage
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The onboarding wizard appears automatically for new users. For testing purposes, developers can use:
+
+```javascript
+// In browser console (development mode only)
+window.onboardingDevUtils.forceShowOnboarding()
+window.onboardingDevUtils.logPreferences()
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+#### Implementation Details
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Component**: `src/components/OnboardingWizard.tsx`
+- **State Management**: `src/lib/userPreferences.ts`
+- **Integration**: `src/pages/Dashboard.tsx`
+- **Highlighting**: CSS animations with `data-onboarding` attributes
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The wizard uses a step-by-step modal approach with:
+- Progress indicator
+- Navigation controls (Next/Back/Skip)
+- Element highlighting with pulsing animations
+- Glassmorphism styling with backdrop blur effects
+
+### Other Features
+
+- **Real-time Project Monitoring**
+- **Build Progress Tracking** 
+- **Billing & Subscription Management**
+- **Factory Pipeline Visualization**
+- **Responsive Glassmorphism Design**
+
+## Development
+
+```bash
+npm install
+npm run dev
 ```
+
+The application will be available at `http://localhost:5173`
+
+## Architecture
+
+- **React 18** with TypeScript
+- **Vite** for build tooling
+- **Tailwind CSS** for styling
+- **shadcn/ui** for component primitives
+- **Lucide React** for icons
+
+## Browser Support
+
+- Modern browsers with backdrop-filter support
+- Graceful degradation for older browsers
+- Mobile-responsive design
