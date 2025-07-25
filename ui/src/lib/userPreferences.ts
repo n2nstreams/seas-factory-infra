@@ -147,9 +147,10 @@ export class UserPreferencesManager {
    * Update notification preferences
    */
   updateNotificationPreferences(notifications: Partial<UserPreferences['notifications']>): void {
+    const currentNotifications = this.preferences.notifications || DEFAULT_PREFERENCES.notifications!;
     this.updatePreferences({
       notifications: {
-        ...this.preferences.notifications,
+        ...currentNotifications,
         ...notifications
       }
     });
@@ -215,7 +216,7 @@ export const devUtils = {
 };
 
 // Make dev utils available globally in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+if (typeof window !== 'undefined' && import.meta.env?.DEV) {
   (window as any).onboardingDevUtils = devUtils;
   console.log('🔧 [DEV] Onboarding dev utils available at: window.onboardingDevUtils');
   console.log('💡 [DEV] Try: window.onboardingDevUtils.forceShowOnboarding()');

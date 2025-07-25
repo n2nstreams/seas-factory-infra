@@ -9,13 +9,11 @@ import {
   ArrowLeft, 
   Sparkles, 
   Lightbulb, 
-  Palette, 
   Code2, 
   Rocket,
   BarChart3,
   MessageCircle,
   CheckCircle,
-  Play,
   Plus
 } from 'lucide-react';
 
@@ -133,7 +131,7 @@ export default function OnboardingWizard({ isOpen, onComplete, onSkip }: Onboard
                 { stage: 'Development', icon: '💻', desc: 'Code generation & API creation' },
                 { stage: 'Testing', icon: '🧪', desc: 'Automated QA & security scans' },
                 { stage: 'Deployment', icon: '🚀', desc: 'Production deployment & monitoring' }
-              ].map((item, index) => (
+                             ].map((item, _index) => (
                 <div key={item.stage} className="flex items-center gap-3 p-3 rounded-lg bg-white/30 backdrop-blur-sm">
                   <span className="text-lg">{item.icon}</span>
                   <div className="flex-1">
@@ -373,26 +371,7 @@ export default function OnboardingWizard({ isOpen, onComplete, onSkip }: Onboard
         </Card>
       </div>
       
-      {/* Custom CSS for highlighting */}
-      <style jsx>{`
-        .onboarding-highlight {
-          position: relative;
-          z-index: 60;
-        }
-        .onboarding-highlight::before {
-          content: '';
-          position: absolute;
-          inset: -4px;
-          background: linear-gradient(45deg, rgba(34, 197, 94, 0.3), rgba(21, 128, 61, 0.3));
-          border-radius: 12px;
-          z-index: -1;
-          animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.6; }
-        }
-      `}</style>
+
     </>
   );
 } 
