@@ -29,7 +29,8 @@ from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_hea
 # Import AIOps agent and rollback controller
 from aiops_agent import (
     AIOpsAgent, LogStreamConfig, AnomalyDetectionRequest, AlertConfigUpdate,
-    LogAnalyticsQuery, AlertSeverity, AnomalyType, GOOGLE_CLOUD_AVAILABLE
+    LogAnalyticsQuery, AlertSeverity, AnomalyType, GOOGLE_CLOUD_AVAILABLE,
+    LoadTestRequest, LoadTestStatusResponse, LoadTestResult
 )
 from rollback_controller import (
     RollbackController, ErrorBudgetWebhookRequest, RollbackOperation,
@@ -675,6 +676,236 @@ async def trigger_manual_rollback(
     except Exception as e:
         logger.error(f"Manual rollback failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Load Testing Endpoints (Night 69)
+
+@app.post("/load-test/start")
+async def start_load_test(
+    request: LoadTestRequest,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: AIOpsAgent = Depends(get_aiops_agent)
+):
+    """
+    Start a k6 load test
+    
+    Initiates a comprehensive load test using k6 with configurable scenarios
+    including spike, load, stress, and soak tests.
+    """
+    
+    try:
+        # Log the request
+        await agent.tenant_db.log_agent_event(
+            tenant_context=tenant_context,
+            event_type="load_test",
+            agent_name="AIOpsAgent",
+            stage="start_test",
+            status="started",
+            input_data=request.model_dump()
+        )
+        
+        # Start the load test
+        test_id = await agent.start_load_test(request)
+        
+        logger.info(f"Started load test {test_id} for tenant {tenant_context.tenant_id}")
+        
+        return {
+            "status": "success",
+            "test_id": test_id,
+            "message": f"Load test started with ID {test_id}",
+            "test_type": request.test_type,
+            "target": request.target.name,
+            "estimated_duration_minutes": request.duration_minutes
+        }
+        
+    except ValueError as e:
+        logger.error(f"Invalid load test request: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to start load test for tenant {tenant_context.tenant_id}: {e}")
+        
+        # Log the error event
+        await agent.tenant_db.log_agent_event(
+            tenant_context=tenant_context,
+            event_type="load_test",
+            agent_name="AIOpsAgent",
+            stage="start_test",
+            status="failed",
+            error_message=str(e)
+        )
+        
+        raise HTTPException(status_code=500, detail=f"Failed to start load test: {str(e)}")
+
+
+@app.get("/load-test/{test_id}/status", response_model=LoadTestStatusResponse)
+async def get_load_test_status(
+    test_id: str,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: AIOpsAgent = Depends(get_aiops_agent)
+):
+    """
+    Get the status of a running or completed load test
+    
+    Returns real-time status information including progress, metrics,
+    and current virtual user count.
+    """
+    
+    try:
+        status = await agent.get_load_test_status(test_id)
+        
+        if not status:
+            raise HTTPException(status_code=404, detail="Load test not found")
+        
+        return status
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get load test status for {test_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get load test status: {str(e)}")
+
+
+@app.get("/load-test/{test_id}/result")
+async def get_load_test_result(
+    test_id: str,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: AIOpsAgent = Depends(get_aiops_agent)
+):
+    """
+    Get detailed results of a completed load test
+    
+    Returns comprehensive test results including metrics, thresholds,
+    anomalies detected, and Gemini analysis.
+    """
+    
+    try:
+        result = await agent.get_load_test_result(test_id)
+        
+        if not result:
+            raise HTTPException(status_code=404, detail="Load test result not found")
+        
+        return {
+            "status": "success",
+            "result": result.to_dict()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get load test result for {test_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get load test result: {str(e)}")
+
+
+@app.get("/load-test/list")
+async def list_load_tests(
+    limit: int = Query(50, ge=1, le=100, description="Maximum number of tests to return"),
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: AIOpsAgent = Depends(get_aiops_agent)
+):
+    """
+    List all load tests with their basic information
+    
+    Returns a list of all load tests ordered by start time (newest first).
+    """
+    
+    try:
+        tests = await agent.get_all_load_tests(limit)
+        
+        return {
+            "status": "success",
+            "total_tests": len(tests),
+            "tests": [test.to_dict() for test in tests]
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to list load tests: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list load tests: {str(e)}")
+
+
+@app.post("/load-test/{test_id}/cancel")
+async def cancel_load_test(
+    test_id: str,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: AIOpsAgent = Depends(get_aiops_agent)
+):
+    """
+    Cancel a running load test
+    
+    Gracefully terminates a running load test and marks it as cancelled.
+    """
+    
+    try:
+        success = await agent.cancel_load_test(test_id)
+        
+        if success:
+            logger.info(f"Cancelled load test {test_id}")
+            return {
+                "status": "success",
+                "message": f"Load test {test_id} cancelled successfully"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Load test not found or not running")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to cancel load test {test_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to cancel load test: {str(e)}")
+
+
+@app.post("/load-test/quick-stress")
+async def quick_stress_test(
+    target_url: str = Query(..., description="Target URL to stress test"),
+    duration_minutes: int = Query(2, ge=1, le=10, description="Test duration in minutes"),
+    virtual_users: int = Query(50, ge=1, le=200, description="Number of virtual users"),
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
+    agent: AIOpsAgent = Depends(get_aiops_agent)
+):
+    """
+    Quick stress test endpoint for immediate testing
+    
+    Provides a simplified way to quickly stress test a single URL
+    without configuring complex test scenarios.
+    """
+    
+    try:
+        # Validate URL
+        if not target_url.startswith(('http://', 'https://')):
+            raise HTTPException(status_code=400, detail="Target URL must start with http:// or https://")
+        
+        # Create simplified load test request
+        request = LoadTestRequest(
+            test_type="stress",
+            target=LoadTestTargetRequest(
+                name="quick-stress",
+                base_url=target_url,
+                endpoints=["/", "/health", "/metrics"]
+            ),
+            duration_minutes=duration_minutes,
+            virtual_users=virtual_users,
+            ramp_up_duration_seconds=30,
+            thresholds={
+                "http_req_duration": ["p(95)<3000"],  # More lenient for quick tests
+                "http_req_failed": ["rate<0.2"]
+            }
+        )
+        
+        test_id = await agent.start_load_test(request)
+        
+        return {
+            "status": "success",
+            "test_id": test_id,
+            "message": f"Quick stress test started for {target_url}",
+            "duration_minutes": duration_minutes,
+            "virtual_users": virtual_users,
+            "monitor_url": f"/load-test/{test_id}/status"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to start quick stress test: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to start quick stress test: {str(e)}")
 
 
 # Error handlers

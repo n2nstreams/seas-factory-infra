@@ -13,6 +13,8 @@ import asyncio
 import json
 import logging
 import os
+import subprocess
+import tempfile
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -64,6 +66,25 @@ class AnomalyType(Enum):
     RESOURCE_EXHAUSTION = "resource_exhaustion"
     SECURITY_INCIDENT = "security_incident"
     PERFORMANCE_DEGRADATION = "performance_degradation"
+    LOAD_TEST_FAILURE = "load_test_failure"
+
+
+class LoadTestType(Enum):
+    """Types of load tests"""
+    SPIKE = "spike"
+    LOAD = "load"
+    STRESS = "stress"
+    SOAK = "soak"
+    CUSTOM = "custom"
+
+
+class LoadTestStatus(Enum):
+    """Status of load test execution"""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 class LogProcessingStatus(Enum):
@@ -184,6 +205,129 @@ class Alert:
         return end_time - self.created_at
 
 
+@dataclass
+class LoadTestTarget:
+    """Target service configuration for load testing"""
+    name: str
+    base_url: str
+    endpoints: List[str]
+    auth_required: bool = False
+    auth_token: Optional[str] = None
+    custom_headers: Dict[str, str] = field(default_factory=dict)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "base_url": self.base_url,
+            "endpoints": self.endpoints,
+            "auth_required": self.auth_required,
+            "custom_headers": self.custom_headers
+        }
+
+
+@dataclass
+class LoadTestConfiguration:
+    """Configuration for k6 load test"""
+    test_id: str
+    test_type: LoadTestType
+    target: LoadTestTarget
+    duration_minutes: int = 5
+    virtual_users: int = 20
+    ramp_up_duration_seconds: int = 30
+    thresholds: Dict[str, List[str]] = field(default_factory=lambda: {
+        "http_req_duration": ["p(95)<2000"],
+        "http_req_failed": ["rate<0.1"]
+    })
+    environment_vars: Dict[str, str] = field(default_factory=dict)
+    custom_script_path: Optional[str] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "test_id": self.test_id,
+            "test_type": self.test_type.value,
+            "target": self.target.to_dict(),
+            "duration_minutes": self.duration_minutes,
+            "virtual_users": self.virtual_users,
+            "ramp_up_duration_seconds": self.ramp_up_duration_seconds,
+            "thresholds": self.thresholds,
+            "environment_vars": self.environment_vars,
+            "custom_script_path": self.custom_script_path
+        }
+
+
+@dataclass
+class LoadTestResult:
+    """Results from k6 load test execution"""
+    test_id: str
+    test_type: LoadTestType
+    status: LoadTestStatus
+    started_at: datetime
+    completed_at: Optional[datetime] = None
+    duration_seconds: Optional[float] = None
+    
+    # K6 metrics
+    total_requests: int = 0
+    failed_requests: int = 0
+    error_rate: float = 0.0
+    avg_response_time: float = 0.0
+    p95_response_time: float = 0.0
+    requests_per_second: float = 0.0
+    data_received_mb: float = 0.0
+    
+    # Threshold results
+    thresholds_passed: Dict[str, bool] = field(default_factory=dict)
+    overall_passed: bool = False
+    
+    # Raw data
+    raw_output: str = ""
+    raw_json_summary: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    
+    # Anomalies detected during test
+    anomalies_detected: List[str] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "test_id": self.test_id,
+            "test_type": self.test_type.value,
+            "status": self.status.value,
+            "started_at": self.started_at.isoformat(),
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "duration_seconds": self.duration_seconds,
+            "total_requests": self.total_requests,
+            "failed_requests": self.failed_requests,
+            "error_rate": self.error_rate,
+            "avg_response_time": self.avg_response_time,
+            "p95_response_time": self.p95_response_time,
+            "requests_per_second": self.requests_per_second,
+            "data_received_mb": self.data_received_mb,
+            "thresholds_passed": self.thresholds_passed,
+            "overall_passed": self.overall_passed,
+            "anomalies_detected": self.anomalies_detected,
+            "error_message": self.error_message
+        }
+
+
+@dataclass
+class LoadTestExecution:
+    """Represents a running load test execution"""
+    test_id: str
+    config: LoadTestConfiguration
+    process: Optional[Any] = None  # subprocess.Popen
+    result: Optional[LoadTestResult] = None
+    logs: List[str] = field(default_factory=list)
+    
+    @property
+    def is_running(self) -> bool:
+        return self.process is not None and self.process.poll() is None
+    
+    @property
+    def is_completed(self) -> bool:
+        return self.result is not None and self.result.status in [
+            LoadTestStatus.COMPLETED, LoadTestStatus.FAILED, LoadTestStatus.CANCELLED
+        ]
+
+
 # Pydantic models for API
 class LogStreamConfig(BaseModel):
     """Configuration for log streaming"""
@@ -219,6 +363,48 @@ class LogAnalyticsQuery(BaseModel):
     severity_levels: List[AlertSeverity] = Field(default_factory=list)
 
 
+# Load Testing API Models
+class LoadTestTargetRequest(BaseModel):
+    """Request model for load test target"""
+    name: str = Field(..., description="Name of the target service")
+    base_url: str = Field(..., description="Base URL of the service to test")
+    endpoints: List[str] = Field(default_factory=list, description="Specific endpoints to test")
+    auth_required: bool = Field(default=False, description="Whether authentication is required")
+    auth_token: Optional[str] = Field(None, description="Authentication token if required")
+    custom_headers: Dict[str, str] = Field(default_factory=dict, description="Custom headers to include")
+
+
+class LoadTestRequest(BaseModel):
+    """Request to start a load test"""
+    test_type: str = Field(..., description="Type of load test (spike, load, stress, soak, custom)")
+    target: LoadTestTargetRequest = Field(..., description="Target service configuration")
+    duration_minutes: int = Field(default=5, ge=1, le=60, description="Test duration in minutes")
+    virtual_users: int = Field(default=20, ge=1, le=1000, description="Number of virtual users")
+    ramp_up_duration_seconds: int = Field(default=30, ge=0, le=300, description="Ramp up duration in seconds")
+    thresholds: Dict[str, List[str]] = Field(
+        default_factory=lambda: {
+            "http_req_duration": ["p(95)<2000"],
+            "http_req_failed": ["rate<0.1"]
+        },
+        description="Performance thresholds"
+    )
+    environment_vars: Dict[str, str] = Field(default_factory=dict, description="Environment variables for k6")
+    custom_script_path: Optional[str] = Field(None, description="Path to custom k6 script")
+
+
+class LoadTestStatusResponse(BaseModel):
+    """Response model for load test status"""
+    test_id: str
+    status: str
+    started_at: str
+    completed_at: Optional[str] = None
+    duration_seconds: Optional[float] = None
+    progress_percentage: float = 0.0
+    current_vus: int = 0
+    total_requests: int = 0
+    error_rate: float = 0.0
+
+
 class AIOpsAgent:
     """
     Advanced AIOps Agent with Gemini-powered anomaly detection
@@ -250,6 +436,11 @@ class AIOpsAgent:
         self.active_anomalies: Dict[str, Anomaly] = {}
         self.active_alerts: Dict[str, Alert] = {}
         self.log_streams: Dict[str, AsyncGenerator] = {}
+        
+        # Load testing state
+        self.load_test_executions: Dict[str, LoadTestExecution] = {}
+        self.load_test_results: Dict[str, LoadTestResult] = {}
+        self.k6_script_path = os.path.join(os.path.dirname(__file__), "k6_load_tests.js")
         
         # Configuration
         self.default_batch_size = 100
@@ -841,6 +1032,456 @@ class AIOpsAgent:
             del self.active_alerts[aid]
         
         self.logger.info(f"Cleaned up {len(old_batches)} batches, {len(old_anomalies)} anomalies, {len(old_alerts)} alerts")
+    
+    # Load Testing Methods
+    async def start_load_test(self, request: LoadTestRequest) -> str:
+        """
+        Start a k6 load test
+        
+        Args:
+            request: Load test configuration request
+            
+        Returns:
+            test_id: Unique identifier for the load test
+        """
+        test_id = f"loadtest-{uuid.uuid4()}"
+        
+        try:
+            # Validate test type
+            test_type = LoadTestType(request.test_type.lower())
+        except ValueError:
+            raise ValueError(f"Invalid test type: {request.test_type}")
+        
+        # Create target configuration
+        target = LoadTestTarget(
+            name=request.target.name,
+            base_url=request.target.base_url,
+            endpoints=request.target.endpoints,
+            auth_required=request.target.auth_required,
+            auth_token=request.target.auth_token,
+            custom_headers=request.target.custom_headers
+        )
+        
+        # Create test configuration
+        config = LoadTestConfiguration(
+            test_id=test_id,
+            test_type=test_type,
+            target=target,
+            duration_minutes=request.duration_minutes,
+            virtual_users=request.virtual_users,
+            ramp_up_duration_seconds=request.ramp_up_duration_seconds,
+            thresholds=request.thresholds,
+            environment_vars=request.environment_vars,
+            custom_script_path=request.custom_script_path
+        )
+        
+        # Create execution object
+        execution = LoadTestExecution(
+            test_id=test_id,
+            config=config
+        )
+        
+        self.load_test_executions[test_id] = execution
+        
+        # Start the load test asynchronously
+        task = asyncio.create_task(self._execute_load_test(execution))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+        
+        self.logger.info(f"Started load test {test_id} of type {test_type.value}")
+        
+        return test_id
+    
+    async def _execute_load_test(self, execution: LoadTestExecution):
+        """Execute k6 load test in background"""
+        
+        test_id = execution.test_id
+        config = execution.config
+        
+        try:
+            # Create result object
+            result = LoadTestResult(
+                test_id=test_id,
+                test_type=config.test_type,
+                status=LoadTestStatus.RUNNING,
+                started_at=datetime.utcnow()
+            )
+            
+            execution.result = result
+            self.load_test_results[test_id] = result
+            
+            # Generate k6 command
+            cmd = await self._generate_k6_command(config)
+            
+            self.logger.info(f"Executing k6 command for test {test_id}: {' '.join(cmd)}")
+            
+            # Execute k6
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=os.path.dirname(self.k6_script_path)
+            )
+            
+            execution.process = process
+            
+            # Monitor the process
+            stdout, stderr = await process.communicate()
+            
+            # Process completed
+            if process.returncode == 0:
+                result.status = LoadTestStatus.COMPLETED
+                await self._parse_k6_results(result, stdout.decode(), stderr.decode())
+            else:
+                result.status = LoadTestStatus.FAILED
+                result.error_message = stderr.decode()
+                
+            result.completed_at = datetime.utcnow()
+            result.duration_seconds = (result.completed_at - result.started_at).total_seconds()
+            
+            # Analyze results for anomalies
+            await self._analyze_load_test_results(result)
+            
+            self.logger.info(f"Load test {test_id} completed with status {result.status.value}")
+            
+        except Exception as e:
+            self.logger.error(f"Error executing load test {test_id}: {e}")
+            
+            if execution.result:
+                execution.result.status = LoadTestStatus.FAILED
+                execution.result.error_message = str(e)
+                execution.result.completed_at = datetime.utcnow()
+                if execution.result.started_at:
+                    execution.result.duration_seconds = (
+                        execution.result.completed_at - execution.result.started_at
+                    ).total_seconds()
+    
+    async def _generate_k6_command(self, config: LoadTestConfiguration) -> List[str]:
+        """Generate k6 command line arguments"""
+        
+        script_path = config.custom_script_path or self.k6_script_path
+        
+        if not os.path.exists(script_path):
+            raise FileNotFoundError(f"k6 script not found: {script_path}")
+        
+        cmd = ["k6", "run"]
+        
+        # Set environment variables
+        env_vars = {
+            "BASE_URL": config.target.base_url,
+            "ORCHESTRATOR_URL": config.target.base_url,  # Default to same as base
+            "DASHBOARD_URL": config.target.base_url,     # Default to same as base
+            **config.environment_vars
+        }
+        
+        for key, value in env_vars.items():
+            cmd.extend(["-e", f"{key}={value}"])
+        
+        # Configure test type scenario
+        if config.test_type != LoadTestType.CUSTOM:
+            cmd.extend(["--include-scenario", config.test_type.value + "_test"])
+        
+        # Output options
+        cmd.extend([
+            "--out", "json=summary.json",
+            "--summary-trend-stats", "avg,min,med,max,p(95),p(99)",
+            "--summary-time-unit", "ms"
+        ])
+        
+        # Add script path
+        cmd.append(script_path)
+        
+        return cmd
+    
+    async def _parse_k6_results(self, result: LoadTestResult, stdout: str, stderr: str):
+        """Parse k6 output and extract metrics"""
+        
+        result.raw_output = stdout
+        
+        try:
+            # Try to load JSON summary
+            summary_file = os.path.join(os.path.dirname(self.k6_script_path), "summary.json")
+            if os.path.exists(summary_file):
+                with open(summary_file, 'r') as f:
+                    summary_data = json.load(f)
+                    result.raw_json_summary = summary_data
+                    
+                    # Extract key metrics
+                    metrics = summary_data.get("metrics", {})
+                    
+                    # HTTP request metrics
+                    if "http_reqs" in metrics:
+                        result.total_requests = metrics["http_reqs"]["values"]["count"]
+                    
+                    if "http_req_failed" in metrics:
+                        result.error_rate = metrics["http_req_failed"]["values"]["rate"]
+                        result.failed_requests = int(result.total_requests * result.error_rate)
+                    
+                    if "http_req_duration" in metrics:
+                        duration_metrics = metrics["http_req_duration"]["values"]
+                        result.avg_response_time = duration_metrics.get("avg", 0)
+                        result.p95_response_time = duration_metrics.get("p(95)", 0)
+                    
+                    if "http_reqs" in metrics and result.total_requests > 0:
+                        test_duration = summary_data.get("state", {}).get("testRunDurationMs", 0) / 1000
+                        if test_duration > 0:
+                            result.requests_per_second = result.total_requests / test_duration
+                    
+                    if "data_received" in metrics:
+                        result.data_received_mb = metrics["data_received"]["values"]["count"] / (1024 * 1024)
+                    
+                    # Check thresholds
+                    thresholds = summary_data.get("thresholds", {})
+                    for threshold_name, threshold_result in thresholds.items():
+                        result.thresholds_passed[threshold_name] = threshold_result.get("ok", False)
+                    
+                    result.overall_passed = all(result.thresholds_passed.values())
+                
+                # Clean up summary file
+                os.remove(summary_file)
+                
+        except Exception as e:
+            self.logger.warning(f"Failed to parse k6 JSON summary: {e}")
+            
+            # Fallback: parse text output
+            try:
+                lines = stdout.split('\n')
+                for line in lines:
+                    if "http_reqs" in line and "rate" in line:
+                        # Extract request rate
+                        parts = line.split()
+                        for i, part in enumerate(parts):
+                            if part.endswith("/s") and i > 0:
+                                result.requests_per_second = float(parts[i-1])
+                                break
+                    elif "http_req_duration" in line:
+                        # Extract response times
+                        if "avg=" in line:
+                            avg_match = line.split("avg=")[1].split()[0]
+                            result.avg_response_time = float(avg_match.replace("ms", "").replace("s", ""))
+            except Exception as parse_error:
+                self.logger.warning(f"Failed to parse k6 text output: {parse_error}")
+    
+    async def _analyze_load_test_results(self, result: LoadTestResult):
+        """Analyze load test results for anomalies and issues"""
+        
+        anomalies = []
+        
+        # Check for high error rate
+        if result.error_rate > 0.05:  # More than 5% errors
+            anomaly = Anomaly(
+                anomaly_id=f"anomaly-{uuid.uuid4()}",
+                anomaly_type=AnomalyType.LOAD_TEST_FAILURE,
+                severity=AlertSeverity.HIGH if result.error_rate > 0.1 else AlertSeverity.MEDIUM,
+                service=result.test_id,
+                description=f"High error rate during load test: {result.error_rate:.1%}",
+                gemini_analysis="Load test detected high error rate indicating potential service issues",
+                evidence=[],  # No log evidence for load tests
+                metrics={
+                    "error_rate": result.error_rate,
+                    "total_requests": result.total_requests,
+                    "failed_requests": result.failed_requests
+                },
+                detected_at=datetime.utcnow(),
+                confidence_score=0.9,
+                recommended_actions=[
+                    "Investigate service logs during load test period",
+                    "Check resource utilization and scaling policies",
+                    "Review error patterns and root causes",
+                    "Consider reducing load or optimizing service performance"
+                ]
+            )
+            anomalies.append(anomaly)
+        
+        # Check for high response times
+        if result.p95_response_time > 2000:  # P95 > 2 seconds
+            anomaly = Anomaly(
+                anomaly_id=f"anomaly-{uuid.uuid4()}",
+                anomaly_type=AnomalyType.LATENCY_INCREASE,
+                severity=AlertSeverity.MEDIUM,
+                service=result.test_id,
+                description=f"High response times during load test: P95 = {result.p95_response_time:.0f}ms",
+                gemini_analysis="Load test detected elevated response times indicating performance degradation",
+                evidence=[],
+                metrics={
+                    "p95_response_time": result.p95_response_time,
+                    "avg_response_time": result.avg_response_time
+                },
+                detected_at=datetime.utcnow(),
+                confidence_score=0.8,
+                recommended_actions=[
+                    "Analyze service performance bottlenecks",
+                    "Check database query performance",
+                    "Review caching strategies",
+                    "Consider horizontal scaling"
+                ]
+            )
+            anomalies.append(anomaly)
+        
+        # Check for failed thresholds
+        if not result.overall_passed:
+            failed_thresholds = [name for name, passed in result.thresholds_passed.items() if not passed]
+            anomaly = Anomaly(
+                anomaly_id=f"anomaly-{uuid.uuid4()}",
+                anomaly_type=AnomalyType.PERFORMANCE_DEGRADATION,
+                severity=AlertSeverity.MEDIUM,
+                service=result.test_id,
+                description=f"Load test thresholds failed: {', '.join(failed_thresholds)}",
+                gemini_analysis="Load test failed to meet defined performance thresholds",
+                evidence=[],
+                metrics={"failed_thresholds": failed_thresholds},
+                detected_at=datetime.utcnow(),
+                confidence_score=0.7,
+                recommended_actions=[
+                    "Review and adjust performance thresholds",
+                    "Investigate specific threshold failures",
+                    "Optimize application performance",
+                    "Consider infrastructure upgrades"
+                ]
+            )
+            anomalies.append(anomaly)
+        
+        # Store anomalies
+        for anomaly in anomalies:
+            await self._handle_detected_anomaly(anomaly)
+            result.anomalies_detected.append(anomaly.anomaly_id)
+        
+        # Use Gemini for deeper analysis if enabled
+        if self.gemini_analysis_enabled and self.gemini_model and anomalies:
+            try:
+                gemini_analysis = await self._analyze_load_test_with_gemini(result)
+                if gemini_analysis:
+                    # Update the first anomaly with Gemini analysis
+                    anomalies[0].gemini_analysis = gemini_analysis
+            except Exception as e:
+                self.logger.warning(f"Gemini analysis of load test results failed: {e}")
+    
+    async def _analyze_load_test_with_gemini(self, result: LoadTestResult) -> str:
+        """Use Gemini to analyze load test results"""
+        
+        prompt = f"""
+        Analyze the following load test results and provide insights:
+
+        TEST DETAILS:
+        - Test Type: {result.test_type.value}
+        - Duration: {result.duration_seconds:.1f} seconds
+        - Status: {result.status.value}
+
+        PERFORMANCE METRICS:
+        - Total Requests: {result.total_requests}
+        - Failed Requests: {result.failed_requests}
+        - Error Rate: {result.error_rate:.1%}
+        - Average Response Time: {result.avg_response_time:.2f}ms
+        - 95th Percentile Response Time: {result.p95_response_time:.2f}ms
+        - Requests Per Second: {result.requests_per_second:.2f}
+        - Data Received: {result.data_received_mb:.2f} MB
+
+        THRESHOLD RESULTS:
+        {json.dumps(result.thresholds_passed, indent=2)}
+
+        Please provide:
+        1. Overall assessment of the load test results
+        2. Identification of performance bottlenecks or issues
+        3. Specific recommendations for improvement
+        4. Risk assessment and impact analysis
+
+        Keep the analysis concise but actionable.
+        """
+        
+        try:
+            response = await self._call_gemini_async(prompt)
+            return response
+        except Exception as e:
+            self.logger.error(f"Gemini analysis failed: {e}")
+            return ""
+    
+    async def get_load_test_status(self, test_id: str) -> Optional[LoadTestStatusResponse]:
+        """Get status of a specific load test"""
+        
+        if test_id not in self.load_test_executions:
+            return None
+        
+        execution = self.load_test_executions[test_id]
+        result = execution.result
+        
+        if not result:
+            return LoadTestStatusResponse(
+                test_id=test_id,
+                status=LoadTestStatus.PENDING.value,
+                started_at=datetime.utcnow().isoformat(),
+                progress_percentage=0.0
+            )
+        
+        # Calculate progress if running
+        progress = 0.0
+        current_vus = 0
+        
+        if result.status == LoadTestStatus.RUNNING:
+            if result.started_at:
+                elapsed = (datetime.utcnow() - result.started_at).total_seconds()
+                total_duration = execution.config.duration_minutes * 60
+                progress = min(100.0, (elapsed / total_duration) * 100)
+                current_vus = execution.config.virtual_users
+        elif result.status == LoadTestStatus.COMPLETED:
+            progress = 100.0
+        
+        return LoadTestStatusResponse(
+            test_id=test_id,
+            status=result.status.value,
+            started_at=result.started_at.isoformat(),
+            completed_at=result.completed_at.isoformat() if result.completed_at else None,
+            duration_seconds=result.duration_seconds,
+            progress_percentage=progress,
+            current_vus=current_vus,
+            total_requests=result.total_requests,
+            error_rate=result.error_rate
+        )
+    
+    async def get_load_test_result(self, test_id: str) -> Optional[LoadTestResult]:
+        """Get detailed results of a completed load test"""
+        return self.load_test_results.get(test_id)
+    
+    async def get_all_load_tests(self, limit: int = 50) -> List[LoadTestResult]:
+        """Get all load test results"""
+        results = list(self.load_test_results.values())
+        results.sort(key=lambda r: r.started_at, reverse=True)
+        return results[:limit]
+    
+    async def cancel_load_test(self, test_id: str) -> bool:
+        """Cancel a running load test"""
+        
+        if test_id not in self.load_test_executions:
+            return False
+        
+        execution = self.load_test_executions[test_id]
+        
+        if execution.is_running and execution.process:
+            try:
+                execution.process.terminate()
+                
+                # Wait for graceful termination
+                try:
+                    await asyncio.wait_for(execution.process.wait(), timeout=10.0)
+                except asyncio.TimeoutError:
+                    # Force kill if needed
+                    execution.process.kill()
+                
+                if execution.result:
+                    execution.result.status = LoadTestStatus.CANCELLED
+                    execution.result.completed_at = datetime.utcnow()
+                    if execution.result.started_at:
+                        execution.result.duration_seconds = (
+                            execution.result.completed_at - execution.result.started_at
+                        ).total_seconds()
+                
+                self.logger.info(f"Cancelled load test {test_id}")
+                return True
+                
+            except Exception as e:
+                self.logger.error(f"Failed to cancel load test {test_id}: {e}")
+                return False
+        
+        return False
     
     async def shutdown(self):
         """Gracefully shutdown the agent"""
