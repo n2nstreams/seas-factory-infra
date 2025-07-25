@@ -1,21 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { EventFilterPanel } from '../components/EventFilterPanel';
-import { LiveMetricsChart } from '../components/LiveMetricsChart';
-import { ScrollArea } from "../components/ui/scroll-area";
-import {
-  Activity,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Filter,
-  RefreshCw,
-  Settings,
-  Users,
-  Zap,
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { EventFilterPanel } from "../components/EventFilterPanel";
+import { 
   Code2
 } from 'lucide-react';
 
@@ -35,12 +24,6 @@ interface EventFilter {
   time_range?: string;
 }
 
-interface Metrics {
-  active_connections: number;
-  total_connections: number;
-  events_sent: number;
-  last_activity: string;
-}
 
 interface AgentStatus {
   name: string;
@@ -54,18 +37,13 @@ const EventDashboard: React.FC = () => {
   const [events, setEvents] = useState<EventMessage[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<EventMessage[]>([]);
   const [filters, setFilters] = useState<EventFilter>({});
-  const [metrics, setMetrics] = useState<Metrics>({
-    active_connections: 0,
-    total_connections: 0,
-    events_sent: 0,
-    last_activity: new Date().toISOString()
-  });
+
   const [agents, setAgents] = useState<AgentStatus[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [connectionId, setConnectionId] = useState<string>('');
 
   // WebSocket connection management
-  const connectWebSocket = useCallback(() => {
+  const connectWebSocket = () => {
     const clientId = `dashboard-${Math.random().toString(36).substr(2, 9)}`;
     setConnectionId(clientId);
     
@@ -95,15 +73,15 @@ const EventDashboard: React.FC = () => {
     };
 
     return websocket;
-  }, []);
+  };
 
-  const disconnectWebSocket = useCallback(() => {
+  const disconnectWebSocket = () => {
     if (ws) {
       ws.close();
       setWs(null);
       setIsConnected(false);
     }
-  }, [ws]);
+  };
 
   // Auto-connect on mount
   useEffect(() => {
@@ -114,7 +92,7 @@ const EventDashboard: React.FC = () => {
         websocket.close();
       }
     };
-  }, [connectWebSocket]);
+  }, []);
 
   // Filter events based on current filters
   useEffect(() => {
@@ -150,18 +128,8 @@ const EventDashboard: React.FC = () => {
     setFilteredEvents(filtered);
   }, [events, filters]);
 
-  // Fetch metrics periodically
+  // Fetch agents periodically
   useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const response = await fetch('/api/metrics');
-        const data = await response.json();
-        setMetrics(data);
-      } catch (error) {
-        console.error('Error fetching metrics:', error);
-      }
-    };
-
     const fetchAgents = async () => {
       try {
         const response = await fetch('/api/agents/status');
@@ -172,11 +140,9 @@ const EventDashboard: React.FC = () => {
       }
     };
 
-    fetchMetrics();
     fetchAgents();
     
     const interval = setInterval(() => {
-      fetchMetrics();
       fetchAgents();
     }, 10000); // Every 10 seconds
 
@@ -394,11 +360,16 @@ const EventDashboard: React.FC = () => {
 
           {/* Live Charts Tab */}
           <TabsContent value="charts" className="mt-6">
-            <LiveMetricsChart 
-              metrics={metrics} 
-              events={events}
-              className="backdrop-blur-sm bg-white/60 border-slate-200/50"
-            />
+            <Card className="backdrop-blur-sm bg-white/60 border-slate-200/50">
+              <CardHeader>
+                <CardTitle className="text-slate-800">Live Charts</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-600">
+                  Charts and metrics will be displayed here.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Event Flows Tab */}

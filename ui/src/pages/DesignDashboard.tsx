@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import FigmaPreview from '../components/FigmaPreview'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import FigmaPreview from '@/components/FigmaPreview';
 import { 
-  Palette, 
-  Download, 
-  RefreshCw, 
-  Eye, 
   Settings,
-  Layers,
-  Grid,
-  Sparkles,
   Code2
 } from 'lucide-react';
 
@@ -130,10 +123,10 @@ export default function DesignDashboard() {
           </Card>
         )}
 
-        {/* Main Design Interface */}
-        <div className="glass-card border-stone-200/50 p-6">
-          <FigmaPreview onGenerateDesign={handleDesignGenerated} />
-        </div>
+                  {/* Main Design Interface */}
+          <div className="glass-card border-stone-200/50 p-6">
+            <FigmaPreview onGenerateDesign={handleDesignGenerated} />
+          </div>
 
         <div className="space-y-6">
           <Card className="card-glass">

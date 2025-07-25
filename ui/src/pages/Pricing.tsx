@@ -8,15 +8,12 @@ import {
   Star, 
   ArrowRight, 
   CreditCard,
-  Settings,
   Zap,
   Shield,
   Code2,
-  Users,
   Globe,
   BarChart3,
-  Headphones,
-  Clock
+  Headphones
 } from 'lucide-react';
 
 interface Plan {
@@ -200,7 +197,7 @@ export default function Pricing() {
       <section className="relative py-16">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 xl:gap-12 max-w-7xl mx-auto">
-            {plans.map((plan, index) => (
+            {plans.map((plan) => (
               <Card 
                 key={plan.name}
                 className={`relative overflow-hidden ${
