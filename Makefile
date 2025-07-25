@@ -14,8 +14,9 @@ help:
 	@echo "  lint          Run linting"
 	@echo ""
 	@echo "Tenant Management:"
-	@echo "  isolate TENANT_ID=<slug>  Promote tenant to isolated infrastructure"
-	@echo "  tenant-status TENANT_ID=<slug>  Check tenant isolation status"
+	@echo "  isolate TENANT_ID=<slug>         Promote tenant to isolated infrastructure (DB + Cloud Run)"
+	@echo "  isolate-db-only TENANT_ID=<slug> Promote tenant to isolated database only"
+	@echo "  tenant-status TENANT_ID=<slug>   Check tenant isolation status"
 	@echo ""
 	@echo "Build & Deploy:"
 	@echo "  build         Build all services"
@@ -56,15 +57,29 @@ test-ui:
 isolate:
 ifndef TENANT_ID
 	@echo "❌ Error: TENANT_ID is required"
-	@echo "Usage: make isolate TENANT_ID=acme-corp"
+	@echo "Usage: make isolate TENANT_ID=acme-corp [SKIP_CLOUD_RUN=true] [KEEP_SHARED_DATA=true]"
 	@exit 1
 endif
 	@echo "🔧 Promoting tenant $(TENANT_ID) to isolated infrastructure..."
-	@echo "⚠️  This will create a dedicated database and migrate tenant data"
+	@echo "⚠️  This will create a dedicated database and Cloud Run service"
+	@echo "   - Database: tenant_$(subst -,_,$(TENANT_ID))"
+	@echo "   - Cloud Run: api-$(TENANT_ID)"
+	@echo "   - Region: $(shell echo $${CLOUD_RUN_REGION:-us-central1})"
+	@echo ""
 	@read -p "Continue? [y/N] " -n 1 -r; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		python3 scripts/tenant_isolation.py promote --tenant-slug=$(TENANT_ID) --confirm; \
+		echo ""; \
+		echo "🚀 Starting tenant isolation..."; \
+		ARGS="--tenant-slug=$(TENANT_ID) --confirm"; \
+		if [ "$(KEEP_SHARED_DATA)" = "true" ]; then \
+			ARGS="$$ARGS --keep-shared-data"; \
+		fi; \
+		if [ "$(SKIP_CLOUD_RUN)" = "true" ]; then \
+			ARGS="$$ARGS --no-cloud-run"; \
+		fi; \
+		python3 scripts/tenant_isolation.py promote $$ARGS; \
 	else \
+		echo ""; \
 		echo "❌ Tenant isolation cancelled"; \
 	fi
 
@@ -76,6 +91,21 @@ ifndef TENANT_ID
 endif
 	@echo "📊 Getting isolation status for tenant: $(TENANT_ID)"
 	python3 scripts/tenant_isolation.py status --tenant-slug=$(TENANT_ID)
+
+# Quick tenant isolation (database only, no Cloud Run)
+isolate-db-only:
+ifndef TENANT_ID
+	@echo "❌ Error: TENANT_ID is required"
+	@echo "Usage: make isolate-db-only TENANT_ID=acme-corp"
+	@exit 1
+endif
+	@echo "🗄️  Promoting tenant $(TENANT_ID) to isolated database only..."
+	@read -p "Continue? [y/N] " -n 1 -r; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		python3 scripts/tenant_isolation.py promote --tenant-slug=$(TENANT_ID) --confirm --no-cloud-run; \
+	else \
+		echo "❌ Tenant isolation cancelled"; \
+	fi
 
 # Build operations
 build:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Tenant Isolation Promotion Script
-Promotes a tenant from shared infrastructure to dedicated isolated database.
+Promotes a tenant from shared infrastructure to dedicated isolated database and Cloud Run revision.
 
 Usage:
     python tenant_isolation.py promote --tenant-slug=acme-corp --confirm
@@ -16,6 +16,9 @@ import json
 import logging
 import os
 import sys
+import subprocess
+import urllib.request
+import urllib.error
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 import uuid
@@ -51,6 +54,11 @@ class TenantIsolationManager:
             'user': os.getenv('DB_USER', 'factoryadmin'),
             'password': os.getenv('DB_PASSWORD', 'localpass')
         }
+        
+        # Cloud configuration
+        self.project_id = os.getenv('GOOGLE_CLOUD_PROJECT', 'saas-factory-prod')
+        self.region = os.getenv('CLOUD_RUN_REGION', 'us-central1')
+        self.container_image = os.getenv('CONTAINER_IMAGE', f'{self.region}-docker.pkg.dev/{self.project_id}/saas-factory/api:latest')
         
     async def get_tenant_info(self, tenant_slug: str) -> Optional[Dict[str, Any]]:
         """Get tenant information from the source database"""
@@ -239,7 +247,135 @@ class TenantIsolationManager:
             logger.error(f"Error updating tenant status: {e}")
             raise TenantIsolationError(f"Failed to update tenant status: {e}")
     
-    async def create_routing_config(self, tenant_slug: str, isolated_db_name: str):
+    async def create_cloud_run_service(self, tenant_slug: str, isolated_db_name: str) -> str:
+        """Create isolated Cloud Run service for the tenant"""
+        service_name = f"api-{tenant_slug}"
+        
+        try:
+            logger.info(f"Creating Cloud Run service: {service_name}")
+            
+            # Prepare database URL for the isolated instance
+            db_url = f"postgresql://{self.source_db_config['user']}:{self.source_db_config['password']}@{self.source_db_config['host']}:{self.source_db_config['port']}/{isolated_db_name}"
+            
+            # Prepare gcloud command for Cloud Run deployment
+            deploy_cmd = [
+                'gcloud', 'run', 'deploy', service_name,
+                '--image', self.container_image,
+                '--platform', 'managed',
+                '--region', self.region,
+                '--project', self.project_id,
+                '--allow-unauthenticated',
+                '--port', '8080',
+                '--memory', '2Gi',
+                '--cpu', '2',
+                '--min-instances', '0',
+                '--max-instances', '10',
+                '--set-env-vars', f'DB_HOST={self.source_db_config["host"]}',
+                '--set-env-vars', f'DB_PORT={self.source_db_config["port"]}',
+                '--set-env-vars', f'DB_NAME={isolated_db_name}',
+                '--set-env-vars', f'DB_USER={self.source_db_config["user"]}',
+                '--set-env-vars', f'DB_PASSWORD={self.source_db_config["password"]}',
+                '--set-env-vars', f'TENANT_ID={tenant_slug}',
+                '--set-env-vars', f'ISOLATION_MODE=isolated',
+                '--vpc-connector', f'projects/{self.project_id}/locations/{self.region}/connectors/vpc-connector',
+                '--vpc-egress', 'private-ranges-only',
+                '--quiet'
+            ]
+            
+            # Execute the deployment
+            result = subprocess.run(deploy_cmd, capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                logger.error(f"Cloud Run deployment failed: {result.stderr}")
+                raise TenantIsolationError(f"Failed to deploy Cloud Run service: {result.stderr}")
+            
+            # Extract service URL from output
+            service_url = None
+            for line in result.stdout.split('\n'):
+                if 'Service URL:' in line:
+                    service_url = line.split('Service URL:')[1].strip()
+                    break
+            
+            if not service_url:
+                # Fallback: construct URL based on standard Cloud Run naming
+                service_url = f"https://{service_name}-{self.project_id}.{self.region}.run.app"
+            
+            logger.info(f"Cloud Run service deployed successfully: {service_url}")
+            return service_url
+            
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Error deploying Cloud Run service: {e}")
+            raise TenantIsolationError(f"Failed to deploy Cloud Run service: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error deploying Cloud Run service: {e}")
+            raise TenantIsolationError(f"Failed to deploy Cloud Run service: {e}")
+
+    async def create_load_balancer_routing(self, tenant_slug: str, service_url: str):
+        """Create load balancer routing for tenant-specific subdomain"""
+        try:
+            logger.info(f"Setting up load balancer routing for tenant: {tenant_slug}")
+            
+            # For now, we'll create a mapping file that can be used by load balancer configuration
+            # In a production environment, this would integrate with Google Cloud Load Balancer
+            
+            routing_config = {
+                'tenant_slug': tenant_slug,
+                'subdomain': f"app-{tenant_slug}",
+                'service_url': service_url,
+                'backend_service': f"api-{tenant_slug}",
+                'created_at': datetime.utcnow().isoformat()
+            }
+            
+            # Ensure load balancer config directory exists
+            os.makedirs('config/load-balancer', exist_ok=True)
+            
+            # Write load balancer configuration
+            config_file = f"config/load-balancer/{tenant_slug}.json"
+            with open(config_file, 'w') as f:
+                json.dump(routing_config, f, indent=2)
+            
+            logger.info(f"Load balancer routing configuration created: {config_file}")
+            
+            # TODO: In production, this would call Google Cloud Load Balancer API to:
+            # 1. Create backend service pointing to the Cloud Run service
+            # 2. Update URL map with the new subdomain routing
+            # 3. Update SSL certificate for the new subdomain
+            
+        except Exception as e:
+            logger.error(f"Error creating load balancer routing: {e}")
+            raise TenantIsolationError(f"Failed to create load balancer routing: {e}")
+
+    async def verify_cloud_run_deployment(self, tenant_slug: str, service_url: str) -> bool:
+        """Verify that the Cloud Run service is healthy and responsive"""
+        try:
+            logger.info(f"Verifying Cloud Run deployment for {tenant_slug}")
+            
+            # Simple health check - try to reach the service
+            health_url = f"{service_url}/health" if service_url.endswith('/') else f"{service_url}/health"
+            
+            try:
+                with urllib.request.urlopen(health_url, timeout=30) as response:
+                    if response.getcode() == 200:
+                        logger.info(f"Cloud Run service is healthy: {service_url}")
+                        return True
+                    else:
+                        logger.warning(f"Cloud Run service returned status {response.getcode()}")
+                        return False
+            except urllib.error.URLError:
+                # Health endpoint might not be implemented yet, try root path
+                try:
+                    with urllib.request.urlopen(service_url, timeout=30) as response:
+                        logger.info(f"Cloud Run service is responsive: {service_url}")
+                        return True
+                except urllib.error.URLError as e:
+                    logger.error(f"Cloud Run service is not responsive: {e}")
+                    return False
+                
+        except Exception as e:
+            logger.error(f"Error verifying Cloud Run deployment: {e}")
+            return False
+
+    async def create_routing_config(self, tenant_slug: str, isolated_db_name: str, service_url: str = None):
         """Create routing configuration for the isolated tenant"""
         try:
             # Create routing configuration file
@@ -252,9 +388,14 @@ class TenantIsolationManager:
                     'port': self.source_db_config['port'],
                     'user': self.source_db_config['user']
                 },
+                'cloud_run': {
+                    'service_name': f"api-{tenant_slug}",
+                    'service_url': service_url,
+                    'region': self.region
+                },
                 'created_at': datetime.utcnow().isoformat(),
                 'endpoints': {
-                    'api': f"api-{tenant_slug}.factory.local",
+                    'api': service_url or f"api-{tenant_slug}.factory.local",
                     'ui': f"app-{tenant_slug}.factory.local"
                 }
             }
@@ -310,7 +451,7 @@ class TenantIsolationManager:
             logger.error(f"Error cleaning up shared data: {e}")
             raise TenantIsolationError(f"Failed to cleanup shared data: {e}")
     
-    async def promote_tenant(self, tenant_slug: str, cleanup_shared: bool = True) -> Dict[str, Any]:
+    async def promote_tenant(self, tenant_slug: str, cleanup_shared: bool = True, deploy_cloud_run: bool = True) -> Dict[str, Any]:
         """Promote a tenant to isolated infrastructure"""
         logger.info(f"Starting tenant isolation promotion for: {tenant_slug}")
         
@@ -331,13 +472,26 @@ class TenantIsolationManager:
             # Step 4: Migrate tenant data
             await self.migrate_tenant_data(tenant_id, isolated_db_name)
             
-            # Step 5: Update tenant status
+            # Step 5: Deploy isolated Cloud Run service (if enabled)
+            service_url = None
+            if deploy_cloud_run:
+                service_url = await self.create_cloud_run_service(tenant_slug, isolated_db_name)
+                
+                # Verify deployment
+                deployment_healthy = await self.verify_cloud_run_deployment(tenant_slug, service_url)
+                if not deployment_healthy:
+                    logger.warning("Cloud Run deployment verification failed, but continuing...")
+                
+                # Set up load balancer routing
+                await self.create_load_balancer_routing(tenant_slug, service_url)
+            
+            # Step 6: Update tenant status
             await self.update_tenant_status(tenant_id, isolated_db_name)
             
-            # Step 6: Create routing configuration
-            await self.create_routing_config(tenant_slug, isolated_db_name)
+            # Step 7: Create routing configuration (updated with Cloud Run info)
+            await self.create_routing_config(tenant_slug, isolated_db_name, service_url)
             
-            # Step 7: Cleanup shared data (optional)
+            # Step 8: Cleanup shared data (optional)
             if cleanup_shared:
                 await self.cleanup_shared_data(tenant_id)
             
@@ -346,8 +500,10 @@ class TenantIsolationManager:
                 'tenant_slug': tenant_slug,
                 'tenant_id': tenant_id,
                 'isolated_db_name': isolated_db_name,
+                'cloud_run_service_url': service_url,
                 'completed_at': datetime.utcnow().isoformat(),
-                'cleanup_shared': cleanup_shared
+                'cleanup_shared': cleanup_shared,
+                'cloud_run_deployed': deploy_cloud_run
             }
             
             logger.info(f"Tenant isolation promotion completed successfully")
@@ -404,6 +560,7 @@ async def main():
     promote_parser.add_argument('--tenant-slug', required=True, help='Tenant slug to promote')
     promote_parser.add_argument('--confirm', action='store_true', help='Confirm the promotion')
     promote_parser.add_argument('--keep-shared-data', action='store_true', help='Keep data in shared database')
+    promote_parser.add_argument('--no-cloud-run', action='store_true', help='Skip Cloud Run deployment')
     
     # Status command
     status_parser = subparsers.add_parser('status', help='Get tenant isolation status')
@@ -429,7 +586,8 @@ async def main():
             print(f"🚀 Starting tenant isolation promotion for: {args.tenant_slug}")
             result = await manager.promote_tenant(
                 args.tenant_slug, 
-                cleanup_shared=not args.keep_shared_data
+                cleanup_shared=not args.keep_shared_data,
+                deploy_cloud_run=not args.no_cloud_run
             )
             
             print("✅ Tenant isolation promotion completed!")
