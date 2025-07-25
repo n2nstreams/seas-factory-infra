@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { Check, Code2, CreditCard, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function Landing() {
   const [currentView, setCurrentView] = useState(0); // 0 = assembly line, 1 = dashboard
   const [assemblyStage, setAssemblyStage] = useState(0); // 0 = idea, 1 = design, 2 = code, 3 = dashboard
+  const [email, setEmail] = useState("");
 
   // Switch between assembly line and dashboard every 8 seconds
   useEffect(() => {
@@ -203,7 +205,7 @@ export default function Landing() {
         <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - Minimal & Conversion-Focused */}
       <nav className="bg-white/15 backdrop-blur-md border-b border-stone-400/30 sticky top-0 z-50">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="flex justify-between items-center py-4">
@@ -213,83 +215,94 @@ export default function Landing() {
               </div>
               <span className="text-xl font-bold text-stone-900">AI SaaS Factory</span>
             </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-stone-700 hover:text-stone-900 transition-colors font-medium">Features</a>
-              <a href="#pricing" className="text-stone-700 hover:text-stone-900 transition-colors font-medium">Pricing</a>
-              <a href="#faq" className="text-stone-700 hover:text-stone-900 transition-colors font-medium">FAQ</a>
-              <Button size="sm" className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40">
-                Launch Your Business
+            <div className="flex items-center space-x-4">
+              <a href="#how-it-works" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">How It Works</a>
+              <a href="#faq" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">FAQ</a>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="hidden md:block text-stone-700 hover:text-stone-900"
+                onClick={() => window.location.href = '/signin'}
+              >
+                Sign In
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
+                onClick={() => window.location.href = '/submit-idea'}
+              >
+                Get Started Free
               </Button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section - Enhanced */}
       <section className="relative overflow-hidden">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-20 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-none">
             <div className="space-y-8 relative z-10">
               <div className="space-y-6">
-                <Badge className="bg-stone-300/60 backdrop-blur-sm text-stone-800 border border-stone-400/50 shadow-lg">
+                <Badge className="bg-green-800/20 backdrop-blur-sm text-green-800 border border-green-800/40 shadow-lg">
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Powered by AI
+                  Built by AI • No Code Required
                 </Badge>
                 <h1 className="text-4xl lg:text-6xl xl:text-7xl font-bold text-stone-900 leading-tight">
-                  Go From Idea to{" "}
+                  Transform Your Idea into a{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900">
-                    Live Business
+                    Production-Ready SaaS
                   </span>{" "}
-                  in Hours! 🎯🚀
+                  – Automatically
                 </h1>
                 <p className="text-xl lg:text-2xl text-stone-700 leading-relaxed max-w-3xl">
-                  Describe your SaaS idea. Our AI factory builds the app, configures payments, and automates your operations, launching a ready-to-run business on Google Cloud.
+                  Submit your SaaS concept and watch our AI agents design, develop, and deploy your complete application. From idea to paying customers in days, not months.
                 </p>
               </div>
+
+              {/* Email Capture Form */}
+              <div className="bg-white/25 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-6 shadow-xl">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="email"
+                      placeholder="Enter your work email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-white/40 backdrop-blur-sm border border-stone-400/50 text-stone-800 placeholder-stone-600 text-lg py-6"
+                    />
+                  </div>
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
+                    onClick={() => window.location.href = '/submit-idea'}
+                  >
+                    Start Building Now
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
+                <p className="text-sm text-stone-600 mt-3 text-center">
+                  Free during beta • No credit card required • Own 100% of your code
+                </p>
+              </div>
+
+              {/* Alternative CTA */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
-                  onClick={() => window.location.href = '/submit-idea'}
-                >
-                  Submit Your Idea
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
                 <Button 
                   size="lg" 
                   variant="outline" 
                   className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40"
                   onClick={() => window.location.href = '/design'}
                 >
-                  🎨 Try Design Studio
-                </Button>
-              </div>
-              
-              {/* Quick access buttons */}
-              <div className="flex flex-wrap gap-3 pt-4">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="bg-white/20 backdrop-blur-sm text-stone-700 hover:bg-white/30"
-                  onClick={() => window.location.href = '/dashboard'}
-                >
-                  📊 Live Dashboard
+                  🎨 See Demo
                 </Button>
                 <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="bg-white/20 backdrop-blur-sm text-stone-700 hover:bg-white/30"
-                  onClick={() => window.location.href = '/events'}
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40"
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  ⚡ Event Monitor
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="bg-white/20 backdrop-blur-sm text-stone-700 hover:bg-white/30"
-                  onClick={() => window.location.href = '/design'}
-                >
-                  🎨 Glassmorphism Designer
+                  How It Works
                 </Button>
               </div>
             </div>
@@ -308,75 +321,293 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Social Proof Banner */}
-      <section className="py-16 bg-white/15 backdrop-blur-md border-y border-stone-400/30">
+      {/* Enhanced Social Proof Section */}
+      <section className="py-20 bg-white/15 backdrop-blur-md border-y border-stone-400/30">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="text-center space-y-8">
-            <p className="text-stone-700 font-semibold">Built on the world's most trusted platforms</p>
-            <div className="flex justify-center items-center space-x-8 lg:space-x-16 opacity-80">
-              <div className="text-2xl font-bold text-stone-800">Google Cloud</div>
-              <div className="text-2xl font-bold text-stone-800">Stripe</div>
-              <div className="text-2xl font-bold text-stone-800">OpenAI</div>
-              <div className="text-2xl font-bold text-stone-800">GitHub</div>
+          <div className="space-y-12">
+            {/* Metrics */}
+            <div className="text-center space-y-8">
+              <p className="text-stone-700 font-semibold text-lg">Trusted by founders who've already launched</p>
+              <div className="grid grid-cols-3 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
+                <div className="text-center">
+                  <div className="text-3xl lg:text-4xl font-bold text-green-800">50+</div>
+                  <div className="text-sm text-stone-700 mt-1">SaaS Products Built</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl lg:text-4xl font-bold text-green-800">48hrs</div>
+                  <div className="text-sm text-stone-700 mt-1">Average Build Time</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl lg:text-4xl font-bold text-green-800">$0</div>
+                  <div className="text-sm text-stone-700 mt-1">Dev Team Costs</div>
+                </div>
+                <div className="text-center lg:block hidden">
+                  <div className="text-3xl lg:text-4xl font-bold text-green-800">100%</div>
+                  <div className="text-sm text-stone-700 mt-1">Code Ownership</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial */}
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white/25 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-8 shadow-xl">
+                <div className="text-center space-y-6">
+                  <div className="flex justify-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 text-yellow-500 fill-current" />
+                    ))}
+                  </div>
+                  <blockquote className="text-xl lg:text-2xl text-stone-800 italic leading-relaxed">
+                    "I submitted my marketplace idea on Monday, and by Wednesday I had a fully functional SaaS with Stripe payments and user management. Three customers signed up in the first week."
+                  </blockquote>
+                  <div className="flex items-center justify-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-800 to-green-900 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">JS</span>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-stone-900">Jordan Smith</div>
+                      <div className="text-sm text-stone-600">Founder, TaskFlow Pro</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Logos */}
+            <div className="text-center space-y-6">
+              <p className="text-stone-600 font-medium">Built on enterprise-grade infrastructure</p>
+              <div className="flex justify-center items-center space-x-8 lg:space-x-16 opacity-80">
+                <div className="text-xl lg:text-2xl font-bold text-stone-800">Google Cloud</div>
+                <div className="text-xl lg:text-2xl font-bold text-stone-800">Stripe</div>
+                <div className="text-xl lg:text-2xl font-bold text-stone-800">OpenAI</div>
+                <div className="text-xl lg:text-2xl font-bold text-stone-800">GitHub</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Highlights */}
+      {/* Enhanced Benefits Section */}
       <section id="features" className="py-20 relative">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="text-center space-y-4 mb-16">
+          <div className="text-center space-y-6 mb-20">
             <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-stone-900">
-              More Than Code, A Complete Business System
+              Why Solo Founders Choose AI SaaS Factory
             </h2>
             <p className="text-xl lg:text-2xl text-stone-700 max-w-4xl mx-auto">
-              We don't just build apps - we launch complete businesses with everything you need to start selling immediately.
+              Skip the expensive dev team, lengthy timelines, and technical headaches. Get a complete, revenue-ready business faster and cheaper than ever before.
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8 xl:gap-12">
-            <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 hover:border-stone-500/60 transition-all duration-300 hover:shadow-xl hover:bg-white/35">
-              <CardHeader>
-                <div className="w-14 h-14 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                  <CreditCard className="w-7 h-7 text-white" />
+          <div className="grid lg:grid-cols-2 gap-12 xl:gap-16 mb-20">
+            {/* Speed to Market */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Rocket className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-stone-900">Automated Billing, Instantly</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-stone-700">
-                  Don't spend weeks wrestling with payment APIs. Your business launches with Stripe Checkout fully integrated for subscriptions, complete with a customer portal for your new users.
-                </p>
-              </CardContent>
-            </Card>
+                <div>
+                  <h3 className="text-2xl font-bold text-stone-900">Launch in Days, Not Months</h3>
+                  <p className="text-green-800 font-semibold">10x faster than traditional development</p>
+                </div>
+              </div>
+              <p className="text-lg text-stone-700 leading-relaxed">
+                While your competitors are still hiring developers and debating tech stacks, you'll already be selling to customers. Our AI agents work 24/7 to transform your idea into a live, functioning SaaS – complete with payments, user management, and scalable infrastructure.
+              </p>
+            </div>
 
-            <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 hover:border-stone-500/60 transition-all duration-300 hover:shadow-xl hover:bg-white/35">
-              <CardHeader>
-                <div className="w-14 h-14 bg-gradient-to-r from-slate-700 to-green-800 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                  <Shield className="w-7 h-7 text-white" />
+            {/* Cost Efficiency */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-lg">
+                  <TrendingUp className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-stone-900">Your AI Operations Team</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-stone-700">
-                  Launch with a built-in operations team. Our AIOpsAgent and CostGuardAgent monitor for issues, manage your cloud budget, and alert you proactively, saving you time and preventing surprises.
-                </p>
-              </CardContent>
-            </Card>
+                <div>
+                  <h3 className="text-2xl font-bold text-stone-900">Save $50K+ on Development</h3>
+                  <p className="text-green-800 font-semibold">Cost of a dev team vs. AI automation</p>
+                </div>
+              </div>
+              <p className="text-lg text-stone-700 leading-relaxed">
+                Skip the $150K+ cost of hiring developers or agencies. No equity given to co-founders, no delayed timelines, no communication overhead. Get the same quality output at a fraction of the cost, and keep 100% ownership of your business.
+              </p>
+            </div>
 
-            <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 hover:border-stone-500/60 transition-all duration-300 hover:shadow-xl hover:bg-white/35">
-              <CardHeader>
-                <div className="w-14 h-14 bg-gradient-to-r from-stone-700 to-green-800 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                  <Code2 className="w-7 h-7 text-white" />
+            {/* Technical Excellence */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Shield className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-stone-900">Full Ownership & Control</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-stone-700">
-                  It's your business, you own everything. Get the full application source code, customer data, and the freedom to extend or migrate your service at any time. No vendor lock-in.
-                </p>
-              </CardContent>
-            </Card>
+                <div>
+                  <h3 className="text-2xl font-bold text-stone-900">Enterprise-Grade from Day One</h3>
+                  <p className="text-green-800 font-semibold">Built-in security, scaling, and monitoring</p>
+                </div>
+              </div>
+              <p className="text-lg text-stone-700 leading-relaxed">
+                Don't worry about technical debt or scalability issues later. Every application is built with production-ready architecture, automated testing, security best practices, and monitoring. Scale confidently from your first customer to thousands.
+              </p>
+            </div>
+
+            {/* Complete Ownership */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Code2 className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-stone-900">It's Your Business, Completely</h3>
+                  <p className="text-green-800 font-semibold">Full source code and data ownership</p>
+                </div>
+              </div>
+              <p className="text-lg text-stone-700 leading-relaxed">
+                No vendor lock-in, no revenue sharing, no restrictions. You get the complete source code, own all customer data, and can modify or migrate your application whenever you want. It's your business – you should control every aspect of it.
+              </p>
+            </div>
+          </div>
+
+          {/* Call-to-Action */}
+          <div className="text-center">
+            <div className="bg-gradient-to-r from-green-800/10 to-green-900/10 backdrop-blur-lg border border-green-800/20 rounded-2xl p-8 max-w-4xl mx-auto">
+              <h3 className="text-2xl lg:text-3xl font-bold text-stone-900 mb-4">
+                Ready to Skip the Development Headaches?
+              </h3>
+              <p className="text-lg text-stone-700 mb-6">
+                Join founders who've already launched profitable SaaS businesses in days, not months.
+              </p>
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl"
+                onClick={() => window.location.href = '/submit-idea'}
+              >
+                Start Building Your SaaS Now
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 bg-gradient-to-br from-green-800/5 to-stone-200/60 backdrop-blur-sm">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="text-center space-y-6 mb-20">
+            <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-stone-900">
+              How It Works: From Idea to Live Business in 3 Steps
+            </h2>
+            <p className="text-xl lg:text-2xl text-stone-700 max-w-4xl mx-auto">
+              Our AI factory handles every step of building your SaaS, so you can focus on growing your business.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8 lg:gap-12 max-w-7xl mx-auto">
+            {/* Step 1: Submit Your Idea */}
+            <div className="relative">
+              <div className="bg-white/35 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 h-full">
+                <div className="text-center space-y-6">
+                  <div className="relative mx-auto">
+                    <div className="w-20 h-20 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-lg mx-auto">
+                      <Lightbulb className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-800 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      1
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-stone-900 mb-3">Submit Your Idea</h3>
+                    <p className="text-stone-700 leading-relaxed">
+                      Describe your SaaS concept in our simple form. Tell us what you want to build – even a few sentences are enough to get started. Our AI understands your vision.
+                    </p>
+                  </div>
+                  <div className="bg-stone-200/60 rounded-xl p-4">
+                    <p className="text-sm text-stone-600 italic">
+                      "A project management tool for remote teams with time tracking and invoicing"
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {/* Arrow for desktop */}
+              <div className="hidden lg:block absolute top-1/2 -right-6 transform -translate-y-1/2">
+                <ArrowRight className="w-8 h-8 text-green-800" />
+              </div>
+            </div>
+
+            {/* Step 2: AI Agents Build It */}
+            <div className="relative">
+              <div className="bg-white/35 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 h-full">
+                <div className="text-center space-y-6">
+                  <div className="relative mx-auto">
+                    <div className="w-20 h-20 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-lg mx-auto">
+                      <Cpu className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-800 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      2
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-stone-900 mb-3">AI Agents Build It</h3>
+                    <p className="text-stone-700 leading-relaxed">
+                      Our specialized AI agents go to work: designing the UI, writing production code, setting up databases, integrating payments, and deploying your application.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm text-stone-600">
+                      <Clock className="w-4 h-4" />
+                      <span>Typically completed in 24-48 hours</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-stone-600">
+                      <Zap className="w-4 h-4" />
+                      <span>Real-time progress updates</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Arrow for desktop */}
+              <div className="hidden lg:block absolute top-1/2 -right-6 transform -translate-y-1/2">
+                <ArrowRight className="w-8 h-8 text-green-800" />
+              </div>
+            </div>
+
+            {/* Step 3: Launch Your SaaS */}
+            <div className="relative">
+              <div className="bg-white/35 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 h-full">
+                <div className="text-center space-y-6">
+                  <div className="relative mx-auto">
+                    <div className="w-20 h-20 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-lg mx-auto">
+                      <Rocket className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-800 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      3
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-stone-900 mb-3">Launch Your SaaS</h3>
+                    <p className="text-stone-700 leading-relaxed">
+                      Review your fully-functional product in the dashboard. Make any adjustments you need, then launch to your customers with one click. Your SaaS is live and ready to generate revenue.
+                    </p>
+                  </div>
+                  <div className="bg-green-800/10 rounded-xl p-4 border border-green-800/20">
+                    <p className="text-sm text-green-800 font-semibold">
+                      🚀 Ready to accept payments and serve customers
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="text-center mt-16">
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-10 py-6 shadow-xl"
+              onClick={() => window.location.href = '/submit-idea'}
+            >
+              Start Your 3-Step Journey
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            <p className="text-sm text-stone-600 mt-3">
+              Join 50+ founders who've already launched their SaaS
+            </p>
           </div>
         </div>
       </section>
@@ -522,49 +753,76 @@ export default function Landing() {
           </div>
 
           <div className="max-w-4xl mx-auto">
-            <Accordion type="single" collapsible className="space-y-4">
+            <Accordion type="single" collapsible className="space-y-4" defaultValue="item-1">
               <AccordionItem value="item-1" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
                 <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                  How does the payment processing work?
+                  Do I retain ownership of the product and code?
                 </AccordionTrigger>
                 <AccordionContent className="text-stone-700">
-                  We integrate Stripe Checkout directly into your application, handling subscriptions, one-time payments, and customer billing automatically. You'll get your own Stripe account and keep 100% of your revenue minus standard Stripe fees.
+                  <strong>Yes, you own 100% of everything.</strong> You get the complete source code, own all customer data, and can modify or migrate your application whenever you want. No revenue sharing, no restrictions, no vendor lock-in. It's your business – you control every aspect of it.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
                 <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                  Do I need my own Stripe account?
+                  What kind of SaaS ideas can I submit?
                 </AccordionTrigger>
                 <AccordionContent className="text-stone-700">
-                  Yes, you'll need your own Stripe account. This ensures you have complete control over your payments and customer data. We'll help you set it up and integrate it seamlessly into your application.
+                  We can build a wide range of web applications: CRMs, project management tools, e-commerce platforms, marketplaces, booking systems, dashboards, and more. If it's a typical SaaS that handles user accounts, data, and payments, our AI can build it. Complex AI models or highly specialized systems may require additional consultation.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-3" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
                 <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                  What business metrics can I see on my dashboard?
+                  How much does it cost and when do I pay?
                 </AccordionTrigger>
                 <AccordionContent className="text-stone-700">
-                  Your dashboard includes revenue tracking, user analytics, subscription metrics, system uptime, cost monitoring, and performance insights. Everything you need to understand and grow your business.
+                  <strong>Currently free during our beta program.</strong> No credit card required to start. You only pay for your own cloud hosting costs (typically $10-50/month depending on usage). Post-beta pricing will be founder-friendly with transparent monthly plans starting at $49/month.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-4" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
                 <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                  Can I export my customer and user data?
+                  How long does it take to get a working product?
                 </AccordionTrigger>
                 <AccordionContent className="text-stone-700">
-                  Absolutely. You own all your data completely. You can export customer data, user information, and application data at any time. No vendor lock-in - it's your business, your data.
+                  Most SaaS applications are ready in <strong>24-48 hours</strong> from idea submission. Complex features or unique requirements may take 3-5 days. You'll receive real-time updates on progress and can review the application at each milestone before final deployment.
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-5" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
                 <AccordionTrigger className="text-left text-stone-900 font-semibold">
-                  What happens if my cloud costs get too high?
+                  Is coding experience required?
                 </AccordionTrigger>
                 <AccordionContent className="text-stone-700">
-                  Our CostGuardAgent monitors your Google Cloud spending in real-time and alerts you before costs spike. You can set budget limits and get automated recommendations for cost optimization.
+                  <strong>No coding experience needed at all.</strong> The system is designed specifically for non-technical founders. You describe your idea in plain English, and our AI handles everything technical. You can focus on your business strategy, marketing, and customers while we handle the development.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-6" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  Can I make changes after the SaaS is built?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  Yes! You can request modifications through our dashboard, add new features, or make adjustments to the existing functionality. Since you own the source code, you can also hire developers to make changes or extend the platform as your business grows.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-7" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  How does AI handle quality and ensure my app is bug-free?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  Every application goes through automated testing with our QA agents before deployment. We use industry best practices: code reviews, security scans, performance testing, and user acceptance testing. Plus, our monitoring agents watch your app 24/7 after launch to catch and resolve any issues proactively.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-8" className="bg-white/25 backdrop-blur-lg border border-stone-400/60 rounded-xl px-6 hover:bg-white/35 transition-all duration-300">
+                <AccordionTrigger className="text-left text-stone-900 font-semibold">
+                  What about security and data privacy?
+                </AccordionTrigger>
+                <AccordionContent className="text-stone-700">
+                  Security is built-in from day one. Every application includes encryption, secure authentication, HTTPS, and follows industry best practices. We're working toward compliance with GDPR, SOC 2, and other standards. Your customers' data is protected with enterprise-grade security measures.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -572,49 +830,92 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30">
+      {/* Final CTA Section */}
+      <section className="py-20 bg-gradient-to-br from-green-800/10 to-stone-300/40 backdrop-blur-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
-                  <Code2 className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-bold">AI SaaS Factory</span>
-              </div>
-              <p className="text-stone-300">
-                Turn any idea into a live SaaS business - no code required.
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="space-y-6">
+              <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-stone-900">
+                Turn Your Idea Into Reality Today
+              </h2>
+              <p className="text-xl lg:text-2xl text-stone-700 leading-relaxed">
+                Don't let another great idea slip away. Join the founders who've already built successful SaaS businesses with AI in days, not months.
               </p>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-stone-200">Product</h4>
-              <div className="space-y-2 text-stone-400">
-                <a href="#features" className="block hover:text-white transition-colors">Features</a>
-                <a href="#pricing" className="block hover:text-white transition-colors">Pricing</a>
-                <a href="#faq" className="block hover:text-white transition-colors">FAQ</a>
+            
+            <div className="bg-white/35 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-8 shadow-xl max-w-2xl mx-auto">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email to get started"
+                    className="bg-white/50 backdrop-blur-sm border border-stone-400/50 text-stone-800 placeholder-stone-600 text-lg py-6"
+                  />
+                </div>
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
+                  onClick={() => window.location.href = '/submit-idea'}
+                >
+                  Start Building Now
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-center space-x-6 mt-6 text-sm text-stone-600">
+                <div className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-green-800" />
+                  <span>Free during beta</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-green-800" />
+                  <span>No credit card required</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-green-800" />
+                  <span>100% code ownership</span>
+                </div>
               </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-stone-200">Company</h4>
-              <div className="space-y-2 text-stone-400">
-                <a href="#" className="block hover:text-white transition-colors">About</a>
-                <a href="#" className="block hover:text-white transition-colors">Blog</a>
-                <a href="#" className="block hover:text-white transition-colors">Contact</a>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12 max-w-3xl mx-auto">
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-green-800">24-48hrs</div>
+                <div className="text-sm text-stone-600">From idea to live SaaS</div>
               </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-stone-200">Support</h4>
-              <div className="space-y-2 text-stone-400">
-                <a href="#" className="block hover:text-white transition-colors">Documentation</a>
-                <a href="#" className="block hover:text-white transition-colors">Community</a>
-                <a href="#" className="block hover:text-white transition-colors">Help Center</a>
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-green-800">$0</div>
+                <div className="text-sm text-stone-600">Development costs</div>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="text-2xl font-bold text-green-800">50+</div>
+                <div className="text-sm text-stone-600">SaaS already built</div>
               </div>
             </div>
           </div>
-          <Separator className="my-8 bg-stone-700/50" />
-          <div className="text-center text-stone-300">
-            <p>&copy; 2024 AI SaaS Factory. All rights reserved.</p>
+        </div>
+      </section>
+
+      {/* Minimal Footer */}
+      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-8 border-t border-stone-400/30">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-green-800 to-green-900 rounded-lg flex items-center justify-center shadow-lg">
+                  <Code2 className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-lg font-bold">AI SaaS Factory</span>
+              </div>
+              <div className="flex items-center space-x-8 text-sm text-stone-400">
+                <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="mailto:hello@aisaasfactory.com" className="hover:text-white transition-colors">Contact</a>
+              </div>
+            </div>
+            <Separator className="my-6 bg-stone-700/50" />
+            <div className="text-center text-stone-400 text-sm">
+              <p>&copy; 2025 AI SaaS Factory. Turn any idea into a live SaaS business – no code required.</p>
+            </div>
           </div>
         </div>
       </footer>
