@@ -80,4 +80,23 @@ variable "use_separate_cloud_run_sa" {
 variable "orchestrator_vertex_endpoint" {
   description = "The Vertex AI Agent Engine endpoint URL for the Project Orchestrator"
   type        = string
+}
+
+# Custom domain configuration
+variable "domain_name" {
+  description = "The custom domain name for the SaaS Factory (e.g., launch24.com)"
+  type        = string
+  default     = "launch24.com"
+}
+
+variable "api_subdomain" {
+  description = "The subdomain for API services"
+  type        = string
+  default     = "api"
+}
+
+variable "www_subdomain" {
+  description = "The subdomain for the frontend web application"
+  type        = string
+  default     = "www"
 } 

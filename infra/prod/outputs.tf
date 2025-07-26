@@ -30,16 +30,31 @@ output "api_east_url" {
   value       = google_cloud_run_v2_service.api_east.uri
 }
 
-# Load balancer IP
-output "lb_ip_address" {
-  description = "The IP address of the load balancer"
+# Load balancer IP addresses
+output "api_lb_ip_address" {
+  description = "The IP address of the API load balancer (for DNS A record: api.launch24.com)"
   value       = google_compute_global_address.lb_ip.address
 }
 
-# API domain
+output "frontend_lb_ip_address" {
+  description = "The IP address of the frontend load balancer (for DNS A record: www.launch24.com)"
+  value       = google_compute_global_address.frontend_lb_ip.address
+}
+
+# Custom domains
 output "api_domain" {
-  description = "The domain for the API"
-  value       = "api.${var.project_id}.com"
+  description = "The custom domain for the API"
+  value       = "${var.api_subdomain}.${var.domain_name}"
+}
+
+output "frontend_domain" {
+  description = "The custom domain for the frontend"
+  value       = "${var.www_subdomain}.${var.domain_name}"
+}
+
+output "apex_domain" {
+  description = "The apex domain"
+  value       = var.domain_name
 }
 
 # Artifact Registry repository
@@ -101,6 +116,39 @@ output "design_agent_url" {
 output "dev_agent_url" {
   description = "The URL of the Dev Agent service"
   value       = module.dev_agent.service_url
+}
+
+# SSL Certificate Status (for monitoring certificate provisioning)
+output "api_ssl_certificate_id" {
+  description = "ID of the API SSL certificate"
+  value       = google_compute_managed_ssl_certificate.api_ssl_cert.id
+}
+
+output "frontend_ssl_certificate_id" {
+  description = "ID of the frontend SSL certificate"
+  value       = google_compute_managed_ssl_certificate.frontend_ssl_cert.id
+}
+
+# SSL Certificate domains
+output "api_ssl_certificate_domains" {
+  description = "Domains covered by the API SSL certificate"
+  value       = google_compute_managed_ssl_certificate.api_ssl_cert.managed[0].domains
+}
+
+output "frontend_ssl_certificate_domains" {
+  description = "Domains covered by the frontend SSL certificate"
+  value       = google_compute_managed_ssl_certificate.frontend_ssl_cert.managed[0].domains
+}
+
+# Custom domain URLs (complete URLs)
+output "custom_api_url" {
+  description = "Complete HTTPS URL for the custom domain API"
+  value       = "https://${var.api_subdomain}.${var.domain_name}"
+}
+
+output "custom_frontend_url" {
+  description = "Complete HTTPS URL for the custom domain frontend"
+  value       = "https://${var.www_subdomain}.${var.domain_name}"
 }
 
 output "qa_agent_url" {

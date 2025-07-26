@@ -31,12 +31,22 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Configure CORS origins for production and development
+CORS_ORIGINS = [
+    "https://www.launch24.com",      # Production frontend
+    "https://launch24.com",          # Production apex domain
+    "http://localhost:3000",         # Development frontend (Vite default)
+    "http://localhost:5173",         # Development frontend (Vite alternative)
+    "http://127.0.0.1:3000",         # Development frontend (alternative)
+    "http://127.0.0.1:5173",         # Development frontend (alternative)
+]
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

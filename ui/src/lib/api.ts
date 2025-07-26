@@ -189,9 +189,22 @@ export class ApiError extends Error {
 }
 
 /**
+ * API Base URL configuration
+ */
+const getApiBaseUrl = (): string => {
+  // Check if we're in development mode
+  if (import.meta.env.DEV || import.meta.env.MODE === 'development') {
+    return 'http://localhost:8000'; // Development API Gateway
+  }
+  
+  // Production API domain
+  return 'https://api.launch24.com';
+};
+
+/**
  * Default API client instance
  */
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient(getApiBaseUrl());
 
 /**
  * Orchestrator API methods

@@ -167,8 +167,8 @@ saas‑factory/
 ### Week 12 – Launch Week
 
 * **Night 78:** Final security scan & penetration test script (OWASP ZAP).
-* **Night 79:** Create status page (Cloud StatusPage.io) & incident playbook.
-* **Night 80:** Switch DNS → Cloud Run custom domain ([www.your‑factory.com](http://www.your‑factory.com)).
+* **Night 79:** Create status page (Cloud StatusPage.io) & incident playbook.
+* **Night 80:** Switch DNS → Cloud Run custom domain ([www.launch24.com](http://www.launch24.com)). ✅ **COMPLETED**
 * **Night 81:** Announce launch (Twitter, LinkedIn) via SocialAgent.
 * **Night 82:** Monitor first live tenant through dashboard; validate SLA metrics.
 * **Night 83:** Add feedback widget; funnel early feedback into IdeaValidationAgent.
