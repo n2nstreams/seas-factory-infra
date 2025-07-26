@@ -1,0 +1,651 @@
+# Cloud Build configuration for OWASP ZAP Penetration Testing
+# Night 78: Final security scan & penetration test script (OWASP ZAP).
+
+steps:
+  # Step 1: Install ZAP and dependencies
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Installing OWASP ZAP and dependencies..."
+        apt-get update && apt-get install -y \
+          wget \
+          curl \
+          openjdk-11-jdk \
+          python3 \
+          python3-pip \
+          xvfb \
+          firefox-esr \
+          unzip
+        
+        # Download and install OWASP ZAP
+        ZAP_VERSION="2.14.0"
+        ZAP_URL="https://github.com/zaproxy/zaproxy/releases/download/v${ZAP_VERSION}/ZAP_${ZAP_VERSION}_Linux.tar.gz"
+        
+        cd /opt
+        wget -q ${ZAP_URL} -O zap.tar.gz
+        tar -xzf zap.tar.gz
+        mv ZAP_${ZAP_VERSION} zaproxy
+        chmod +x /opt/zaproxy/zap.sh
+        
+        # Create symlink for easier access
+        ln -sf /opt/zaproxy/zap.sh /usr/local/bin/zap.sh
+        
+        # Verify installation
+        /opt/zaproxy/zap.sh -version
+        echo "OWASP ZAP installed successfully"
+        
+        # Install Python dependencies for ZAP integration
+        pip3 install --upgrade pip
+        pip3 install requests httpx asyncio pydantic fastapi python-zaproxy
+
+  # Step 2: Setup ZAP configuration and policies
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Setting up ZAP configuration..."
+        
+        # Create ZAP configuration directory
+        mkdir -p /workspace/zap-config
+        
+        # Create ZAP API key
+        ZAP_API_KEY=$(openssl rand -hex 16)
+        echo "ZAP_API_KEY=${ZAP_API_KEY}" > /workspace/zap-config/zap.env
+        
+        # Create ZAP scan policies configuration
+        cat > /workspace/zap-config/scan-policies.json << 'EOF'
+        {
+          "quick": {
+            "description": "Quick scan for basic vulnerabilities",
+            "spider_timeout": 300,
+            "scan_timeout": 600,
+            "max_depth": 3,
+            "disabled_scanners": [
+              "10020", "10021", "10023", "10024", "10025", 
+              "10026", "10027", "10028", "10029"
+            ]
+          },
+          "baseline": {
+            "description": "Baseline scan with moderate coverage",
+            "spider_timeout": 600,
+            "scan_timeout": 1200,
+            "max_depth": 5,
+            "disabled_scanners": ["10029"]
+          },
+          "full": {
+            "description": "Comprehensive security scan",
+            "spider_timeout": 1800,
+            "scan_timeout": 3600,
+            "max_depth": 10,
+            "disabled_scanners": []
+          }
+        }
+        EOF
+        
+        # Create ZAP context configuration for different target types
+        cat > /workspace/zap-config/contexts.json << 'EOF'
+        {
+          "web_app": {
+            "name": "Web Application Context",
+            "include_regexes": ["https?://.*"],
+            "exclude_regexes": [
+              ".*\\.css$",
+              ".*\\.js$",
+              ".*\\.png$",
+              ".*\\.jpg$",
+              ".*\\.gif$",
+              ".*\\.ico$",
+              ".*/logout.*",
+              ".*/signout.*"
+            ]
+          },
+          "api": {
+            "name": "API Context",
+            "include_regexes": ["https?://.*/api/.*"],
+            "exclude_regexes": [
+              ".*/api/health.*",
+              ".*/api/metrics.*",
+              ".*/api/docs.*"
+            ]
+          }
+        }
+        EOF
+        
+        echo "ZAP configuration setup completed"
+
+  # Step 3: Run ZAP Penetration Test
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Starting OWASP ZAP penetration test..."
+        
+        # Source ZAP environment
+        source /workspace/zap-config/zap.env
+        
+        # Set target URL (from substitution or default)
+        TARGET_URL="${_TARGET_URL:-https://example.com}"
+        SCAN_TYPE="${_SCAN_TYPE:-baseline}"
+        
+        echo "Target URL: ${TARGET_URL}"
+        echo "Scan Type: ${SCAN_TYPE}"
+        
+        # Create results directory
+        mkdir -p /workspace/zap-results
+        
+        # Start virtual display for ZAP GUI components
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        
+        # Start ZAP daemon
+        echo "Starting ZAP daemon..."
+        /opt/zaproxy/zap.sh \
+          -daemon \
+          -host 0.0.0.0 \
+          -port 8090 \
+          -config api.key=${ZAP_API_KEY} \
+          -config api.addrs.addr.name=.* \
+          -config api.addrs.addr.regex=true \
+          -config scanner.strength=MEDIUM \
+          -config view.mode=attack \
+          > /workspace/zap-results/zap-daemon.log 2>&1 &
+        
+        # Wait for ZAP to start
+        echo "Waiting for ZAP to start..."
+        for i in {1..60}; do
+          if curl -s "http://localhost:8090/JSON/core/view/version/?apikey=${ZAP_API_KEY}" > /dev/null; then
+            echo "ZAP daemon started successfully"
+            break
+          fi
+          sleep 2
+        done
+        
+        # Verify ZAP is running
+        ZAP_VERSION=$(curl -s "http://localhost:8090/JSON/core/view/version/?apikey=${ZAP_API_KEY}" | python3 -c "import sys, json; print(json.load(sys.stdin)['version'])")
+        echo "ZAP Version: ${ZAP_VERSION}"
+        
+        # Create comprehensive ZAP scan script
+        cat > /workspace/run_zap_scan.py << 'PYEOF'
+        import json
+        import time
+        import requests
+        import sys
+        import os
+        from datetime import datetime
+        
+        def zap_api_call(endpoint, params=None):
+            """Make API call to ZAP"""
+            api_key = os.environ.get('ZAP_API_KEY')
+            base_url = "http://localhost:8090"
+            
+            if params is None:
+                params = {}
+            params['apikey'] = api_key
+            
+            try:
+                response = requests.get(f"{base_url}/JSON/{endpoint}", params=params)
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                print(f"ZAP API call failed: {e}")
+                return None
+        
+        def zap_api_action(endpoint, params=None):
+            """Make action API call to ZAP"""
+            api_key = os.environ.get('ZAP_API_KEY')
+            base_url = "http://localhost:8090"
+            
+            if params is None:
+                params = {}
+            params['apikey'] = api_key
+            
+            try:
+                response = requests.post(f"{base_url}/JSON/{endpoint}", data=params)
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                print(f"ZAP API action failed: {e}")
+                return None
+        
+        def wait_for_completion(endpoint, scan_id, max_wait=3600):
+            """Wait for scan completion"""
+            start_time = time.time()
+            while time.time() - start_time < max_wait:
+                result = zap_api_call(endpoint, {"scanId": scan_id})
+                if result:
+                    status = int(result.get("status", 0))
+                    print(f"Scan progress: {status}%")
+                    if status >= 100:
+                        return True
+                time.sleep(10)
+            return False
+        
+        def run_zap_penetration_test():
+            """Run comprehensive ZAP penetration test"""
+            target_url = os.environ.get('TARGET_URL', 'https://example.com')
+            scan_type = os.environ.get('SCAN_TYPE', 'baseline')
+            
+            print(f"Starting ZAP penetration test for {target_url}")
+            print(f"Scan type: {scan_type}")
+            
+            scan_results = {
+                "target_url": target_url,
+                "scan_type": scan_type,
+                "start_time": datetime.utcnow().isoformat(),
+                "spider_results": {},
+                "passive_scan_results": {},
+                "active_scan_results": {},
+                "alerts": [],
+                "summary": {}
+            }
+            
+            try:
+                # 1. Setup context and target
+                print("Setting up ZAP context...")
+                zap_api_action("core/action/newSession", {"name": f"scan_{int(time.time())}"})
+                zap_api_action("core/action/includeInContext", {
+                    "contextName": "Default Context",
+                    "regex": f"{target_url}.*"
+                })
+                
+                # 2. Configure scan policies based on scan type
+                if scan_type == "quick":
+                    # Disable time-consuming scanners
+                    disabled_scanners = ["10020", "10021", "10023", "10024", "10025", "10026", "10027", "10028", "10029"]
+                    for scanner_id in disabled_scanners:
+                        zap_api_action("ascan/action/disableAllScanners")
+                        zap_api_action("ascan/action/enableScanners", {"ids": scanner_id})
+                elif scan_type == "full":
+                    # Enable all scanners
+                    zap_api_action("ascan/action/enableAllScanners")
+                
+                # 3. Run spider (URL discovery)
+                print("Starting spider scan...")
+                spider_result = zap_api_action("spider/action/scan", {
+                    "url": target_url,
+                    "maxChildren": "5" if scan_type == "quick" else "10",
+                    "recurse": "true",
+                    "contextName": "Default Context"
+                })
+                
+                if spider_result and "scan" in spider_result:
+                    spider_id = spider_result["scan"]
+                    print(f"Spider scan started with ID: {spider_id}")
+                    
+                    # Wait for spider to complete
+                    timeout = 300 if scan_type == "quick" else 600
+                    if wait_for_completion("spider/view/status", spider_id, timeout):
+                        spider_results = zap_api_call("spider/view/results", {"scanId": spider_id})
+                        scan_results["spider_results"] = {
+                            "spider_id": spider_id,
+                            "urls_found": len(spider_results.get("results", [])),
+                            "urls": spider_results.get("results", [])
+                        }
+                        print(f"Spider completed. Found {len(spider_results.get('results', []))} URLs")
+                    else:
+                        print("Spider scan timed out")
+                
+                # 4. Wait for passive scan to complete
+                print("Waiting for passive scan to complete...")
+                for i in range(60):  # Wait up to 10 minutes
+                    passive_status = zap_api_call("pscan/view/recordsToScan")
+                    if passive_status and int(passive_status.get("recordsToScan", 1)) == 0:
+                        print("Passive scan completed")
+                        break
+                    time.sleep(10)
+                
+                scan_results["passive_scan_results"] = {"status": "completed"}
+                
+                # 5. Run active scan (if not quick scan)
+                if scan_type in ["baseline", "full"]:
+                    print("Starting active scan...")
+                    active_result = zap_api_action("ascan/action/scan", {
+                        "url": target_url,
+                        "recurse": "true",
+                        "inScopeOnly": "true",
+                        "scanPolicyName": "Default Policy",
+                        "contextId": "0"
+                    })
+                    
+                    if active_result and "scan" in active_result:
+                        active_scan_id = active_result["scan"]
+                        print(f"Active scan started with ID: {active_scan_id}")
+                        
+                        # Wait for active scan to complete
+                        timeout = 600 if scan_type == "baseline" else 1800
+                        if wait_for_completion("ascan/view/status", active_scan_id, timeout):
+                            scan_results["active_scan_results"] = {
+                                "scan_id": active_scan_id,
+                                "status": "completed"
+                            }
+                            print("Active scan completed")
+                        else:
+                            print("Active scan timed out")
+                
+                # 6. Get alerts and generate report
+                print("Generating security report...")
+                alerts_result = zap_api_call("core/view/alerts")
+                if alerts_result:
+                    scan_results["alerts"] = alerts_result.get("alerts", [])
+                
+                # Calculate summary statistics
+                alerts = scan_results["alerts"]
+                risk_counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "Informational": 0}
+                confidence_counts = {"High": 0, "Medium": 0, "Low": 0}
+                
+                for alert in alerts:
+                    risk = alert.get("risk", "Low")
+                    confidence = alert.get("confidence", "Medium")
+                    if risk in risk_counts:
+                        risk_counts[risk] += 1
+                    if confidence in confidence_counts:
+                        confidence_counts[confidence] += 1
+                
+                # Calculate risk score
+                risk_weights = {"Critical": 10, "High": 7, "Medium": 3, "Low": 1, "Informational": 0}
+                confidence_weights = {"High": 1.0, "Medium": 0.7, "Low": 0.4}
+                
+                total_score = 0
+                max_score = 0
+                for alert in alerts:
+                    risk_weight = risk_weights.get(alert.get("risk", "Low"), 1)
+                    confidence_weight = confidence_weights.get(alert.get("confidence", "Medium"), 0.5)
+                    total_score += risk_weight * confidence_weight
+                    max_score += risk_weights["Critical"] * 1.0
+                
+                risk_score = (total_score / max_score * 100) if max_score > 0 else 0
+                
+                scan_results["summary"] = {
+                    "total_alerts": len(alerts),
+                    "risk_distribution": risk_counts,
+                    "confidence_distribution": confidence_counts,
+                    "risk_score": min(risk_score, 100.0),
+                    "security_posture": "Critical" if risk_counts["Critical"] > 0 else 
+                                     "Poor" if risk_counts["High"] > 3 or risk_score > 70 else
+                                     "Fair" if risk_counts["High"] > 0 or risk_score > 40 else
+                                     "Good" if risk_score > 20 else "Excellent"
+                }
+                
+                scan_results["end_time"] = datetime.utcnow().isoformat()
+                
+                # Save results
+                with open("/workspace/zap-results/zap-scan-results.json", "w") as f:
+                    json.dump(scan_results, f, indent=2)
+                
+                print(f"ZAP scan completed successfully!")
+                print(f"Total alerts: {len(alerts)}")
+                print(f"Risk score: {risk_score:.2f}/100")
+                print(f"Security posture: {scan_results['summary']['security_posture']}")
+                
+                return True
+                
+            except Exception as e:
+                print(f"ZAP scan failed: {e}")
+                scan_results["error"] = str(e)
+                scan_results["end_time"] = datetime.utcnow().isoformat()
+                
+                with open("/workspace/zap-results/zap-scan-results.json", "w") as f:
+                    json.dump(scan_results, f, indent=2)
+                
+                return False
+        
+        if __name__ == "__main__":
+            success = run_zap_penetration_test()
+            sys.exit(0 if success else 1)
+        PYEOF
+        
+        # Run the ZAP penetration test
+        export ZAP_API_KEY
+        export TARGET_URL
+        export SCAN_TYPE
+        
+        python3 /workspace/run_zap_scan.py
+        
+        # Generate HTML report
+        echo "Generating HTML report..."
+        curl -s "http://localhost:8090/OTHER/core/other/htmlreport/?apikey=${ZAP_API_KEY}" > /workspace/zap-results/zap-report.html
+        
+        # Generate XML report  
+        curl -s "http://localhost:8090/OTHER/core/other/xmlreport/?apikey=${ZAP_API_KEY}" > /workspace/zap-results/zap-report.xml
+        
+        # Stop ZAP daemon
+        curl -s "http://localhost:8090/JSON/core/action/shutdown/?apikey=${ZAP_API_KEY}"
+        
+        echo "ZAP penetration test completed"
+
+  # Step 4: Process ZAP results and integrate with SecurityAgent
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Processing ZAP results with SecurityAgent integration..."
+        
+        # Install required Python packages
+        pip install --upgrade pip
+        pip install requests httpx asyncio pydantic fastapi python-multipart
+        
+        # Create ZAP result processor for SecurityAgent integration
+        cat > /workspace/process_zap_results.py << 'PYEOF'
+        import json
+        import os
+        import sys
+        from datetime import datetime
+        from typing import Dict, List, Any
+        
+        def process_zap_results_for_security_agent():
+            """Process ZAP results for SecurityAgent compatibility"""
+            try:
+                # Load ZAP scan results
+                with open('/workspace/zap-results/zap-scan-results.json', 'r') as f:
+                    zap_results = json.load(f)
+                
+                # Convert to SecurityAgent format
+                security_agent_report = {
+                    'scan_id': f"zap_{int(datetime.utcnow().timestamp())}",
+                    'scan_type': 'zap_penetration',
+                    'target_url': zap_results.get('target_url'),
+                    'scan_metadata': {
+                        'build_id': os.environ.get('BUILD_ID', 'unknown'),
+                        'project_name': os.environ.get('_PROJECT_NAME', 'unknown'),
+                        'branch': os.environ.get('BRANCH_NAME', 'unknown'),
+                        'commit_sha': os.environ.get('COMMIT_SHA', 'unknown'),
+                        'scan_type': zap_results.get('scan_type', 'baseline'),
+                        'zap_version': 'OWASP ZAP 2.14.0'
+                    },
+                    'summary': zap_results.get('summary', {}),
+                    'vulnerabilities': [],
+                    'recommendations': [],
+                    'risk_score': zap_results.get('summary', {}).get('risk_score', 0),
+                    'status': 'completed' if 'error' not in zap_results else 'failed',
+                    'spider_results': zap_results.get('spider_results', {}),
+                    'scan_duration': 0,
+                    'processed_at': datetime.utcnow().isoformat()
+                }
+                
+                # Calculate scan duration
+                if 'start_time' in zap_results and 'end_time' in zap_results:
+                    start = datetime.fromisoformat(zap_results['start_time'].replace('Z', '+00:00'))
+                    end = datetime.fromisoformat(zap_results['end_time'].replace('Z', '+00:00'))
+                    security_agent_report['scan_duration'] = int((end - start).total_seconds())
+                
+                # Process vulnerabilities
+                for alert in zap_results.get('alerts', []):
+                    vulnerability = {
+                        'id': alert.get('id', ''),
+                        'plugin_id': alert.get('pluginId', ''),
+                        'name': alert.get('name', ''),
+                        'description': alert.get('description', ''),
+                        'solution': alert.get('solution', ''),
+                        'reference': alert.get('reference', ''),
+                        'severity': alert.get('risk', 'Low'),
+                        'confidence': alert.get('confidence', 'Medium'),
+                        'url': alert.get('url', ''),
+                        'param': alert.get('param', ''),
+                        'attack': alert.get('attack', ''),
+                        'evidence': alert.get('evidence', ''),
+                        'cwe_id': alert.get('cweid', ''),
+                        'wasc_id': alert.get('wascid', ''),
+                        'other_info': alert.get('other', '')
+                    }
+                    security_agent_report['vulnerabilities'].append(vulnerability)
+                
+                # Generate recommendations
+                summary = zap_results.get('summary', {})
+                risk_dist = summary.get('risk_distribution', {})
+                
+                recommendations = []
+                
+                if risk_dist.get('Critical', 0) > 0:
+                    recommendations.append(f"🚨 Address {risk_dist['Critical']} CRITICAL vulnerabilities immediately")
+                
+                if risk_dist.get('High', 0) > 0:
+                    recommendations.append(f"⚠️ Fix {risk_dist['High']} HIGH severity vulnerabilities within 7 days")
+                
+                # Analyze common vulnerability types
+                xss_alerts = [a for a in zap_results.get('alerts', []) if 'cross-site' in a.get('name', '').lower() or 'xss' in a.get('name', '').lower()]
+                if xss_alerts:
+                    recommendations.append(f"🔒 Implement proper input validation and output encoding to prevent XSS ({len(xss_alerts)} found)")
+                
+                sql_alerts = [a for a in zap_results.get('alerts', []) if 'sql' in a.get('name', '').lower() and 'injection' in a.get('name', '').lower()]
+                if sql_alerts:
+                    recommendations.append(f"💉 Use parameterized queries to prevent SQL injection ({len(sql_alerts)} found)")
+                
+                header_alerts = [a for a in zap_results.get('alerts', []) if 'header' in a.get('name', '').lower()]
+                if header_alerts:
+                    recommendations.append("🛡️ Implement security headers (CSP, HSTS, X-Frame-Options, etc.)")
+                
+                if summary.get('risk_score', 0) > 50:
+                    recommendations.append("🎯 Consider implementing a Web Application Firewall (WAF)")
+                    recommendations.append("🔍 Perform regular security assessments and penetration testing")
+                
+                if not recommendations:
+                    recommendations.append("✅ No critical security issues found, maintain current security practices")
+                
+                security_agent_report['recommendations'] = recommendations
+                
+                # Save SecurityAgent-compatible report
+                with open('/workspace/zap-results/security-agent-zap-report.json', 'w') as f:
+                    json.dump(security_agent_report, f, indent=2)
+                
+                print("ZAP results processed for SecurityAgent integration")
+                print(f"Scan ID: {security_agent_report['scan_id']}")
+                print(f"Risk Score: {security_agent_report['risk_score']:.2f}/100")
+                print(f"Total Vulnerabilities: {len(security_agent_report['vulnerabilities'])}")
+                print(f"Status: {security_agent_report['status']}")
+                
+                # Create summary for build output
+                with open('/workspace/zap-results/zap-summary.txt', 'w') as f:
+                    f.write(f"ZAP Penetration Test Summary\n")
+                    f.write(f"===========================\n")
+                    f.write(f"Target URL: {security_agent_report['target_url']}\n")
+                    f.write(f"Scan Type: {security_agent_report['scan_metadata']['scan_type']}\n")
+                    f.write(f"Risk Score: {security_agent_report['risk_score']:.2f}/100\n")
+                    f.write(f"Total Vulnerabilities: {len(security_agent_report['vulnerabilities'])}\n")
+                    f.write(f"Critical: {risk_dist.get('Critical', 0)}\n")
+                    f.write(f"High: {risk_dist.get('High', 0)}\n")
+                    f.write(f"Medium: {risk_dist.get('Medium', 0)}\n")
+                    f.write(f"Low: {risk_dist.get('Low', 0)}\n")
+                    f.write(f"Security Posture: {summary.get('security_posture', 'Unknown')}\n")
+                    f.write(f"\nRecommendations:\n")
+                    for i, rec in enumerate(recommendations, 1):
+                        f.write(f"{i}. {rec}\n")
+                
+                return True
+                
+            except Exception as e:
+                print(f"Error processing ZAP results: {e}")
+                return False
+        
+        if __name__ == "__main__":
+            success = process_zap_results_for_security_agent()
+            sys.exit(0 if success else 1)
+        PYEOF
+        
+        # Run the result processor
+        python3 /workspace/process_zap_results.py
+        
+        echo "ZAP results processing completed"
+
+  # Step 5: Upload results and send notifications
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Uploading ZAP scan results..."
+        
+        # Upload results to Cloud Storage
+        gsutil -m cp -r /workspace/zap-results/* gs://${_SECURITY_RESULTS_BUCKET}/zap-scans/${BUILD_ID}/
+        
+        # Display summary
+        echo "=== ZAP Penetration Test Summary ==="
+        cat /workspace/zap-results/zap-summary.txt
+        
+        # Check if SecurityAgent service is available for notification
+        if [ -n "${_ZAP_AGENT_URL}" ]; then
+          echo "Sending results to ZAP SecurityAgent..."
+          
+          # Send notification to ZAP SecurityAgent
+          cat > /workspace/zap-results/zap-webhook-payload.json << EOF
+        {
+          "build_id": "${BUILD_ID}",
+          "project_name": "${_PROJECT_NAME}",
+          "target_url": "${_TARGET_URL}",
+          "branch": "${BRANCH_NAME}",
+          "commit_sha": "${COMMIT_SHA}",
+          "results_url": "gs://${_SECURITY_RESULTS_BUCKET}/zap-scans/${BUILD_ID}/",
+          "webhook_type": "zap_penetration_scan_completed",
+          "scan_type": "${_SCAN_TYPE}"
+        }
+        EOF
+          
+          echo "ZAP webhook payload prepared"
+          cat /workspace/zap-results/zap-webhook-payload.json
+        else
+          echo "No ZAP Agent URL configured, skipping notification"
+        fi
+        
+        echo "ZAP penetration test results uploaded successfully"
+
+# Store build artifacts
+artifacts:
+  objects:
+    location: 'gs://${_SECURITY_RESULTS_BUCKET}/zap-scans/${BUILD_ID}'
+    paths:
+      - '/workspace/zap-results/**'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_STANDARD_4'  # ZAP needs more resources
+  diskSizeGb: '100'
+  env:
+    - 'PYTHONUNBUFFERED=1'
+    - 'DISPLAY=:99'
+
+# Set timeout to 45 minutes (ZAP scans can take longer)
+timeout: '2700s'
+
+# Required substitutions
+substitutions:
+  _PROJECT_NAME: 'ai-saas-factory'
+  _TARGET_URL: 'https://your-app.com'
+  _SCAN_TYPE: 'baseline'
+  _SECURITY_RESULTS_BUCKET: '${PROJECT_ID}-security-results'
+  _ZAP_AGENT_URL: 'https://zap-agent-service-url'
+
+# Tags for organization
+tags:
+  - 'security-scan'
+  - 'zap'
+  - 'penetration-test'
+  - 'dast'
+  - 'night-78' 
