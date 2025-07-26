@@ -198,7 +198,7 @@ const getApiBaseUrl = (): string => {
   }
   
   // Production API domain
-  return 'https://api.launch84.com';
+  return 'https://api.forge95.com';
 };
 
 /**

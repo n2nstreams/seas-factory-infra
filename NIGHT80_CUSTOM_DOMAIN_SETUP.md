@@ -7,9 +7,9 @@ This guide explains how to configure custom domains for your AI SaaS Factory dep
 ## What Was Deployed
 
 The Terraform configuration sets up:
-- **API Domain**: `api.launch84.com` → Points to API Gateway and backend services
-- **Frontend Domain**: `www.launch84.com` → Points to React frontend
-- **Apex Domain**: `launch84.com` → Redirects to `www.launch84.com`
+- **API Domain**: `api.forge95.com` → Points to API Gateway and backend services
+- **Frontend Domain**: `www.forge95.com` → Points to React frontend
+- **Apex Domain**: `forge95.com` → Redirects to `www.forge95.com`
 
 ## Step 1: Deploy Infrastructure
 
@@ -44,13 +44,13 @@ In your domain registrar's DNS management console (e.g., Google Domains, Cloudfl
 
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
-| A | `api.launch84.com` | `<api_lb_ip_address>` | 300 |
-| A | `www.launch84.com` | `<frontend_lb_ip_address>` | 300 |
-| A | `launch84.com` | `<frontend_lb_ip_address>` | 300 |
+| A | `api.forge95.com` | `<api_lb_ip_address>` | 300 |
+| A | `www.forge95.com` | `<frontend_lb_ip_address>` | 300 |
+| A | `forge95.com` | `<frontend_lb_ip_address>` | 300 |
 
 ### Example for Google Domains:
 1. Go to [Google Domains](https://domains.google.com)
-2. Select your domain (`launch84.com`)
+2. Select your domain (`forge95.com`)
 3. Click "DNS" in the left sidebar
 4. Under "Custom records", add:
    ```
@@ -92,13 +92,13 @@ Once DNS propagates (5-60 minutes), test your domains:
 
 ```bash
 # Test API domain
-curl -I https://api.launch84.com/health
+curl -I https://api.forge95.com/health
 
 # Test frontend domain
-curl -I https://www.launch84.com
+curl -I https://www.forge95.com
 
 # Test apex domain redirect
-curl -I https://launch84.com
+curl -I https://forge95.com
 ```
 
 Expected responses:
@@ -116,7 +116,7 @@ Update environment variables in your React app:
 ```typescript
 // ui/src/lib/api.ts
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.launch84.com'
+  ? 'https://api.forge95.com'
   : 'http://localhost:8080';
 ```
 
@@ -126,8 +126,8 @@ Update CORS origins in your API Gateway:
 ```python
 # api-gateway/app.py
 CORS_ORIGINS = [
-    'https://www.launch84.com',
-    'https://launch84.com',
+    'https://www.forge95.com',
+    'https://forge95.com',
     'http://localhost:3000'  # For development
 ]
 ```
@@ -137,17 +137,17 @@ CORS_ORIGINS = [
 ### DNS Not Resolving
 ```bash
 # Check DNS propagation
-dig api.launch84.com
-dig www.launch84.com
+dig api.forge95.com
+dig www.forge95.com
 
 # Check from different locations
-nslookup api.launch84.com 8.8.8.8
+nslookup api.forge95.com 8.8.8.8
 ```
 
 ### SSL Certificate Issues
 ```bash
 # Check certificate details
-openssl s_client -connect api.launch84.com:443 -servername api.launch84.com
+openssl s_client -connect api.forge95.com:443 -servername api.forge95.com
 
 # Force refresh certificate status
 gcloud compute ssl-certificates describe api-ssl-cert --global
@@ -179,7 +179,7 @@ Set up monitoring for your custom domains:
 gcloud alpha monitoring uptime-check-configs create \
   --display-name="Frontend Uptime Check" \
   --monitored-resource-type="uptime_url" \
-  --hostname="www.launch84.com" \
+  --hostname="www.forge95.com" \
   --path="/" \
   --port=443 \
   --use-ssl
@@ -187,7 +187,7 @@ gcloud alpha monitoring uptime-check-configs create \
 gcloud alpha monitoring uptime-check-configs create \
   --display-name="API Uptime Check" \
   --monitored-resource-type="uptime_url" \
-  --hostname="api.launch84.com" \
+  --hostname="api.forge95.com" \
   --path="/health" \
   --port=443 \
   --use-ssl

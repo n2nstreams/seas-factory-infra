@@ -1,4 +1,4 @@
-# Frontend Load Balancer Configuration for www.launch84.com
+# Frontend Load Balancer Configuration for www.forge95.com
 
 # Global IP address for frontend load balancer
 resource "google_compute_global_address" "frontend_lb_ip" {

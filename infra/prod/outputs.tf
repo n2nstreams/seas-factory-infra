@@ -32,12 +32,12 @@ output "api_east_url" {
 
 # Load balancer IP addresses
 output "api_lb_ip_address" {
-  description = "The IP address of the API load balancer (for DNS A record: api.launch84.com)"
+  description = "The IP address of the API load balancer (for DNS A record: api.forge95.com)"
   value       = google_compute_global_address.lb_ip.address
 }
 
 output "frontend_lb_ip_address" {
-  description = "The IP address of the frontend load balancer (for DNS A record: www.launch84.com)"
+  description = "The IP address of the frontend load balancer (for DNS A record: www.forge95.com)"
   value       = google_compute_global_address.frontend_lb_ip.address
 }
 
