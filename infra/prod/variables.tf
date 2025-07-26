@@ -84,9 +84,9 @@ variable "orchestrator_vertex_endpoint" {
 
 # Custom domain configuration
 variable "domain_name" {
-  description = "The custom domain name for the SaaS Factory (e.g., launch24.com)"
+  description = "The custom domain name for the SaaS Factory (e.g., launch84.com)"
   type        = string
-  default     = "launch24.com"
+  default     = "launch84.com"
 }
 
 variable "api_subdomain" {

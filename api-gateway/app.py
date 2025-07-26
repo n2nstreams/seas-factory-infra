@@ -33,8 +33,8 @@ app = FastAPI(
 
 # Configure CORS origins for production and development
 CORS_ORIGINS = [
-    "https://www.launch24.com",      # Production frontend
-    "https://launch24.com",          # Production apex domain
+    "https://www.launch84.com",      # Production frontend
+    "https://launch84.com",          # Production apex domain
     "http://localhost:3000",         # Development frontend (Vite default)
     "http://localhost:5173",         # Development frontend (Vite alternative)
     "http://127.0.0.1:3000",         # Development frontend (alternative)

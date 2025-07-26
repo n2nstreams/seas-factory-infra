@@ -40,7 +40,7 @@ resource "google_cloud_run_domain_mapping" "frontend_domain_mapping" {
   ]
 }
 
-# Optional: Domain mapping for bare domain (launch24.com -> www.launch24.com)
+# Optional: Domain mapping for bare domain (launch84.com -> www.launch84.com)
 resource "google_cloud_run_domain_mapping" "apex_domain_mapping" {
   location = var.region
   name     = var.domain_name
