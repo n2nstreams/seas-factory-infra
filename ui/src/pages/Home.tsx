@@ -637,13 +637,13 @@ export default function Home() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8 xl:gap-12">
-            {/* Launch Tier */}
+            {/* Free Tier */}
             <Card className="bg-white/35 backdrop-blur-lg border border-stone-400/60 hover:border-stone-500/80 transition-all duration-300 hover:shadow-xl hover:bg-white/45">
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold text-stone-900">Launch</CardTitle>
-                <CardDescription className="text-stone-700">Launch a transactable business</CardDescription>
+                <CardTitle className="text-2xl font-bold text-stone-900">Free</CardTitle>
+                <CardDescription className="text-stone-700">Perfect for testing your first idea</CardDescription>
                 <div className="mt-6 p-4 bg-stone-200/60 rounded-xl border border-stone-300/60">
-                  <span className="text-4xl font-bold text-green-800">$49</span>
+                  <span className="text-4xl font-bold text-green-800">$0</span>
                   <span className="text-stone-700">/month</span>
                 </div>
               </CardHeader>
@@ -651,27 +651,30 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Full Idea-to-Deploy Pipeline</span>
+                    <span className="text-sm text-stone-800">1 Project</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Stripe Payment Integration</span>
+                    <span className="text-sm text-stone-800">5 Build Hours</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Basic Monitoring</span>
+                    <span className="text-sm text-stone-800">Demo Deploy</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg">
-                    <span className="text-sm text-stone-700">Community Forum Support</span>
+                    <span className="text-sm text-stone-700">Community Support</span>
                   </div>
                 </div>
-                <Button className="w-full bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70">
-                  Start with Launch
+                <Button 
+                  onClick={() => navigate('/signup')}
+                  className="w-full bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70"
+                >
+                  Get Started Free
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Operate Tier */}
+            {/* Starter Tier */}
             <Card className="bg-white/45 backdrop-blur-lg border-2 border-green-800/60 relative hover:shadow-2xl transition-all duration-300 hover:bg-white/55">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <Badge className="bg-gradient-to-r from-green-800 to-green-900 text-white shadow-lg backdrop-blur-sm border border-stone-400/40">
@@ -680,10 +683,10 @@ export default function Home() {
                 </Badge>
               </div>
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold text-stone-900">Operate</CardTitle>
-                <CardDescription className="text-stone-700">Automate operations & marketing</CardDescription>
+                <CardTitle className="text-2xl font-bold text-stone-900">Starter</CardTitle>
+                <CardDescription className="text-stone-700">Ideal for solo entrepreneurs launching their first SaaS</CardDescription>
                 <div className="mt-6 p-4 bg-gradient-to-r from-stone-200/60 to-stone-300/60 rounded-xl border border-stone-400/60">
-                  <span className="text-4xl font-bold text-green-800">$129</span>
+                  <span className="text-4xl font-bold text-green-800">$19</span>
                   <span className="text-stone-700">/month</span>
                 </div>
               </CardHeader>
@@ -691,37 +694,40 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Everything in Launch</span>
+                    <span className="text-sm text-stone-800">1 Project</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Business Operations Agents</span>
+                    <span className="text-sm text-stone-800">25 Build Hours</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Customer Engagement Agents</span>
+                    <span className="text-sm text-stone-800">Core Agents</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Analytics Dashboard</span>
+                    <span className="text-sm text-stone-800">Custom Domain</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg">
-                    <span className="text-sm text-stone-700">Email Support, 48h SLA</span>
+                    <span className="text-sm text-stone-700">Email Support (72h)</span>
                   </div>
                 </div>
-                <Button className="w-full bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40">
-                  Choose Operate
+                <Button 
+                  onClick={() => navigate('/signup')}
+                  className="w-full bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
+                >
+                  Start Building
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Scale Tier */}
+            {/* Pro Tier */}
             <Card className="bg-white/35 backdrop-blur-lg border border-stone-400/60 hover:border-stone-500/80 transition-all duration-300 hover:shadow-xl hover:bg-white/45">
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold text-stone-900">Scale</CardTitle>
-                <CardDescription className="text-stone-700">Optimize growth & infrastructure</CardDescription>
+                <CardTitle className="text-2xl font-bold text-stone-900">Pro</CardTitle>
+                <CardDescription className="text-stone-700">For entrepreneurs building multiple SaaS products</CardDescription>
                 <div className="mt-6 p-4 bg-stone-200/60 rounded-xl border border-stone-300/60">
-                  <span className="text-4xl font-bold text-green-800">$349</span>
+                  <span className="text-4xl font-bold text-green-800">$79</span>
                   <span className="text-stone-700">/month</span>
                 </div>
               </CardHeader>
@@ -729,22 +735,25 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Everything in Operate</span>
+                    <span className="text-sm text-stone-800">3 Projects</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Growth & Personalization Agents</span>
+                    <span className="text-sm text-stone-800">100 Build Hours</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
                     <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Advanced Infrastructure</span>
+                    <span className="text-sm text-stone-800">Advanced Agents</span>
                   </div>
                   <div className="flex items-center space-x-3 p-2 rounded-lg">
-                    <span className="text-sm text-stone-700">Slack Support, 24h SLA</span>
+                    <span className="text-sm text-stone-700">Email Support (24-48h)</span>
                   </div>
                 </div>
-                <Button className="w-full bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70">
-                  Choose Scale
+                <Button 
+                  onClick={() => navigate('/signup')}
+                  className="w-full bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70"
+                >
+                  Scale Up
                 </Button>
               </CardContent>
             </Card>

@@ -69,7 +69,7 @@ const defaultFAQs: FAQItem[] = [
   },
   {
     question: "How much does it cost to build a SaaS application?",
-    answer: "We offer different pricing tiers starting from $29/month for simple applications. The cost depends on complexity, features, and ongoing support requirements. Check our pricing page for detailed information on each tier.",
+            answer: "We offer different pricing tiers starting with a Free plan, then $19/month for the Starter plan. The cost depends on complexity, features, and ongoing support requirements. Check our pricing page for detailed information on each tier.",
     category: "Getting Started",
     source: "fallback"
   },
