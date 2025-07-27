@@ -139,7 +139,7 @@ export default function Pricing() {
                 )}
                 
                 <CardHeader className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
                     {getPlanIcon(tier.id)}
                   </div>
                   <div>
@@ -208,38 +208,38 @@ export default function Pricing() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
                 {
-                  icon: <Zap className="w-8 h-8 text-accent" />,
+                  icon: <Zap className="w-8 h-8 text-white" />,
                   title: "AI-Powered Development",
                   description: "Complete SaaS built by AI agents in under 24 hours"
                 },
                 {
-                  icon: <Globe className="w-8 h-8 text-accent" />,
+                  icon: <Globe className="w-8 h-8 text-white" />,
                   title: "Global Deployment",
                   description: "Auto-deploy to cloud with custom domain and SSL"
                 },
                 {
-                  icon: <CreditCard className="w-8 h-8 text-accent" />,
+                  icon: <CreditCard className="w-8 h-8 text-white" />,
                   title: "Payment Integration",
                   description: "Stripe checkout and subscription management included"
                 },
                 {
-                  icon: <BarChart3 className="w-8 h-8 text-accent" />,
+                  icon: <BarChart3 className="w-8 h-8 text-white" />,
                   title: "Analytics Dashboard",
                   description: "Real-time metrics and user behavior insights"
                 },
                 {
-                  icon: <Shield className="w-8 h-8 text-accent" />,
+                  icon: <Shield className="w-8 h-8 text-white" />,
                   title: "Security First",
                   description: "Enterprise-grade security and compliance built-in"
                 },
                 {
-                  icon: <Headphones className="w-8 h-8 text-accent" />,
+                  icon: <Headphones className="w-8 h-8 text-white" />,
                   title: "Expert Support",
                   description: "Get help from our team when you need it most"
                 }
               ].map((feature, index) => (
                 <div key={index} className="card-glass p-6 text-center">
-                  <div className="w-16 h-16 bg-accent-icon rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                     {feature.icon}
                   </div>
                   <h3 className="text-xl font-bold text-heading mb-2">{feature.title}</h3>

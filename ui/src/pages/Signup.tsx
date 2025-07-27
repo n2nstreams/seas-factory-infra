@@ -106,6 +106,71 @@ export default function Signup() {
     }
   };
 
+  const handleSocialLogin = (provider: string) => {
+    console.log(`Initiating ${provider} OAuth flow for signup`);
+    
+    // OAuth configuration
+    const oauthConfigs = {
+      github: {
+        clientId: 'your_github_client_id',
+        redirectUri: `${window.location.origin}/auth/callback/github`,
+        scope: 'user:email',
+        authUrl: 'https://github.com/login/oauth/authorize'
+      },
+      google: {
+        clientId: 'your_google_client_id',
+        redirectUri: `${window.location.origin}/auth/callback/google`,
+        scope: 'openid email profile',
+        authUrl: 'https://accounts.google.com/oauth2/v2/auth'
+      }
+    };
+
+    const config = oauthConfigs[provider as keyof typeof oauthConfigs];
+    
+    if (!config) {
+      console.error(`Unsupported OAuth provider: ${provider}`);
+      return;
+    }
+
+    try {
+      // Store signup intent for OAuth flow
+      sessionStorage.setItem('oauth_signup_flow', 'true');
+      sessionStorage.setItem('oauth_redirect_path', '/dashboard');
+      
+      // Build OAuth URL
+      const params = new URLSearchParams({
+        client_id: config.clientId,
+        redirect_uri: config.redirectUri,
+        scope: config.scope,
+        response_type: 'code',
+        state: btoa(JSON.stringify({ provider, timestamp: Date.now(), signup: true }))
+      });
+
+      const oauthUrl = `${config.authUrl}?${params.toString()}`;
+      
+      // For development/demo purposes, show what would happen
+      if (import.meta.env.DEV) {
+        console.log(`Would redirect to: ${oauthUrl}`);
+        alert(`OAuth signup flow initiated for ${provider}!\n\nIn production, this would redirect to:\n${oauthUrl}\n\nFor demo purposes, redirecting to dashboard...`);
+        
+        // Simulate successful signup
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+        return;
+      }
+
+      // In production, redirect to OAuth provider
+      window.location.href = oauthUrl;
+      
+    } catch (error) {
+      console.error(`${provider} OAuth signup error:`, error);
+      setErrors({ 
+        submit: `Failed to initiate ${provider} signup. Please try again.` 
+      });
+    }
+  };
+
   const passwordStrength = (password: string) => {
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -244,7 +309,7 @@ export default function Signup() {
                 <Button 
                   variant="outline" 
                   className="w-full btn-secondary"
-                  onClick={() => console.log('GitHub login')}
+                  onClick={() => handleSocialLogin('github')}
                 >
                   <Github className="w-5 h-5 mr-2" />
                   Continue with GitHub
@@ -252,7 +317,7 @@ export default function Signup() {
                 <Button 
                   variant="outline" 
                   className="w-full btn-secondary"
-                  onClick={() => console.log('Google login')}
+                  onClick={() => handleSocialLogin('google')}
                 >
                   <Mail className="w-5 h-5 mr-2" />
                   Continue with Google

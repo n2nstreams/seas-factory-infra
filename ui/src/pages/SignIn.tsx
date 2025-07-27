@@ -89,8 +89,67 @@ export default function SignIn() {
   };
 
   const handleSocialLogin = (provider: string) => {
-    console.log(`Logging in with ${provider}`);
-    // TODO: Implement social login
+    console.log(`Initiating ${provider} OAuth flow`);
+    
+    // OAuth configuration
+    const oauthConfigs = {
+      github: {
+        clientId: 'your_github_client_id',
+        redirectUri: `${window.location.origin}/auth/callback/github`,
+        scope: 'user:email',
+        authUrl: 'https://github.com/login/oauth/authorize'
+      },
+      google: {
+        clientId: 'your_google_client_id',
+        redirectUri: `${window.location.origin}/auth/callback/google`,
+        scope: 'openid email profile',
+        authUrl: 'https://accounts.google.com/oauth2/v2/auth'
+      }
+    };
+
+    const config = oauthConfigs[provider as keyof typeof oauthConfigs];
+    
+    if (!config) {
+      console.error(`Unsupported OAuth provider: ${provider}`);
+      return;
+    }
+
+    try {
+      // Store current path for redirect after authentication
+      sessionStorage.setItem('oauth_redirect_path', window.location.pathname);
+      
+      // Build OAuth URL
+      const params = new URLSearchParams({
+        client_id: config.clientId,
+        redirect_uri: config.redirectUri,
+        scope: config.scope,
+        response_type: 'code',
+        state: btoa(JSON.stringify({ provider, timestamp: Date.now() }))
+      });
+
+      const oauthUrl = `${config.authUrl}?${params.toString()}`;
+      
+      // For development/demo purposes, show what would happen
+      if (import.meta.env.DEV) {
+        console.log(`Would redirect to: ${oauthUrl}`);
+        alert(`OAuth flow initiated for ${provider}!\n\nIn production, this would redirect to:\n${oauthUrl}\n\nFor demo purposes, redirecting to dashboard...`);
+        
+        // Simulate successful authentication
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+        return;
+      }
+
+      // In production, redirect to OAuth provider
+      window.location.href = oauthUrl;
+      
+    } catch (error) {
+      console.error(`${provider} OAuth error:`, error);
+      setErrors({ 
+        submit: `Failed to initiate ${provider} authentication. Please try again.` 
+      });
+    }
   };
 
   return (

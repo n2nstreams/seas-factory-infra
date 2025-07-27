@@ -4,9 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket } from "lucide-react";
+import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket, Users, BarChart3, Headphones } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import pricingData from '../data/pricing.json';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -636,127 +637,104 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8 xl:gap-12">
-            {/* Free Tier */}
-            <Card className="bg-white/35 backdrop-blur-lg border border-stone-400/60 hover:border-stone-500/80 transition-all duration-300 hover:shadow-xl hover:bg-white/45">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold text-stone-900">Free</CardTitle>
-                <CardDescription className="text-stone-700">Perfect for testing your first idea</CardDescription>
-                <div className="mt-6 p-4 bg-stone-200/60 rounded-xl border border-stone-300/60">
-                  <span className="text-4xl font-bold text-green-800">$0</span>
-                  <span className="text-stone-700">/month</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">1 Project</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">5 Build Hours</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Demo Deploy</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg">
-                    <span className="text-sm text-stone-700">Community Support</span>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => navigate('/signup')}
-                  className="w-full bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70"
-                >
-                  Get Started Free
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 xl:gap-4">
+            {pricingData.tiers.map((tier) => {
+              const getPlanIcon = (planId: string) => {
+                switch (planId) {
+                  case 'FREE':
+                    return <Rocket className="w-6 h-6 text-white" />;
+                  case 'STARTER':
+                    return <Zap className="w-6 h-6 text-white" />;
+                  case 'PRO':
+                    return <BarChart3 className="w-6 h-6 text-white" />;
+                  case 'SCALE':
+                    return <Users className="w-6 h-6 text-white" />;
+                  case 'ENTERPRISE':
+                    return <Shield className="w-6 h-6 text-white" />;
+                  default:
+                    return <Sparkles className="w-6 h-6 text-white" />;
+                }
+              };
 
-            {/* Starter Tier */}
-            <Card className="bg-white/45 backdrop-blur-lg border-2 border-green-800/60 relative hover:shadow-2xl transition-all duration-300 hover:bg-white/55">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-green-800 to-green-900 text-white shadow-lg backdrop-blur-sm border border-stone-400/40">
-                  <Star className="w-4 h-4 mr-1" />
-                  Most Popular
-                </Badge>
-              </div>
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold text-stone-900">Starter</CardTitle>
-                <CardDescription className="text-stone-700">Ideal for solo entrepreneurs launching their first SaaS</CardDescription>
-                <div className="mt-6 p-4 bg-gradient-to-r from-stone-200/60 to-stone-300/60 rounded-xl border border-stone-400/60">
-                  <span className="text-4xl font-bold text-green-800">$19</span>
-                  <span className="text-stone-700">/month</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">1 Project</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">25 Build Hours</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Core Agents</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/50">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Custom Domain</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg">
-                    <span className="text-sm text-stone-700">Email Support (72h)</span>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => navigate('/signup')}
-                  className="w-full bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
-                >
-                  Start Building
-                </Button>
-              </CardContent>
-            </Card>
+              const getButtonVariant = (tier: any) => {
+                if (tier.popular) {
+                  return "bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40 text-white";
+                }
+                return "bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70";
+              };
 
-            {/* Pro Tier */}
-            <Card className="bg-white/35 backdrop-blur-lg border border-stone-400/60 hover:border-stone-500/80 transition-all duration-300 hover:shadow-xl hover:bg-white/45">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-bold text-stone-900">Pro</CardTitle>
-                <CardDescription className="text-stone-700">For entrepreneurs building multiple SaaS products</CardDescription>
-                <div className="mt-6 p-4 bg-stone-200/60 rounded-xl border border-stone-300/60">
-                  <span className="text-4xl font-bold text-green-800">$79</span>
-                  <span className="text-stone-700">/month</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">3 Projects</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">100 Build Hours</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg bg-stone-200/40">
-                    <Check className="w-5 h-5 text-green-800" />
-                    <span className="text-sm text-stone-800">Advanced Agents</span>
-                  </div>
-                  <div className="flex items-center space-x-3 p-2 rounded-lg">
-                    <span className="text-sm text-stone-700">Email Support (24-48h)</span>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => navigate('/signup')}
-                  className="w-full bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70"
+              return (
+                <Card 
+                  key={tier.id}
+                  className={`relative ${
+                    tier.popular 
+                      ? 'bg-white/45 backdrop-blur-lg border-2 border-green-800/60 hover:shadow-2xl transition-all duration-300 hover:bg-white/55' 
+                      : 'bg-white/35 backdrop-blur-lg border border-stone-400/60 hover:border-stone-500/80 transition-all duration-300 hover:shadow-xl hover:bg-white/45'
+                  }`}
                 >
-                  Scale Up
-                </Button>
-              </CardContent>
-            </Card>
+                  {tier.popular && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-green-800 to-green-900 text-white shadow-lg backdrop-blur-sm border border-stone-400/40">
+                        <Star className="w-4 h-4 mr-1" />
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  <CardHeader className="text-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center mx-auto shadow-lg mb-4">
+                      {getPlanIcon(tier.id)}
+                    </div>
+                    <CardTitle className="text-xl lg:text-2xl font-bold text-stone-900">{tier.name}</CardTitle>
+                    <CardDescription className="text-stone-700 text-sm">{tier.description}</CardDescription>
+                    <div className={`mt-6 p-4 rounded-xl border ${
+                      tier.popular 
+                        ? 'bg-gradient-to-r from-stone-200/60 to-stone-300/60 border-stone-400/60' 
+                        : 'bg-stone-200/60 border-stone-300/60'
+                    }`}>
+                      {typeof tier.monthly === 'string' ? (
+                        <span className="text-2xl lg:text-3xl font-bold text-green-800">{tier.monthly}</span>
+                      ) : (
+                        <>
+                          <span className="text-3xl lg:text-4xl font-bold text-green-800">${tier.monthly}</span>
+                          <span className="text-stone-700">/month</span>
+                        </>
+                      )}
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      {tier.features.slice(0, 4).map((feature, index) => (
+                        <div key={index} className={`flex items-center space-x-3 p-2 rounded-lg ${
+                          tier.popular ? 'bg-stone-200/50' : 'bg-stone-200/40'
+                        }`}>
+                          <Check className="w-4 h-4 text-green-800 flex-shrink-0" />
+                          <span className="text-xs lg:text-sm text-stone-800">{feature}</span>
+                        </div>
+                      ))}
+                      {tier.features.length > 4 && (
+                        <div className="text-xs text-stone-600 text-center">
+                          +{tier.features.length - 4} more features
+                        </div>
+                      )}
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        if (tier.id === 'FREE' || tier.id === 'STARTER' || tier.id === 'PRO' || tier.id === 'SCALE') {
+                          navigate('/signup');
+                        } else if (tier.id === 'ENTERPRISE') {
+                          window.location.href = 'mailto:sales@forge95.com';
+                        }
+                      }}
+                      className={`w-full ${getButtonVariant(tier)}`}
+                    >
+                      {tier.ctaText}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
