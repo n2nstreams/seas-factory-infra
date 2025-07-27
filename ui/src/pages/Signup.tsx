@@ -499,16 +499,16 @@ export default function Signup() {
               <div className="w-8 h-8 bg-accent-icon rounded-lg flex items-center justify-center shadow-lg">
                 <Code2 className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold">AI SaaS Factory</span>
+                              <span className="text-lg font-bold">Forge95</span>
             </div>
             <div className="flex space-x-6 text-sm text-stone-300">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Support</a>
+              <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+              <a href="mailto:support@forge95.com" className="hover:text-white transition-colors">Support</a>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-stone-700/50 text-center text-stone-400 text-sm">
-            <p>&copy; 2024 AI SaaS Factory. All rights reserved.</p>
+                            <p>&copy; 2025 Forge95. All rights reserved.</p>
           </div>
         </div>
       </footer>

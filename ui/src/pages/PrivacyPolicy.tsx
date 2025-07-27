@@ -40,7 +40,7 @@ export default function PrivacyPolicy() {
               Privacy Policy
             </CardTitle>
             <p className="text-body leading-relaxed">
-              At AI SaaS Factory, we are committed to protecting your privacy and ensuring transparency 
+              At Forge95, we are committed to protecting your privacy and ensuring transparency 
               about how we handle your personal information. This Privacy Policy explains our practices 
               regarding the collection, use, and disclosure of information when you use our Services.
             </p>

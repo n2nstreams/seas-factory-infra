@@ -32,7 +32,7 @@ A step‑by‑step, **novice‑friendly** guide for building Version 1 of your 
 
 ## Repository Layout
 
-```
+```python
 saas‑factory/
 ├── infra/                 # Terraform & IaC modules
 ├── orchestrator/          # ADK Project Orchestrator agent

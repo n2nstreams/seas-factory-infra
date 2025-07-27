@@ -17,7 +17,7 @@ import json
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks, Request
 from pydantic import BaseModel, Field
 import asyncpg
 import httpx
@@ -412,6 +412,31 @@ async def trigger_factory_pipeline(
     except Exception as e:
         logger.error(f"Error triggering factory pipeline: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to trigger factory pipeline: {str(e)}")
+
+@router.post("/faq/webhook/github")
+async def github_webhook(request: Request):
+    """
+    GitHub webhook endpoint to trigger FAQ regeneration when code changes
+    """
+    try:
+        # Get the GitHub event type
+        event_type = request.headers.get("X-GitHub-Event")
+        
+        if event_type == "push":
+            # Trigger FAQ regeneration in the background
+            import httpx
+            async with httpx.AsyncClient() as client:
+                try:
+                    await client.post("http://localhost:8089/faq/regenerate", timeout=5.0)
+                    logger.info("FAQ regeneration triggered via GitHub webhook")
+                except Exception as e:
+                    logger.warning(f"Could not trigger FAQ regeneration: {e}")
+        
+        return {"status": "ok", "event": event_type}
+        
+    except Exception as e:
+        logger.error(f"GitHub webhook error: {e}")
+        return {"status": "error", "message": str(e)}
 
 # Background task functions
 

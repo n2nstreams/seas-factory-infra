@@ -39,7 +39,7 @@ export default function OnboardingWizard({ isOpen, onComplete, onSkip }: Onboard
   const steps: OnboardingStep[] = [
     {
       id: 'welcome',
-      title: 'Welcome to AI SaaS Factory! 🎉',
+              title: 'Welcome to Forge95! 🎉',
       description: 'Your intelligent development companion',
       icon: Sparkles,
       content: (

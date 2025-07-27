@@ -41,7 +41,7 @@ export default function DPA() {
             </CardTitle>
             <p className="text-body leading-relaxed">
               This Data Processing Agreement ("DPA") forms part of the Service Agreement between 
-              AI SaaS Factory ("Company", "we", "us") and you ("Customer", "you") for the use 
+              Forge95 ("Company", "we", "us") and you ("Customer", "you") for the use 
               of our AI-powered SaaS development platform services ("Services").
             </p>
           </CardHeader>

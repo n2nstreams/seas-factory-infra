@@ -123,7 +123,7 @@ export default function Dashboard() {
     billing: {
       amount: 99,
       period: 'monthly',
-      nextBilling: '2024-02-15'
+      nextBilling: '2025-02-15'
     },
     features: ['AI Design Generation', 'Advanced Analytics', 'Priority Support', 'Custom Integrations']
   };
@@ -134,7 +134,7 @@ export default function Dashboard() {
       name: 'TaskFlow Pro',
       status: 'deployed',
       progress: 100,
-      lastUpdated: '2024-01-15T10:30:00Z',
+      lastUpdated: '2025-01-15T10:30:00Z',
       url: 'https://taskflow-pro.com',
       buildHours: 24,
       stage: 'live',
@@ -146,7 +146,7 @@ export default function Dashboard() {
       name: 'Invoice Genius',
       status: 'building',
       progress: 75,
-      lastUpdated: '2024-01-15T14:20:00Z',
+      lastUpdated: '2025-01-15T14:20:00Z',
       buildHours: 18,
       stage: 'development'
     },
@@ -155,7 +155,7 @@ export default function Dashboard() {
       name: 'SocialSync',
       status: 'active',
       progress: 25,
-      lastUpdated: '2024-01-15T09:15:00Z',
+      lastUpdated: '2025-01-15T09:15:00Z',
       buildHours: 8,
       stage: 'design'
     }
@@ -168,7 +168,7 @@ export default function Dashboard() {
       projectName: 'Invoice Genius',
       status: 'running',
       stage: 'development',
-      startedAt: '2024-01-15T13:00:00Z',
+      startedAt: '2025-01-15T13:00:00Z',
       buildHours: 3.5,
       logs: ['Started development phase', 'Generating API endpoints', 'Setting up database schema']
     },
@@ -178,8 +178,8 @@ export default function Dashboard() {
       projectName: 'TaskFlow Pro',
       status: 'completed',
       stage: 'deployment',
-      startedAt: '2024-01-15T08:00:00Z',
-      completedAt: '2024-01-15T10:30:00Z',
+      startedAt: '2025-01-15T08:00:00Z',
+      completedAt: '2025-01-15T10:30:00Z',
       duration: 2.5,
       buildHours: 2.5,
       logs: ['Deployment successful', 'SSL certificate configured', 'Domain linked']
@@ -190,7 +190,7 @@ export default function Dashboard() {
       projectName: 'SocialSync',
       status: 'queued',
       stage: 'design',
-      startedAt: '2024-01-15T16:00:00Z',
+      startedAt: '2025-01-15T16:00:00Z',
       buildHours: 0,
       logs: ['Waiting for design generation to start']
     }
@@ -201,7 +201,7 @@ export default function Dashboard() {
       id: '1',
       type: 'build_completed',
       message: 'TaskFlow Pro deployment completed successfully',
-      timestamp: '2024-01-15T10:30:00Z',
+      timestamp: '2025-01-15T10:30:00Z',
       projectId: '1',
       buildId: '2'
     },
@@ -209,7 +209,7 @@ export default function Dashboard() {
       id: '2',
       type: 'build_started',
       message: 'Invoice Genius development phase started',
-      timestamp: '2024-01-15T13:00:00Z',
+      timestamp: '2025-01-15T13:00:00Z',
       projectId: '2',
       buildId: '1'
     },
@@ -217,20 +217,20 @@ export default function Dashboard() {
       id: '3',
       type: 'project_created',
       message: 'New project SocialSync created',
-      timestamp: '2024-01-15T09:15:00Z',
+      timestamp: '2025-01-15T09:15:00Z',
       projectId: '3'
     },
     {
       id: '4',
       type: 'payment_processed',
       message: 'Monthly Pro plan payment processed ($99.00)',
-      timestamp: '2024-01-15T00:00:00Z'
+      timestamp: '2025-01-15T00:00:00Z'
     },
     {
       id: '5',
       type: 'user_joined',
       message: '12 new users joined TaskFlow Pro',
-      timestamp: '2024-01-14T18:45:00Z',
+      timestamp: '2025-01-14T18:45:00Z',
       projectId: '1'
     }
   ];
@@ -851,7 +851,7 @@ export default function Dashboard() {
                 <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
                   <Code2 className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">AI SaaS Factory</span>
+                <span className="text-xl font-bold">Forge95</span>
               </div>
               <p className="text-stone-300">
                 Turn any idea into a live SaaS business - no code required.
@@ -883,7 +883,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="border-t border-stone-700/50 mt-8 pt-8 text-center text-stone-300">
-            <p>&copy; 2024 AI SaaS Factory. All rights reserved.</p>
+                            <p>&copy; 2025 Forge95. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1,0 +1,309 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devagent
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: agent
+    app.kubernetes.io/part-of: saas-factory
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: kubectl
+    tier: agent
+    role: code-generation
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    description: "DevAgent deployment for Night 68 K8s POC"
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: devagent
+      app.kubernetes.io/component: agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: devagent
+        app.kubernetes.io/component: agent
+        app.kubernetes.io/part-of: saas-factory
+        app.kubernetes.io/version: "1.0.0"
+        tier: agent
+        role: code-generation
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8084"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: devagent-service-account
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+      - name: artifact-registry-secret
+      containers:
+      - name: devagent
+        image: us-central1-docker.pkg.dev/PROJECT_ID/saas-factory/devagent:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8083
+          protocol: TCP
+        - name: metrics
+          containerPort: 8084
+          protocol: TCP
+        env:
+        # Configuration from ConfigMap
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: ENVIRONMENT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: LOG_LEVEL
+        - name: AGENT_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: AGENT_TYPE
+        - name: HOST
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: HOST
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: PORT
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: DB_NAME
+        - name: ENABLE_AUTO_COMMIT
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: ENABLE_AUTO_COMMIT
+        - name: ENABLE_AUTO_PR
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: ENABLE_AUTO_PR
+        - name: PYTHONUNBUFFERED
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: PYTHONUNBUFFERED
+        - name: PYTHONDONTWRITEBYTECODE
+          valueFrom:
+            configMapKeyRef:
+              name: devagent-config
+              key: PYTHONDONTWRITEBYTECODE
+        
+        # Secrets from Secret
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: devagent-secrets
+              key: OPENAI_API_KEY
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: devagent-secrets
+              key: DB_PASSWORD
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: devagent-secrets
+              key: DB_USER
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: devagent-secrets
+              key: DB_HOST
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: devagent-secrets
+              key: GITHUB_TOKEN
+              optional: true
+        
+        # Kubernetes-specific environment variables
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: KUBERNETES_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KUBERNETES_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KUBERNETES_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+            ephemeral-storage: "1Gi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+            ephemeral-storage: "2Gi"
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+        
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+          successThreshold: 1
+        
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: app-tmp
+          mountPath: /app/tmp
+        - name: shared-data
+          mountPath: /app/shared
+          readOnly: true
+      
+      # Sidecar container for metrics collection (optional)
+      - name: metrics-exporter
+        image: prom/node-exporter:latest
+        args:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --collector.filesystem.ignored-mount-points
+        - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
+        ports:
+        - name: node-metrics
+          containerPort: 9100
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65534
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+      
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: app-tmp
+        emptyDir: {}
+      - name: shared-data
+        configMap:
+          name: devagent-templates
+      - name: proc
+        hostPath:
+          path: /proc
+          type: Directory
+      - name: sys
+        hostPath:
+          path: /sys
+          type: Directory
+      
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      
+      # Node selection for GKE Autopilot
+      nodeSelector:
+        kubernetes.io/os: linux
+        cloud.google.com/gke-nodepool: default-pool
+      
+      # Toleration for GKE Autopilot nodes
+      tolerations:
+      - key: "kubernetes.io/arch"
+        operator: "Equal"
+        value: "amd64"
+        effect: "NoSchedule"
+      
+      # Affinity rules for high availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - devagent
+              topologyKey: kubernetes.io/hostname 

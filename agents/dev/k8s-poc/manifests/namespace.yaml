@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devagent-poc
+  labels:
+    name: devagent-poc
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: saas-factory
+    app.kubernetes.io/managed-by: kubectl
+    kubernetes.io/managed-by: saas-factory
+    environment: poc
+    tier: agent
+  annotations:
+    description: "DevAgent Kubernetes POC namespace for Night 68"
+    owner: "saas-factory-team"
+    contact: "devops@saas-factory.com"
+---
+# Resource quota to prevent runaway resource consumption
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: devagent-poc-quota
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: resource-quota
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    pods: "10"
+    services: "5"
+    persistentvolumeclaims: "2"
+    secrets: "10"
+    configmaps: "10"
+---
+# Limit range to set default resource limits
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: devagent-poc-limits
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: limit-range
+spec:
+  limits:
+  - default:
+      cpu: "500m"
+      memory: "1Gi"
+    defaultRequest:
+      cpu: "250m"
+      memory: "512Mi"
+    type: Container 

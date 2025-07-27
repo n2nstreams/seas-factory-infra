@@ -6,8 +6,10 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Landing() {
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState(0); // 0 = assembly line, 1 = dashboard
   const [assemblyStage, setAssemblyStage] = useState(0); // 0 = idea, 1 = design, 2 = code, 3 = dashboard
   const [email, setEmail] = useState("");
@@ -211,9 +213,11 @@ export default function Landing() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm">
-                <Code2 className="w-6 h-6 text-white" />
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H9V3H7V1H5V7L1 9V11L7 13V21H9V19H11V21H13V19H15V21H17V13L23 11V9H21ZM19 10.5L17 11.5V17H15V15H13V17H11V15H9V17H7V11.5L5 10.5V9.5L7 8.5V7H9V9H11V7H13V9H15V7H17V8.5L19 9.5V10.5Z"/>
+                </svg>
               </div>
-              <span className="text-xl font-bold text-stone-900">AI SaaS Factory</span>
+              <span className="text-xl font-bold text-stone-900">Forge95</span>
             </div>
             <div className="flex items-center space-x-4">
               <a href="#how-it-works" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">How It Works</a>
@@ -222,14 +226,14 @@ export default function Landing() {
                 size="sm" 
                 variant="ghost" 
                 className="hidden md:block text-stone-700 hover:text-stone-900"
-                onClick={() => window.location.href = '/signin'}
+                onClick={() => navigate('/signin')}
               >
                 Sign In
               </Button>
               <Button 
                 size="sm" 
                 className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
-                onClick={() => window.location.href = '/submit-idea'}
+                onClick={() => navigate('/submit-idea')}
               >
                 Get Started Free
               </Button>
@@ -275,7 +279,7 @@ export default function Landing() {
                   <Button 
                     size="lg" 
                     className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
-                    onClick={() => window.location.href = '/submit-idea'}
+                    onClick={() => navigate('/submit-idea')}
                   >
                     Start Building Now
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -292,7 +296,7 @@ export default function Landing() {
                   size="lg" 
                   variant="outline" 
                   className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40"
-                  onClick={() => window.location.href = '/design'}
+                  onClick={() => navigate('/design')}
                 >
                   🎨 See Demo
                 </Button>
@@ -392,7 +396,7 @@ export default function Landing() {
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="text-center space-y-6 mb-20">
             <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-stone-900">
-              Why Solo Founders Choose AI SaaS Factory
+              Why Solo Founders Choose Forge95
             </h2>
             <p className="text-xl lg:text-2xl text-stone-700 max-w-4xl mx-auto">
               Skip the expensive dev team, lengthy timelines, and technical headaches. Get a complete, revenue-ready business faster and cheaper than ever before.
@@ -477,7 +481,7 @@ export default function Landing() {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl"
-                onClick={() => window.location.href = '/submit-idea'}
+                onClick={() => navigate('/submit-idea')}
               >
                 Start Building Your SaaS Now
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -600,7 +604,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-10 py-6 shadow-xl"
-              onClick={() => window.location.href = '/submit-idea'}
+              onClick={() => navigate('/submit-idea')}
             >
               Start Your 3-Step Journey
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -855,7 +859,7 @@ export default function Landing() {
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
-                  onClick={() => window.location.href = '/submit-idea'}
+                  onClick={() => navigate('/submit-idea')}
                 >
                   Start Building Now
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -904,17 +908,17 @@ export default function Landing() {
                 <div className="w-8 h-8 bg-gradient-to-r from-green-800 to-green-900 rounded-lg flex items-center justify-center shadow-lg">
                   <Code2 className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-lg font-bold">AI SaaS Factory</span>
+                <span className="text-lg font-bold">Forge95</span>
               </div>
               <div className="flex items-center space-x-8 text-sm text-stone-400">
-                <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-                <a href="mailto:hello@aisaasfactory.com" className="hover:text-white transition-colors">Contact</a>
+                <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+                <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+                                  <a href="mailto:hello@forge95.com" className="hover:text-white transition-colors">Contact</a>
               </div>
             </div>
             <Separator className="my-6 bg-stone-700/50" />
             <div className="text-center text-stone-400 text-sm">
-              <p>&copy; 2025 AI SaaS Factory. Turn any idea into a live SaaS business – no code required.</p>
+                              <p>&copy; 2025 Forge95. Turn any idea into a live SaaS business – no code required.</p>
             </div>
           </div>
         </div>

@@ -110,7 +110,7 @@ export default function SubmitIdea() {
                 <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
                   <Code2 className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">AI SaaS Factory</span>
+                <span className="text-xl font-bold">Forge95</span>
               </div>
               <p className="text-stone-300">
                 Turn any idea into a live SaaS business - no code required.
@@ -142,7 +142,7 @@ export default function SubmitIdea() {
             </div>
           </div>
           <div className="border-t border-stone-700/50 mt-8 pt-8 text-center text-stone-300">
-            <p>&copy; 2024 AI SaaS Factory. All rights reserved.</p>
+                          <p>&copy; 2025 Forge95. All rights reserved.</p>
           </div>
         </div>
       </footer>

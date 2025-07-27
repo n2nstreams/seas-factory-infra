@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, Code2, User, Settings, LogOut, ChevronDown, Home, Package, Activity, CreditCard, Clock, Lightbulb } from 'lucide-react';
+import { Menu, X, User, Settings, LogOut, ChevronDown, Home, Package, Activity, CreditCard, Clock, Lightbulb } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface NavigationProps {
@@ -69,10 +69,12 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-accent-icon rounded-xl flex items-center justify-center shadow-lg">
-              <Code2 className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H9V3H7V1H5V7L1 9V11L7 13V21H9V19H11V21H13V19H15V21H17V13L23 11V9H21ZM19 10.5L17 11.5V17H15V15H13V17H11V15H9V17H7V11.5L5 10.5V9.5L7 8.5V7H9V9H11V7H13V9H15V7H17V8.5L19 9.5V10.5Z"/>
+              </svg>
             </div>
-            <span className="text-xl font-bold text-heading">AI SaaS Factory</span>
+            <span className="text-xl font-bold text-heading">Forge95</span>
           </div>
 
           {/* Desktop Navigation */}
