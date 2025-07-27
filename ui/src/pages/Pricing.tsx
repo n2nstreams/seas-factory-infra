@@ -123,70 +123,58 @@ export default function Pricing() {
             {pricingData.tiers.map((tier) => (
               <Card 
                 key={tier.id}
-                className={`relative overflow-hidden ${
-                  tier.popular 
-                    ? 'card-glass border-2 border-accent shadow-2xl scale-105 lg:scale-110' 
-                    : 'card-glass hover:shadow-xl transition-all duration-300 hover:scale-105'
-                }`}
+                className="relative overflow-hidden h-full flex flex-col card-glass hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
-                {tier.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-accent text-white shadow-lg">
-                      <Star className="w-4 h-4 mr-1" />
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
                 
-                <CardHeader className="text-center space-y-4">
+                <CardHeader className="text-center space-y-4 pb-4">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
                     {getPlanIcon(tier.id)}
                   </div>
-                  <div>
-                    <CardTitle className="text-2xl font-bold text-heading">{tier.name}</CardTitle>
-                    <CardDescription className="text-body mt-2">{tier.description}</CardDescription>
-                  </div>
                   <div className="space-y-2">
+                    <CardTitle className="text-2xl font-bold text-heading">{tier.name}</CardTitle>
+                    <CardDescription className="text-body text-sm leading-relaxed min-h-[2.5rem] flex items-center justify-center px-2">
+                      {tier.description}
+                    </CardDescription>
+                  </div>
+                  <div className="space-y-2 min-h-[4rem] flex flex-col justify-center">
                     <div className="flex items-baseline justify-center space-x-1">
                       {typeof getDisplayPrice(tier) === 'string' ? (
                         <span className="text-2xl lg:text-3xl font-bold text-accent">{getDisplayPrice(tier)}</span>
                       ) : (
                         <>
                           <span className="text-4xl lg:text-5xl font-bold text-accent">${getDisplayPrice(tier)}</span>
-                          <span className="text-body">/{billingPeriod === 'yearly' ? 'year' : 'month'}</span>
+                          <span className="text-body text-sm">/{billingPeriod === 'yearly' ? 'year' : 'month'}</span>
                         </>
                       )}
                     </div>
-                                         {billingPeriod === 'yearly' && typeof tier.monthly === 'number' && tier.monthly > 0 && typeof tier.yearly === 'number' && (
-                       <p className="text-sm text-body">
-                         ${Math.round(tier.yearly / 12)}/month billed annually
-                       </p>
-                     )}
+                    {billingPeriod === 'yearly' && typeof tier.monthly === 'number' && tier.monthly > 0 && typeof tier.yearly === 'number' && (
+                      <p className="text-xs text-muted">
+                        ${Math.round(tier.yearly / 12)}/month billed annually
+                      </p>
+                    )}
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-6">
-                  <div className="space-y-3">
+                <CardContent className="flex-1 flex flex-col space-y-6 pt-2">
+                  <div className="flex-1 space-y-3 min-h-[10rem] flex flex-col justify-start">
                     {tier.features.map((feature, index) => (
-                      <div key={index} className="flex items-start space-x-3">
-                        <Check className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
-                        <span className="text-body text-sm">{feature}</span>
+                      <div key={index} className="flex items-center space-x-3 text-left">
+                        <Check className="w-5 h-5 text-accent flex-shrink-0" />
+                        <span className="text-body text-sm leading-relaxed text-left">{feature}</span>
                       </div>
                     ))}
                   </div>
 
-                                      <Button 
+                  <div className="pt-4">
+                    <Button 
                       onClick={() => handleGetStarted(tier.id)}
-                      className={`w-full ${
-                        tier.ctaVariant === 'default' 
-                          ? 'bg-accent hover:bg-accent/90 text-white' 
-                          : 'border border-accent text-accent hover:bg-accent hover:text-white'
-                      }`}
-                      variant={tier.ctaVariant as "default" | "outline"}
+                      className="w-full btn-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                      size="lg"
                     >
-                    {tier.ctaText}
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+                      {tier.ctaText}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

@@ -44,8 +44,7 @@
       ],
       "description": "Ideal for solo entrepreneurs launching their first SaaS",
       "ctaText": "Start Building",
-      "ctaVariant": "default",
-      "popular": true
+      "ctaVariant": "default"
     },
     {
       "id": "PRO", 
