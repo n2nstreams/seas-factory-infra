@@ -15,7 +15,7 @@ export default function DesignDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-stone-100 via-stone-50 to-white overflow-hidden">
+    <div className="min-h-screen bg-homepage relative overflow-hidden">
       {/* Glassmorphism Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-green-800/20 to-green-900/25 rounded-full blur-3xl animate-pulse"></div>
@@ -24,16 +24,16 @@ export default function DesignDashboard() {
         <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
       </div>
 
-      <div className="relative z-10 p-4">
-        <div className="max-w-7xl mx-auto relative">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 relative z-10">
+        <div className="space-y-8">
         {/* Header */}
-        <div className="mb-8 bg-white/15 backdrop-blur-md border border-stone-400/30 rounded-2xl p-8 shadow-xl">
+        <div className="glass-card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl lg:text-5xl font-bold text-stone-900 mb-3">
+              <h1 className="text-3xl xl:text-4xl font-bold text-heading mb-3">
                 🎨 Design Studio
               </h1>
-              <p className="text-stone-700 text-lg lg:text-xl">
+              <p className="text-body text-lg xl:text-xl">
                 AI-powered wireframe and design generation with glassmorphism theme
               </p>
             </div>
@@ -44,76 +44,76 @@ export default function DesignDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 shadow-xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <Card className="card-glass">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-stone-700">
+              <CardTitle className="text-sm font-medium text-body">
                 Design Theme
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded bg-gradient-to-r from-green-800 to-green-900 shadow-lg"></div>
-                <span className="text-lg font-semibold text-stone-900">Glassmorphism</span>
+                <span className="text-lg font-semibold text-heading">Glassmorphism</span>
               </div>
-              <p className="text-xs text-stone-600 mt-1">Natural stone palette with green accents</p>
+              <p className="text-xs text-muted mt-1">Natural stone palette with green accents</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 shadow-xl">
+          <Card className="card-glass">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-stone-700">
+              <CardTitle className="text-sm font-medium text-body">
                 Supported Platforms
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-800">3</div>
-              <p className="text-xs text-stone-600">Web, Mobile, Dashboard</p>
+              <p className="text-xs text-muted">Web, Mobile, Dashboard</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 shadow-xl">
+          <Card className="card-glass">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-stone-700">
+              <CardTitle className="text-sm font-medium text-body">
                 Figma Integration
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-green-800 shadow-lg"></div>
-                <span className="text-sm font-medium text-stone-900">Active</span>
+                <span className="text-sm font-medium text-heading">Active</span>
               </div>
-              <p className="text-xs text-stone-600 mt-1">Auto-export to Figma</p>
+              <p className="text-xs text-muted mt-1">Auto-export to Figma</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 shadow-xl">
+          <Card className="card-glass">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-stone-700">
+              <CardTitle className="text-sm font-medium text-body">
                 Design System
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm font-medium text-stone-900">Components Ready</div>
-              <p className="text-xs text-stone-600">Button, Card, Modal, Nav+</p>
+              <div className="text-sm font-medium text-heading">Components Ready</div>
+              <p className="text-xs text-muted">Button, Card, Modal, Nav+</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Recent Activity */}
         {recentActivity.length > 0 && (
-          <Card className="mb-8 bg-white/25 backdrop-blur-lg border border-stone-400/40 shadow-xl">
+          <Card className="card-glass">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-stone-900">
+              <CardTitle className="flex items-center gap-2 text-heading">
                 📋 Recent Design Activity
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-white/30 backdrop-blur-sm rounded-lg border border-stone-400/30">
+                  <div key={index} className="flex items-center gap-3 p-3 glass-card">
                     <div className="w-2 h-2 rounded-full bg-green-800 shadow-lg"></div>
-                    <span className="text-sm text-stone-800">{activity}</span>
+                    <span className="text-sm text-body">{activity}</span>
                     <Badge className="ml-auto text-xs bg-green-800/20 text-green-800 border border-green-800/40">
                       {index === 0 ? 'Just now' : `${index + 1}m ago`}
                     </Badge>
@@ -125,17 +125,17 @@ export default function DesignDashboard() {
         )}
 
         {/* Main Design Interface */}
-        <div className="mb-8">
-          <div className="bg-white/25 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-6 shadow-xl">
+        <div className="space-y-6">
+          <div className="card-glass p-6">
             <FigmaPreview onGenerateDesign={handleDesignGenerated} />
           </div>
         </div>
 
         {/* Theme Settings */}
         <div className="space-y-6">
-          <Card className="bg-white/25 backdrop-blur-lg border border-stone-400/40 shadow-xl">
+          <Card className="card-glass">
             <CardHeader>
-              <CardTitle className="text-stone-900 flex items-center">
+              <CardTitle className="text-heading flex items-center">
                 <Settings className="w-5 h-5 mr-2 text-green-800" />
                 Theme Settings
               </CardTitle>
@@ -143,20 +143,20 @@ export default function DesignDashboard() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-stone-700">Glass Effect Intensity</span>
+                  <span className="text-body">Glass Effect Intensity</span>
                   <div className="w-32 h-2 bg-stone-300/60 rounded-full">
                     <div className="w-3/4 h-2 bg-gradient-to-r from-green-800 to-green-900 rounded-full"></div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-stone-700">Blur Radius</span>
+                  <span className="text-body">Blur Radius</span>
                   <div className="w-32 h-2 bg-stone-300/60 rounded-full">
                     <div className="w-1/2 h-2 bg-gradient-to-r from-green-800 to-green-900 rounded-full"></div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-800 shadow-lg"></div>
-                  <span className="text-stone-800">Glassmorphism Theme Active</span>
+                  <span className="text-body">Glassmorphism Theme Active</span>
                 </div>
               </div>
             </CardContent>
@@ -166,8 +166,8 @@ export default function DesignDashboard() {
       </div>
 
       {/* Footer */}
-      <footer className="relative bg-stone-900/95 backdrop-blur-lg text-white py-12 mt-20 border-t border-stone-400/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30 mt-16">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
