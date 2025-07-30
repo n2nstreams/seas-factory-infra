@@ -1,5 +1,6 @@
-# SaaS Factory API Gateway - Standalone Requirements
-# Night 56: API Gateway dependencies for end-to-end testing
+# SaaS Factory - Unified Base Requirements
+# This file contains standardized versions of all shared dependencies
+# All services should inherit from this base to ensure compatibility
 
 # Web Framework & API
 fastapi==0.115.14
@@ -19,14 +20,26 @@ psycopg2-binary==2.9.9
 asyncpg==0.29.0
 redis==5.2.0
 
-# Google Cloud Platform (basic)
+# Google Cloud Platform
 google-cloud-logging==3.12.1
+google-cloud-pubsub==2.29.0
+google-cloud-storage==2.19.0
+google-cloud-aiplatform==1.101.0
 google-cloud-secret-manager==2.24.0
+google-cloud-monitoring==2.22.0
+google-cloud-error-reporting==1.10.0
+google-cloud-deploy==2.7.1
 google-auth==2.40.3
-google-cloud-bigquery==3.28.0
 
 # AI & ML
 openai==1.93.0
+google-genai==1.24.0
+
+# Development & Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.1.0
+python-dotenv==1.0.1
 
 # Security & Authentication
 python-jose[cryptography]==3.3.0
@@ -39,6 +52,7 @@ pyyaml==6.0.2
 python-multipart==0.0.17
 email-validator==2.2.0
 jinja2==3.1.6
+click==8.2.1
 aiofiles==24.1.0
 
 # Background Tasks
@@ -48,5 +62,5 @@ celery==5.4.0
 stripe==12.3.0
 sendgrid==6.11.0
 
-# Configuration
-python-decouple==3.8
+# Configuration format
+python-decouple==3.8 

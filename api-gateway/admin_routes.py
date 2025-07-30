@@ -30,7 +30,6 @@ from access_control import (
 )
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from .access_control import verify_admin_access
 from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
@@ -62,7 +61,7 @@ class AdminResponse(BaseModel):
     data: Optional[Dict[str, Any]] = None
 
 # Dependency to verify admin access
-async def verify_admin_access(
+async def validate_admin_access(
     request: Request,
     x_tenant_id: str = Header(..., description="Tenant ID"),
     x_user_id: str = Header(..., description="User ID"), 
@@ -103,7 +102,7 @@ async def get_all_ideas(
     priority: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Get all ideas across all tenants (admin only)"""
     try:
@@ -137,7 +136,7 @@ async def get_all_ideas(
 @admin_router.get("/ideas/{idea_id}", response_model=Dict[str, Any])
 async def get_idea_details(
     idea_id: str,
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Get detailed information about a specific idea"""
     try:
@@ -169,7 +168,7 @@ async def review_idea(
     idea_id: str,
     review_request: IdeaReviewRequest,
     request: Request,
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Review an idea (approve, reject, or mark in review)"""
     try:
@@ -229,7 +228,7 @@ async def review_idea(
 async def promote_idea_to_project(
     idea_id: str,
     request: Request,
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Promote an approved idea to a project"""
     try:
@@ -278,7 +277,7 @@ async def promote_idea_to_project(
 async def get_all_tenants(
     status: Optional[str] = None,
     isolation_mode: Optional[str] = None,
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Get all tenants with their statistics (admin only)"""
     try:
@@ -309,7 +308,7 @@ async def get_all_tenants(
 @admin_router.get("/tenants/{tenant_id}", response_model=Dict[str, Any])
 async def get_tenant_details(
     tenant_id: str,
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Get detailed information about a specific tenant"""
     try:
@@ -345,7 +344,7 @@ async def upgrade_tenant_to_isolated(
     tenant_id: str,
     isolation_request: TenantIsolationRequest,
     request: Request,
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Upgrade a tenant to isolated infrastructure"""
     try:
@@ -422,7 +421,7 @@ async def upgrade_tenant_to_isolated(
 
 @admin_router.get("/analytics/ideas", response_model=Dict[str, Any])
 async def get_idea_analytics(
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Get idea submission and approval analytics"""
     try:
@@ -466,7 +465,7 @@ async def get_idea_analytics(
 
 @admin_router.get("/analytics/tenants", response_model=Dict[str, Any])
 async def get_tenant_analytics(
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Get tenant usage and growth analytics"""
     try:
@@ -514,7 +513,7 @@ async def get_tenant_analytics(
         raise HTTPException(status_code=500, detail=f"Failed to fetch analytics: {str(e)}")
 
 @admin_router.get("/analytics/experiment/{experiment_key}")
-async def get_experiment_analytics(request: Request, experiment_key: str, admin_user: dict = Depends(verify_admin_access)):
+async def get_experiment_analytics(request: Request, experiment_key: str, admin_user: dict = Depends(validate_admin_access)):
     """
     Retrieves and aggregates analytics data for a specific experiment from BigQuery.
     """
@@ -553,7 +552,7 @@ async def get_experiment_analytics(request: Request, experiment_key: str, admin_
 
 @admin_router.get("/health", response_model=Dict[str, Any])
 async def admin_health_check(
-    admin_context: TenantContext = Depends(verify_admin_access)
+    admin_context: TenantContext = Depends(validate_admin_access)
 ):
     """Admin console health check"""
     try:

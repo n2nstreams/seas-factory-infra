@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Loader2
 } from "lucide-react";
+import { apiClient } from '@/lib/api';
 
 interface IdeaFormData {
   projectName: string;
@@ -91,23 +92,28 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
       if (onSubmit) {
         await onSubmit(formData);
       } else {
-        // Submit idea to the new ideas API endpoint
-        const response = await fetch('/api/ideas/submit', {
-          method: 'POST',
+        // Map frontend field names to backend field names
+        const mappedData = {
+          title: formData.projectName,
+          description: formData.description,
+          category: formData.category,
+          problem: formData.problem,
+          solution: formData.solution,
+          target_audience: formData.targetAudience,
+          key_features: formData.keyFeatures ? formData.keyFeatures.split(',').map(f => f.trim()) : [],
+          business_model: formData.businessModel,
+          timeline: formData.timeline,
+          budget_range: formData.budget
+        };
+
+        // Submit idea to the API using the configured API client
+        const result = await apiClient.post('/api/ideas/submit', mappedData, {
+          skipTenantHeaders: true, // We'll add custom headers
           headers: {
-            'Content-Type': 'application/json',
             'x-tenant-id': tenantId || 'default',
             'x-user-id': userId || 'default-user'
-          },
-          body: JSON.stringify(formData)
+          }
         });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.detail || 'Failed to submit idea');
-        }
-
-        const result = await response.json();
         console.log('Idea submitted successfully:', result);
       }
 

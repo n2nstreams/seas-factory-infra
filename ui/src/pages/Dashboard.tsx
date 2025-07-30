@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FactoryProgressMonitor from "@/components/FactoryProgressMonitor";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { onboardingUtils } from "@/lib/userPreferences";
+import { apiClient } from '@/lib/api';
+import { useAuth } from '@/App';
 import { 
   Code2, 
   Settings, 
@@ -76,6 +78,40 @@ interface Build {
   logs: string[];
 }
 
+// Helper functions to map idea data to project format
+const mapIdeaStatusToProjectStatus = (ideaStatus: string): Project['status'] => {
+  switch (ideaStatus) {
+    case 'pending': return 'active';
+    case 'in_progress': return 'building';
+    case 'completed': return 'deployed';
+    case 'failed': return 'failed';
+    case 'paused': return 'paused';
+    default: return 'active';
+  }
+};
+
+const getProgressByStatus = (ideaStatus: string): number => {
+  switch (ideaStatus) {
+    case 'pending': return 10;
+    case 'in_progress': return 50;
+    case 'completed': return 100;
+    case 'failed': return 0;
+    case 'paused': return 25;
+    default: return 10;
+  }
+};
+
+const mapIdeaStatusToStage = (ideaStatus: string): Project['stage'] => {
+  switch (ideaStatus) {
+    case 'pending': return 'idea';
+    case 'in_progress': return 'development';
+    case 'completed': return 'live';
+    case 'failed': return 'idea';
+    case 'paused': return 'design';
+    default: return 'idea';
+  }
+};
+
 interface ActivityItem {
   id: string;
   type: 'build_started' | 'build_completed' | 'build_failed' | 'project_created' | 'payment_processed' | 'user_joined';
@@ -89,6 +125,9 @@ interface ActivityItem {
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   // Check if user needs onboarding on component mount
   useEffect(() => {
@@ -98,6 +137,46 @@ export default function Dashboard() {
       setTimeout(() => setShowOnboarding(true), 500);
     }
   }, []);
+
+  // Fetch user's submitted ideas
+  useEffect(() => {
+    const fetchUserIdeas = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await apiClient.get('/api/ideas/my-ideas', {
+          headers: {
+            'x-user-id': user.id,
+            'x-tenant-id': '5aff78c7-413b-4e0e-bbfb-090765835bab'
+          }
+        });
+
+        // Map ideas to projects format
+        const mappedProjects: Project[] = response.map((idea: any) => ({
+          id: idea.id,
+          name: idea.project_name || idea.title,
+          status: mapIdeaStatusToProjectStatus(idea.status),
+          progress: getProgressByStatus(idea.status),
+          lastUpdated: idea.updated_at || idea.created_at,
+          buildHours: 0, // Default for now
+          stage: mapIdeaStatusToStage(idea.status)
+        }));
+
+        setProjects(mappedProjects);
+      } catch (error) {
+        console.error('Error fetching user ideas:', error);
+        // Fallback to empty array
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserIdeas();
+  }, [user]);
 
   const handleOnboardingComplete = () => {
     onboardingUtils.complete();
@@ -109,131 +188,55 @@ export default function Dashboard() {
     setShowOnboarding(false);
   };
 
-  // Mock data
+  // Calculate metrics from real user data
+  const totalBuildHours = projects.reduce((sum, project) => sum + project.buildHours, 0);
+  const activeBuilds = projects.filter(p => p.status === 'building').length;
+  
   const subscription: UserSubscription = {
-    plan: 'pro',
+    plan: 'starter', // Default for new users
     buildHours: {
-      used: 42,
-      total: 60
+      used: totalBuildHours,
+      total: 20 // Starter plan limit
     },
     projects: {
-      used: 2,
-      total: 3
+      used: projects.length,
+      total: 5 // Starter plan limit
     },
     billing: {
-      amount: 99,
+      amount: 0, // Free starter plan
       period: 'monthly',
-      nextBilling: '2025-02-15'
+      nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     },
-    features: ['AI Design Generation', 'Advanced Analytics', 'Priority Support', 'Custom Integrations']
+    features: ['Basic AI Generation', 'Community Support', 'Standard Templates']
   };
 
-  const projects: Project[] = [
-    {
-      id: '1',
-      name: 'TaskFlow Pro',
-      status: 'deployed',
-      progress: 100,
-      lastUpdated: '2025-01-15T10:30:00Z',
-      url: 'https://taskflow-pro.com',
-      buildHours: 24,
-      stage: 'live',
-      revenue: 2840,
-      users: 156
-    },
-    {
-      id: '2',
-      name: 'Invoice Genius',
-      status: 'building',
-      progress: 75,
-      lastUpdated: '2025-01-15T14:20:00Z',
-      buildHours: 18,
-      stage: 'development'
-    },
-    {
-      id: '3',
-      name: 'SocialSync',
-      status: 'active',
-      progress: 25,
-      lastUpdated: '2025-01-15T09:15:00Z',
-      buildHours: 8,
-      stage: 'design'
-    }
-  ];
+  // Projects will be loaded from API
 
-  const builds: Build[] = [
-    {
-      id: '1',
-      projectId: '2',
-      projectName: 'Invoice Genius',
-      status: 'running',
-      stage: 'development',
-      startedAt: '2025-01-15T13:00:00Z',
-      buildHours: 3.5,
-      logs: ['Started development phase', 'Generating API endpoints', 'Setting up database schema']
-    },
-    {
-      id: '2',
-      projectId: '1',
-      projectName: 'TaskFlow Pro',
-      status: 'completed',
-      stage: 'deployment',
-      startedAt: '2025-01-15T08:00:00Z',
-      completedAt: '2025-01-15T10:30:00Z',
-      duration: 2.5,
-      buildHours: 2.5,
-      logs: ['Deployment successful', 'SSL certificate configured', 'Domain linked']
-    },
-    {
-      id: '3',
-      projectId: '3',
-      projectName: 'SocialSync',
-      status: 'queued',
-      stage: 'design',
-      startedAt: '2025-01-15T16:00:00Z',
-      buildHours: 0,
-      logs: ['Waiting for design generation to start']
-    }
-  ];
+  // Build queue will be derived from user projects
+  const builds: Build[] = projects.map((project, index) => ({
+    id: project.id,
+    projectId: project.id,
+    projectName: project.name,
+    status: project.status === 'building' ? 'running' : 
+           project.status === 'deployed' ? 'completed' : 'queued',
+    stage: project.stage === 'live' ? 'deployment' : project.stage as Build['stage'],
+    startedAt: project.lastUpdated,
+    buildHours: project.buildHours,
+    logs: project.status === 'building' ? 
+      [`Starting ${project.stage} phase for ${project.name}`, 'Initializing build environment'] :
+      project.status === 'deployed' ? 
+      [`${project.name} deployment completed successfully`] :
+      [`${project.name} queued for processing`]
+  }));
 
-  const activities: ActivityItem[] = [
-    {
-      id: '1',
-      type: 'build_completed',
-      message: 'TaskFlow Pro deployment completed successfully',
-      timestamp: '2025-01-15T10:30:00Z',
-      projectId: '1',
-      buildId: '2'
-    },
-    {
-      id: '2',
-      type: 'build_started',
-      message: 'Invoice Genius development phase started',
-      timestamp: '2025-01-15T13:00:00Z',
-      projectId: '2',
-      buildId: '1'
-    },
-    {
-      id: '3',
-      type: 'project_created',
-      message: 'New project SocialSync created',
-      timestamp: '2025-01-15T09:15:00Z',
-      projectId: '3'
-    },
-    {
-      id: '4',
-      type: 'payment_processed',
-      message: 'Monthly Pro plan payment processed ($99.00)',
-      timestamp: '2025-01-15T00:00:00Z'
-    },
-    {
-      id: '5',
-      type: 'user_joined',
-      message: '12 new users joined TaskFlow Pro',
-      timestamp: '2025-01-14T18:45:00Z',
-      projectId: '1'
-    }
-  ];
+  // Generate activities from user's real projects
+  const activities: ActivityItem[] = projects.map((project, index) => ({
+    id: project.id,
+    type: 'project_created' as const,
+    message: `Project "${project.name}" was submitted for processing`,
+    timestamp: project.lastUpdated,
+    projectId: project.id
+  })).slice(0, 5); // Show most recent 5 activities
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -285,6 +288,20 @@ export default function Dashboard() {
         return <Clock className="w-4 h-4" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-homepage relative overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-heading" />
+          <p className="text-heading">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show welcome message for new users with no projects
+  const isNewUser = projects.length === 0;
 
   return (
     <div className="min-h-screen bg-homepage relative overflow-hidden">

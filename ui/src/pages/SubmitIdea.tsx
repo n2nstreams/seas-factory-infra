@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lightbulb, Clock, Target, Rocket, Code2 } from 'lucide-react';
 import IdeaSubmissionForm from "@/components/IdeaSubmissionForm";
+import { useAuth } from '@/App';
 
 export default function SubmitIdea() {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-homepage relative overflow-hidden">
       {/* Glassmorphism Background Elements */}
@@ -70,7 +72,10 @@ export default function SubmitIdea() {
         </div>
 
         {/* Main Form */}
-        <IdeaSubmissionForm />
+        <IdeaSubmissionForm 
+          userId={user?.id}
+          tenantId="5aff78c7-413b-4e0e-bbfb-090765835bab"
+        />
 
         {/* Support Links */}
         <div className="mt-12 text-center">

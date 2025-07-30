@@ -20,6 +20,7 @@ from google.cloud import bigquery
 from admin_routes import admin_router
 from user_routes import router as user_router
 from privacy_routes import router as privacy_router
+from ideas_routes import router as ideas_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -37,8 +38,10 @@ CORS_ORIGINS = [
     "https://forge95.com",           # Production apex domain
     "http://localhost:3000",         # Development frontend (Vite default)
     "http://localhost:5173",         # Development frontend (Vite alternative)
+    "http://localhost:5175",         # Development frontend (current port)
     "http://127.0.0.1:3000",         # Development frontend (alternative)
     "http://127.0.0.1:5173",         # Development frontend (alternative)
+    "http://127.0.0.1:5175",         # Development frontend (current port alternative)
 ]
 
 # Add CORS middleware
@@ -54,6 +57,7 @@ app.add_middleware(
 app.include_router(admin_router)
 app.include_router(user_router)
 app.include_router(privacy_router)
+app.include_router(ideas_router)
 
 # Health check endpoint
 @app.get("/health")

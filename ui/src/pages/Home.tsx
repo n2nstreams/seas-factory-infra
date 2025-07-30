@@ -234,7 +234,7 @@ export default function Home() {
               <Button 
                 size="sm" 
                 className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
-                onClick={() => navigate('/submit-idea')}
+                onClick={() => navigate('/signup')}
               >
                 Get Started Free
               </Button>
@@ -280,7 +280,7 @@ export default function Home() {
                   <Button 
                     size="lg" 
                     className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
-                    onClick={() => navigate('/submit-idea')}
+                    onClick={() => navigate('/signup')}
                   >
                     Start Building Now
                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -490,7 +490,7 @@ export default function Home() {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl"
-                onClick={() => navigate('/submit-idea')}
+                onClick={() => navigate('/signup')}
               >
                 Start Building Your SaaS Now
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -613,7 +613,7 @@ export default function Home() {
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-10 py-6 shadow-xl"
-              onClick={() => navigate('/submit-idea')}
+              onClick={() => navigate('/signup')}
             >
               Start Your 3-Step Journey
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -854,7 +854,7 @@ export default function Home() {
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
-                  onClick={() => navigate('/submit-idea')}
+                  onClick={() => navigate('/signup')}
                 >
                   Start Building Now
                   <ArrowRight className="w-5 h-5 ml-2" />

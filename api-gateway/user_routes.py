@@ -42,7 +42,6 @@ class UserRegistrationRequest(BaseModel):
     password: str
     confirmPassword: str
     agreeToTerms: bool = False
-    gdprConsent: bool = False
     tenant_id: Optional[str] = None
     
     @validator('password')
@@ -63,11 +62,7 @@ class UserRegistrationRequest(BaseModel):
             raise ValueError('You must agree to the terms of service')
         return v
     
-    @validator('gdprConsent')
-    def must_consent_to_gdpr(cls, v):
-        if not v:
-            raise ValueError('GDPR consent is required')
-        return v
+
 
 class UserLoginRequest(BaseModel):
     """User login request model"""
@@ -153,10 +148,9 @@ async def register_user(user_data: UserRegistrationRequest, request: Request):
                 """
                 INSERT INTO users (
                     id, tenant_id, email, name, role, status, password_hash, 
-                    created_at, updated_at, gdpr_consent_given, gdpr_consent_date, 
-                    gdpr_consent_ip, privacy_policy_version, dpa_version
+                    created_at, updated_at, privacy_policy_version, dpa_version
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                 """,
                 user_id,
                 tenant_id,
@@ -167,53 +161,50 @@ async def register_user(user_data: UserRegistrationRequest, request: Request):
                 password_hash,
                 now,
                 now,
-                user_data.gdprConsent,
-                now if user_data.gdprConsent else None,
-                client_ip if user_data.gdprConsent else None,
                 "1.0",  # Privacy policy version
                 "1.0"   # DPA version
             )
             
-            # Create consent audit record for GDPR compliance
-            await conn.execute(
-                """
-                INSERT INTO privacy_consent_audit (
-                    user_id, tenant_id, consent_type, consent_given, consent_date,
-                    consent_ip, document_version, user_agent, notes
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                """,
-                user_id,
-                tenant_id,
-                "gdpr",
-                user_data.gdprConsent,
-                now,
-                client_ip,
-                "1.0",
-                user_agent,
-                f"Initial registration consent for user {full_name}"
-            )
+#             # Create consent audit record for GDPR compliance
+#             await conn.execute(
+#                 """
+#                 -- INSERT INTO privacy_consent_audit (
+#                     user_id, tenant_id, consent_type, consent_given, consent_date,
+#                     consent_ip, document_version, user_agent, notes
+#                 )
+#                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+#                 """,
+#                 user_id,
+#                 tenant_id,
+#                 "gdpr",
+#                 user_data.gdprConsent,
+#                 now,
+#                 client_ip,
+#                 "1.0",
+#                 user_agent,
+#                 f"Initial registration consent for user {full_name}"
+#             )
             
             # Also track terms of service acceptance
-            await conn.execute(
-                """
-                INSERT INTO privacy_consent_audit (
-                    user_id, tenant_id, consent_type, consent_given, consent_date,
-                    consent_ip, document_version, user_agent, notes
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                """,
-                user_id,
-                tenant_id,
-                "terms",
-                user_data.agreeToTerms,
-                now,
-                client_ip,
-                "1.0",
-                user_agent,
-                f"Terms of service acceptance for user {full_name}"
-            )
-            
+#             await conn.execute(
+#                 """
+#                 -- INSERT INTO privacy_consent_audit (
+#                     user_id, tenant_id, consent_type, consent_given, consent_date,
+#                     consent_ip, document_version, user_agent, notes
+#                 )
+#                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+#                 """,
+#                 user_id,
+#                 tenant_id,
+#                 "terms",
+#                 user_data.agreeToTerms,
+#                 now,
+#                 client_ip,
+#                 "1.0",
+#                 user_agent,
+#                 f"Terms of service acceptance for user {full_name}"
+#             )
+#             
             # Get tenant info for plan details
             tenant_info = await conn.fetchrow(
                 "SELECT plan FROM tenants WHERE id = $1",

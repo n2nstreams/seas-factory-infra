@@ -21,8 +21,11 @@ import {
   Star,
   TrendingUp
 } from "lucide-react";
+import { apiClient } from '@/lib/api';
+import { useAuth } from '@/App';
 
 export default function Signup() {
+  const { setUser } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,8 +36,7 @@ export default function Signup() {
     email: '',
     password: '',
     confirmPassword: '',
-    agreeToTerms: false,
-    gdprConsent: false
+    agreeToTerms: false
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -62,7 +64,6 @@ export default function Signup() {
     if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms';
-    if (!formData.gdprConsent) newErrors.gdprConsent = 'GDPR consent is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -76,24 +77,28 @@ export default function Signup() {
         setErrors({});
         
         // Submit registration to API
-        const response = await fetch('/api/users/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData)
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Registration failed');
-        }
-        
-        const result = await response.json();
+        const result = await apiClient.post('/api/users/register', formData);
         console.log('Registration successful:', result);
+        
+        // Set user data in auth context
+        setUser({
+          id: result.id,
+          name: result.name,
+          email: result.email,
+          plan: result.plan || 'pro',
+          buildHours: {
+            used: 0,
+            total: result.plan === 'pro' ? 'unlimited' : 42
+          }
+        });
         
         // Show success message and redirect
         setRegistrationSuccess(true);
+        
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 2000);
         
       } catch (error) {
         console.error('Registration error:', error);
@@ -473,34 +478,13 @@ export default function Signup() {
                   </div>
                   {errors.agreeToTerms && <p className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
                   
-                  <div className="flex items-start space-x-2">
-                    <input
-                      type="checkbox"
-                      id="gdprConsent"
-                      name="gdprConsent"
-                      checked={formData.gdprConsent}
-                      onChange={handleInputChange}
-                      className="mt-1 h-4 w-4 text-green-800 focus:ring-green-800 border-stone-300 rounded"
-                    />
-                    <label htmlFor="gdprConsent" className="text-sm text-body">
-                      I consent to the processing of my personal data as described in the{" "}
-                      <a href="/privacy" className="text-accent hover:underline">
-                        Privacy Policy
-                      </a>{" "}
-                      and{" "}
-                      <a href="/dpa" className="text-accent hover:underline">
-                        Data Processing Agreement
-                      </a>{" "}
-                      (required for GDPR compliance)
-                    </label>
-                  </div>
-                  {errors.gdprConsent && <p className="text-red-500 text-xs">{errors.gdprConsent}</p>}
+
                 </div>
 
                 <Button 
                   type="submit" 
                   className="w-full btn-primary"
-                  disabled={!formData.agreeToTerms || !formData.gdprConsent || isSubmitting}
+                  disabled={!formData.agreeToTerms || isSubmitting}
                 >
                   {isSubmitting ? 'Creating Account...' : 'Create Account'}
                   {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
@@ -517,7 +501,7 @@ export default function Signup() {
                       <div>
                         <p className="text-green-800 font-medium">Account created successfully!</p>
                         <p className="text-green-600 text-sm mt-1">
-                          Check your email for a welcome message with next steps.
+                          Redirecting you to your dashboard in a moment...
                         </p>
                       </div>
                     </div>
