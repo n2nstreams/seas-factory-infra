@@ -56,9 +56,16 @@ export const useWebSocket = (options: UseWebSocketOptions) => {
 
       ws.onmessage = (event) => {
         try {
-          const message: WebSocketMessage = JSON.parse(event.data);
-          setLastMessage(message);
-          onMessage?.(message);
+          const raw = JSON.parse(event.data);
+          // Normalize payload shape from backend {event_type, data, timestamp}
+          const normalized: WebSocketMessage = {
+            type: raw.type || raw.event_type || 'unknown',
+            data: raw.data ?? raw,
+            timestamp: raw.timestamp || new Date().toISOString()
+          };
+          setLastMessage(normalized);
+          // Cast to minimal shape expected by consumers
+          onMessage?.(normalized as unknown as WebSocketMessage);
         } catch (error) {
           console.error('Failed to parse WebSocket message:', error);
         }

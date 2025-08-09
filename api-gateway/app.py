@@ -4,7 +4,7 @@ API Gateway for SaaS Factory
 Routes requests to appropriate agent services and handles cross-cutting concerns.
 """
 
-from fastapi import FastAPI, HTTPException, Request, Header, Depends
+from fastapi import FastAPI, HTTPException, Request, Header, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import asyncio
@@ -21,6 +21,8 @@ from admin_routes import admin_router
 from user_routes import router as user_router
 from privacy_routes import router as privacy_router
 from ideas_routes import router as ideas_router
+from factory_routes import router as factory_router
+from websocket_manager import get_websocket_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -58,6 +60,7 @@ app.include_router(admin_router)
 app.include_router(user_router)
 app.include_router(privacy_router)
 app.include_router(ideas_router)
+app.include_router(factory_router)
 
 # Health check endpoint
 @app.get("/health")
@@ -81,10 +84,68 @@ async def root():
             "health": "/health",
             "admin": "/api/admin/*",
             "orchestrator": "/api/orchestrate",
-            "agents": "/api/{agent_type}/*"
+            "agents": "/api/{agent_type}/*",
+            "factory": "/api/factory/*",
+            "websocket": "/ws/{client_id}"
         },
         "documentation": "/docs"
     }
+
+# ------------------------------
+# WebSocket endpoint for real-time events
+# ------------------------------
+
+# Lazily initialize the websocket manager
+_ws_manager = get_websocket_manager()
+
+
+class _StarletteWSAdapter:
+    """Adapter to make Starlette WebSocket compatible with websocket_manager API."""
+
+    def __init__(self, websocket: WebSocket):
+        self._ws = websocket
+
+    async def send(self, message: str):
+        await self._ws.send_text(message)
+
+    async def close(self):
+        await self._ws.close()
+
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    # Accept connection
+    await websocket.accept()
+
+    # Register client with optional filters parsed from query params
+    filters: Dict[str, Any] = {}
+    try:
+        params = dict(websocket.query_params)
+        if "event_types" in params and params["event_types"]:
+            filters["event_types"] = params["event_types"].split(",")
+    except Exception:
+        filters = {}
+
+    adapter = _StarletteWSAdapter(websocket)
+    await _ws_manager.connect_client(client_id, adapter, filters)
+
+    try:
+        while True:
+            # Receive messages from client (used for updating filters, pings, etc.)
+            msg = await websocket.receive_text()
+            try:
+                payload = json.loads(msg)
+                if isinstance(payload, dict) and payload.get("type") == "filters":
+                    new_filters = payload.get("data") or {}
+                    await _ws_manager.update_client_filters(client_id, new_filters)
+            except Exception:
+                # Ignore malformed payloads
+                pass
+
+    except WebSocketDisconnect:
+        pass
+    finally:
+        await _ws_manager.disconnect_client(client_id)
 
 # Orchestrator endpoint (existing)
 @app.post("/api/orchestrate")

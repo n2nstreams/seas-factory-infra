@@ -44,7 +44,7 @@ class FactoryPipelineStatus(BaseModel):
     project_name: str
     current_stage: str
     progress: float = Field(..., ge=0.0, le=100.0)
-    status: str = Field(..., regex="^(queued|running|completed|failed|paused)$")
+    status: str = Field(..., pattern="^(queued|running|completed|failed|paused)$")
     stages: Dict[str, str] = Field(default_factory=dict)
     started_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -55,7 +55,7 @@ class FactoryPipelineStatus(BaseModel):
 class FactoryStageUpdate(BaseModel):
     """Factory stage update model"""
     stage: str
-    status: str = Field(..., regex="^(pending|running|completed|failed)$")
+    status: str = Field(..., pattern="^(pending|running|completed|failed)$")
     progress: float = Field(..., ge=0.0, le=100.0)
     description: Optional[str] = None
     output_data: Optional[Dict[str, Any]] = None

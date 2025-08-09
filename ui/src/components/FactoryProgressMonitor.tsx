@@ -22,6 +22,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { apiClient } from '@/lib/api';
 
 interface FactoryPipeline {
   pipeline_id: string;
@@ -129,22 +130,15 @@ const FactoryProgressMonitor: React.FC<FactoryProgressMonitorProps> = ({
   const fetchPipelines = useCallback(async () => {
     try {
       setError(null);
-      const response = await fetch('/api/factory/pipelines?limit=10', {
-        headers: {
-          'x-tenant-id': tenantId,
-          'x-user-id': userId
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch pipelines: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get<FactoryPipeline[]>(
+        '/api/factory/pipelines?limit=10',
+        { tenantContext: { tenantId: tenantId || 'default', userId: userId || 'default-user' } }
+      );
       setPipelines(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching pipelines:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch pipelines');
+      const message = err?.message || 'Failed to fetch pipelines';
+      setError(message);
     } finally {
       setLoading(false);
     }
