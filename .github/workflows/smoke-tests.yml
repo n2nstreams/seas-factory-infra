@@ -149,40 +149,48 @@ jobs:
         run: |
           echo "🔍 Validating API structure..."
           
-          # Check that API routes exist and can be imported
-          # First ensure all necessary files are available
-          cd api-gateway
+          # Check that API gateway directory exists
+          if [ ! -d "api-gateway" ]; then
+            echo "❌ api-gateway directory not found!"
+            exit 1
+          fi
           
-          # Validate API structure without importing (avoids dependency issues)
-          python -c "
-          import os
-          import re
+          # Check for critical route files
+          echo "Checking for API route files..."
+          for file in user_routes.py admin_routes.py factory_routes.py ideas_routes.py; do
+            if [ -f "api-gateway/$file" ]; then
+              echo "✅ Found route file: $file"
+            else
+              echo "❌ Missing route file: $file"
+              exit 1
+            fi
+          done
           
-          # Check that critical files exist
-          critical_files = ['user_routes.py', 'admin_routes.py', 'factory_routes.py', 'ideas_routes.py']
-          for file in critical_files:
-              if os.path.exists(file):
-                  print(f'✅ Found route file: {file}')
-              else:
-                  print(f'❌ Missing route file: {file}')
-                  exit(1)
+          # Check for critical endpoints in user_routes.py
+          echo ""
+          echo "Checking for critical endpoints in user_routes.py..."
+          if grep -q '"/register"' api-gateway/user_routes.py; then
+            echo "✅ Found endpoint: /register"
+          else
+            echo "❌ Missing endpoint: /register"
+            exit 1
+          fi
           
-          # Parse user_routes.py for endpoints without importing
-          with open('user_routes.py', 'r') as f:
-              content = f.read()
-              
-          # Look for route definitions (router has /api/users prefix)
-          critical_endpoints = ['/register', '/login', '/profile']
-          for endpoint in critical_endpoints:
-              # Check if the endpoint is defined in the router
-              if f'"{endpoint}"' in content or f"'{endpoint}'" in content:
-                  print(f'✅ Found critical endpoint: {endpoint}')
-              else:
-                  print(f'❌ Missing critical endpoint: {endpoint}')
-                  exit(1)
-                  
-          print('🎉 All critical API endpoints are present')
-          "
+          if grep -q '"/login"' api-gateway/user_routes.py; then
+            echo "✅ Found endpoint: /login"
+          else
+            echo "❌ Missing endpoint: /login"
+            exit 1
+          fi
+          
+          if grep -q '"/profile"' api-gateway/user_routes.py; then
+            echo "✅ Found endpoint: /profile"
+          else
+            echo "❌ Missing endpoint: /profile"
+            exit 1
+          fi
+          
+          echo "🎉 All critical API endpoints are present"
           
       - name: Validate frontend signup form
         run: |
