@@ -19,10 +19,6 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 
 # Import from the shared modules
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agents', 'shared'))
-
 from tenant_db import TenantDatabase, TenantContext
 from access_control import (
     require_subscription, AccessLevel, get_tenant_subscription, 

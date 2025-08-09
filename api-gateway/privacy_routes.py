@@ -21,8 +21,6 @@ from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 
-# Add shared modules to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agents', 'shared'))
 from privacy_service import PrivacyService, ConsentRequest, DataExportRequest, get_privacy_service
 
 logger = logging.getLogger(__name__)

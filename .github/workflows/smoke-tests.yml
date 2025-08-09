@@ -54,7 +54,7 @@ jobs:
           python -m pip install --upgrade pip
           # Install core dependencies for smoke tests
           pip install pytest pytest-asyncio pytest-mock httpx
-          pip install fastapi uvicorn pydantic sqlalchemy asyncpg
+          pip install fastapi uvicorn pydantic==2.10.5 pydantic-settings==2.7.0 sqlalchemy asyncpg
           pip install bcrypt python-dotenv
           
           # Install project dependencies if they exist
@@ -145,7 +145,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install fastapi uvicorn httpx pytest
-          pip install asyncpg bcrypt pydantic sqlalchemy python-dotenv
+          pip install asyncpg bcrypt pydantic==2.10.5 pydantic-settings==2.7.0 sqlalchemy python-dotenv
           
       - name: Quick API structure validation
         run: |
@@ -154,7 +154,10 @@ jobs:
           # Check that API routes exist and can be imported
           python -c "
           import sys
+          import os
           sys.path.append('api-gateway')
+          # Add the current directory to PYTHONPATH for local imports
+          os.environ['PYTHONPATH'] = 'api-gateway:' + os.environ.get('PYTHONPATH', '')
           try:
               from user_routes import router
               print('✅ User routes imported successfully')

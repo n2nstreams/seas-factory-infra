@@ -22,8 +22,6 @@ from pydantic import BaseModel, EmailStr, validator
 import asyncpg
 import bcrypt
 
-# Add shared modules to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agents', 'shared'))
 from tenant_db import TenantDatabase, TenantContext
 from email_service import get_email_service, EmailRecipient, WelcomeEmailData
 

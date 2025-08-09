@@ -22,8 +22,6 @@ from pydantic import BaseModel, Field
 import asyncpg
 import httpx
 
-# Add shared modules to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agents', 'shared'))
 from tenant_db import TenantDatabase, TenantContext
 from websocket_manager import get_websocket_manager, EventMessage
 
