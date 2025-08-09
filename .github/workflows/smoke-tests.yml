@@ -171,10 +171,11 @@ jobs:
           with open('user_routes.py', 'r') as f:
               content = f.read()
               
-          # Look for route definitions
-          critical_endpoints = ['/api/users/register', '/api/users/login', '/api/users/profile']
+          # Look for route definitions (router has /api/users prefix)
+          critical_endpoints = ['/register', '/login', '/profile']
           for endpoint in critical_endpoints:
-              if endpoint in content:
+              # Check if the endpoint is defined in the router
+              if f'"{endpoint}"' in content or f"'{endpoint}'" in content:
                   print(f'✅ Found critical endpoint: {endpoint}')
               else:
                   print(f'❌ Missing critical endpoint: {endpoint}')
