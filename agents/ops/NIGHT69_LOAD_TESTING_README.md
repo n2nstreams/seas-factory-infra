@@ -204,7 +204,7 @@ python -m pytest test_load_testing.py -v
 python main.py
 
 # Run demo
-python ../../../night69_demo.py
+python ../../../examples/night-demos/night69_demo.py
 ```
 
 ### Test Coverage
@@ -302,7 +302,7 @@ Run the comprehensive Night 69 demonstration:
 pip install requests
 
 # Run demo (requires AIOps agent running)
-python night69_demo.py
+python examples/night-demos/night69_demo.py
 ```
 
 ### Demo Features

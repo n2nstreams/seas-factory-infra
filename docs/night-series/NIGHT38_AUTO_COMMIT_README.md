@@ -307,7 +307,7 @@ if __name__ == "__main__":
 Run the comprehensive demo:
 
 ```bash
-python night38_demo.py
+python examples/night-demos/night38_demo.py
 ```
 
 This demonstrates:
@@ -429,7 +429,7 @@ kubectl apply -f orchestrator/deployment.yaml
 gh secret set GITHUB_TOKEN --body "your_token"
 
 # 3. Test the workflow
-python night38_demo.py
+python examples/night-demos/night38_demo.py
 
 # 4. Monitor metrics
 kubectl logs -f deployment/dev-agent
