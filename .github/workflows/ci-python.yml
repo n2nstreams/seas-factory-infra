@@ -13,6 +13,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: factoryadmin
+          POSTGRES_PASSWORD: localpass
+          POSTGRES_DB: factorydb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U factoryadmin" --health-interval=10s --health-timeout=5s --health-retries=5
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -26,6 +37,19 @@ jobs:
           if [ -f requirements-agents.txt ]; then pip install -r requirements-agents.txt; fi
           if [ -f orchestrator/requirements.txt ]; then pip install -r orchestrator/requirements.txt; fi
           if [ -f api-gateway/requirements.txt ]; then pip install -r api-gateway/requirements.txt; fi
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            pg_isready -h localhost -p 5432 -U factoryadmin && break
+            sleep 2
+          done
+      - name: Initialize database schema
+        env:
+          PGPASSWORD: localpass
+        run: |
+          psql -h localhost -U factoryadmin -d factorydb -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+          psql -h localhost -U factoryadmin -d factorydb -f dev/init.sql
+          for f in dev/migrations/*.sql; do echo "Running $f"; psql -h localhost -U factoryadmin -d factorydb -f "$f"; done
       - name: Lint (ruff optional)
         run: |
           echo "Skipping ruff; add when ready"

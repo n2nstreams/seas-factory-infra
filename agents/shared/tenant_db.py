@@ -673,4 +673,20 @@ async def get_default_tenant_context() -> TenantContext:
 
 # Ensure cleanup on shutdown
 import atexit
-atexit.register(lambda: asyncio.run(tenant_db.close_pool())) 
+def _safe_close_pool():
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # No running loop; create a temporary loop to close cleanly
+        loop = asyncio.new_event_loop()
+        try:
+            loop.run_until_complete(tenant_db.close_pool())
+        finally:
+            loop.close()
+        return
+    try:
+        loop.run_until_complete(tenant_db.close_pool())
+    except Exception:
+        pass
+
+atexit.register(_safe_close_pool)
