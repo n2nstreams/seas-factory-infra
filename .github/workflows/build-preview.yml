@@ -35,14 +35,21 @@ jobs:
           cd ui
           npm run build
       
+      - name: Skip notice (no GCP upload on forks/Dependabot/missing secrets)
+        if: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) || github.actor == 'dependabot[bot]' || secrets.WIF_PROVIDER == '' || secrets.GCP_SA_EMAIL == '' }}
+        run: |
+          echo "Skipping GCP authentication and preview upload."
+          echo "Reason: fork PR=${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}, actor=${{ github.actor }}, WIF_PROVIDER set=${{ secrets.WIF_PROVIDER != '' }}, GCP_SA_EMAIL set=${{ secrets.GCP_SA_EMAIL != '' }}"
       - name: Authenticate to Google Cloud
         id: auth
+        if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && github.actor != 'dependabot[bot]' && secrets.WIF_PROVIDER != '' && secrets.GCP_SA_EMAIL != '' }}
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SA_EMAIL }}
       
       - name: Setup Google Cloud SDK
+        if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && github.actor != 'dependabot[bot]' && secrets.WIF_PROVIDER != '' && secrets.GCP_SA_EMAIL != '' }}
         uses: google-github-actions/setup-gcloud@v2
       
       - name: Generate build path
@@ -57,6 +64,7 @@ jobs:
           echo "Building for branch: ${BRANCH_NAME}, commit: ${COMMIT_SHA}"
       
       - name: Upload build to GCS
+        if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && github.actor != 'dependabot[bot]' && secrets.WIF_PROVIDER != '' && secrets.GCP_SA_EMAIL != '' }}
         run: |
           cd ui
           # Copy all files from dist/ to the GCS bucket
@@ -67,6 +75,7 @@ jobs:
       
       - name: Generate preview URL
         id: preview_url
+        if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && github.actor != 'dependabot[bot]' && secrets.WIF_PROVIDER != '' && secrets.GCP_SA_EMAIL != '' }}
         run: |
           # Generate a public URL for the index.html file
           PREVIEW_URL="https://storage.googleapis.com/${{ steps.build_path.outputs.BUCKET_NAME }}/${{ steps.build_path.outputs.BUILD_PATH }}/index.html"
@@ -75,7 +84,7 @@ jobs:
           echo "🔗 Preview URL generated: ${PREVIEW_URL}"
       
       - name: Create or update PR comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && (github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]' && secrets.WIF_PROVIDER != '' && secrets.GCP_SA_EMAIL != ''
         uses: peter-evans/create-or-update-comment@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
