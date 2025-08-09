@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket, Users, BarChart3, Headphones } from "lucide-react";
+import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket, Users, BarChart3 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import pricingData from '../data/pricing.json';
@@ -657,7 +657,8 @@ export default function Home() {
               };
 
               const getButtonVariant = (tier: any) => {
-                if (tier.popular) {
+                const isPopular = tier.id === 'PRO';
+                if (isPopular) {
                   return "bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40 text-white";
                 }
                 return "bg-white/50 backdrop-blur-sm border border-stone-400/60 text-stone-800 hover:bg-white/70";
@@ -667,12 +668,12 @@ export default function Home() {
                 <Card 
                   key={tier.id}
                   className={`relative ${
-                    tier.popular 
+                    (tier.id === 'PRO') 
                       ? 'bg-white/45 backdrop-blur-lg border-2 border-green-800/60 hover:shadow-2xl transition-all duration-300 hover:bg-white/55' 
                       : 'bg-white/35 backdrop-blur-lg border border-stone-400/60 hover:border-stone-500/80 transition-all duration-300 hover:shadow-xl hover:bg-white/45'
                   }`}
                 >
-                  {tier.popular && (
+                  {tier.id === 'PRO' && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge className="bg-gradient-to-r from-green-800 to-green-900 text-white shadow-lg backdrop-blur-sm border border-stone-400/40">
                         <Star className="w-4 h-4 mr-1" />
@@ -687,8 +688,8 @@ export default function Home() {
                     </div>
                     <CardTitle className="text-xl lg:text-2xl font-bold text-stone-900">{tier.name}</CardTitle>
                     <CardDescription className="text-stone-700 text-sm">{tier.description}</CardDescription>
-                    <div className={`mt-6 p-4 rounded-xl border ${
-                      tier.popular 
+                      <div className={`mt-6 p-4 rounded-xl border ${
+                      (tier.id === 'PRO') 
                         ? 'bg-gradient-to-r from-stone-200/60 to-stone-300/60 border-stone-400/60' 
                         : 'bg-stone-200/60 border-stone-300/60'
                     }`}>
@@ -707,7 +708,7 @@ export default function Home() {
                     <div className="space-y-2">
                       {tier.features.slice(0, 4).map((feature, index) => (
                         <div key={index} className={`flex items-center space-x-3 p-2 rounded-lg ${
-                          tier.popular ? 'bg-stone-200/50' : 'bg-stone-200/40'
+                          (tier.id === 'PRO') ? 'bg-stone-200/50' : 'bg-stone-200/40'
                         }`}>
                           <Check className="w-4 h-4 text-green-800 flex-shrink-0" />
                           <span className="text-xs lg:text-sm text-stone-800">{feature}</span>
