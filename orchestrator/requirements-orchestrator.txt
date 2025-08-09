@@ -6,7 +6,7 @@
 # Orchestrator-specific dependencies
 flask==3.1.1
 google-adk==1.5.0
-autogen-agentchat==0.2.40
+autogen-agentchat==0.7.2
 langgraph==0.5.1
 langgraph-sdk==0.1.72
 langsmith==0.4.4
