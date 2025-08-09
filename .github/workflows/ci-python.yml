@@ -13,6 +13,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: factorydb
+      DB_USER: factoryadmin
+      DB_PASSWORD: localpass
+      SECRET_MANAGER_ENABLED: "false"
+      MONITORING_ENABLED: "false"
+      OPENAI_API_KEY: test-key
+      JWT_SECRET_KEY: test-jwt
     services:
       postgres:
         image: postgres:16
