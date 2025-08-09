@@ -26,7 +26,7 @@ google-cloud-pubsub==2.29.0
 google-cloud-storage==2.19.0
 google-cloud-aiplatform==1.101.0
 google-cloud-secret-manager==2.24.0
-google-cloud-monitoring==2.22.0
+google-cloud-monitoring==2.27.2
 google-cloud-error-reporting==1.10.0
 google-cloud-deploy==2.7.1
 google-auth==2.40.3
