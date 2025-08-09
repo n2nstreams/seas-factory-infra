@@ -8,7 +8,7 @@ flask==3.1.1
 google-adk==1.5.0
 autogen-agentchat==0.2.40
 langgraph==0.5.1
-langgraph-sdk==0.1.72
+langgraph-sdk==0.2.0
 langsmith==0.4.4
 mcp==1.10.1
 
