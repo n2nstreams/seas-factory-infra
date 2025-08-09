@@ -1,4 +1,9 @@
-from google.adk.agents import Agent
+try:
+    from google.adk.agents import Agent  # type: ignore
+except Exception:  # pragma: no cover
+    class Agent:  # minimal stub for local tests
+        def __init__(self, **_: object) -> None:
+            pass
 
 def greet(name: str) -> str:
     """Tiny helper function for first-run smoke test."""

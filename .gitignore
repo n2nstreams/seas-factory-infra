@@ -71,6 +71,11 @@ jspm_packages/
 .env.development.local
 .env.test.local
 .env.production.local
+# Broad patterns to avoid committing env files anywhere
+.env*
+*.env
+**/.env*
+**/*.env
 
 # Terraform
 *.tfstate
@@ -93,5 +98,5 @@ htmlcov/
 
 # Development artifacts
 *.tmp
-*.temp y/
+*.temp
 y/

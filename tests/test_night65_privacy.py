@@ -128,9 +128,14 @@ class TestGDPRSignupFlow:
         assert form_data["gdprConsent"] is True
         assert form_data["agreeToTerms"] is True
     
-    def test_signup_validation_requires_gdpr_consent(self):
+    def test_signup_validation_requires_gdpr_consent(self, monkeypatch):
         """Test that signup validation requires GDPR consent"""
-        from api_gateway.user_routes import UserRegistrationRequest
+        import sys, os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+        # Provide stable alias for module import in tests
+        import importlib
+        module = importlib.import_module('api_gateway.user_routes')
+        UserRegistrationRequest = getattr(module, 'UserRegistrationRequest')
         import pytest
         from pydantic import ValidationError
         

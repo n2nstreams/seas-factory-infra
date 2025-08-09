@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@growthbook/growthbook-react": "^1.6.0",
-    "react-router-dom": "^7.6.3"
-  }
-}
