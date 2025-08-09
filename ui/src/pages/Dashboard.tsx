@@ -300,7 +300,7 @@ export default function Dashboard() {
   }
 
   // Show welcome message for new users with no projects
-  const isNewUser = projects.length === 0;
+  //const isNewUser = projects.length === 0;
 
   return (
     <div className="min-h-screen bg-homepage relative overflow-hidden">
