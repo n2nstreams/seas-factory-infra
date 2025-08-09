@@ -32,7 +32,7 @@ jobs:
         
       - name: Set up Python
         if: steps.check_auto_pr.outputs.is_auto_generated == 'true'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           
