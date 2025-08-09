@@ -135,8 +135,8 @@ def run_frontend_validation():
     
     # Check for required form fields
     required_fields = [
-        "firstName", "lastName", "email", "password", 
-        "confirmPassword", "agreeToTerms", "gdprConsent"
+        "firstName", "lastName", "email", "password",
+        "confirmPassword", "agreeToTerms"
     ]
     
     content = signup_file.read_text()

@@ -8,7 +8,7 @@ import os
 import logging
 from typing import Dict, List, Optional, Any
 from pydantic import Field, field_validator, SecretStr
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from enum import Enum
 
 
@@ -32,6 +32,8 @@ class LogLevel(str, Enum):
 
 class DatabaseConfig(BaseSettings):
     """Database configuration"""
+    # Ignore unknown environment variables to be CI-friendly
+    model_config = SettingsConfigDict(extra='ignore')
     host: str = Field(default="localhost", env="DB_HOST")
     port: int = Field(default=5432, env="DB_PORT")
     name: str = Field(default="factorydb", env="DB_NAME")
@@ -55,6 +57,7 @@ class DatabaseConfig(BaseSettings):
 
 class GoogleCloudConfig(BaseSettings):
     """Google Cloud Platform configuration"""
+    model_config = SettingsConfigDict(extra='ignore')
     project_id: str = Field(default="summer-nexus-463503-e1", env="PROJECT_ID")
     region: str = Field(default="us-central1", env="GOOGLE_CLOUD_REGION")
     service_account_key_path: Optional[str] = Field(None, env="GOOGLE_APPLICATION_CREDENTIALS")
@@ -71,6 +74,7 @@ class GoogleCloudConfig(BaseSettings):
 
 class AIConfig(BaseSettings):
     """AI/ML service configuration"""
+    model_config = SettingsConfigDict(extra='ignore')
     openai_api_key: SecretStr = Field(default="", env="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4o", env="OPENAI_MODEL")
     openai_max_tokens: int = Field(default=4000, env="OPENAI_MAX_TOKENS")
@@ -92,6 +96,7 @@ class AIConfig(BaseSettings):
 
 class SecurityConfig(BaseSettings):
     """Security configuration"""
+    model_config = SettingsConfigDict(extra='ignore')
     # JWT
     jwt_secret_key: SecretStr = Field(default="test-secret-key", env="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
@@ -118,6 +123,7 @@ class SecurityConfig(BaseSettings):
 
 class ServiceConfig(BaseSettings):
     """Service URLs and endpoints"""
+    model_config = SettingsConfigDict(extra='ignore')
     # Core services
     orchestrator_url: str = Field(default="http://localhost:8080", env="ORCHESTRATOR_URL")
     api_gateway_url: str = Field(default="http://localhost:8000", env="API_GATEWAY_URL")
@@ -142,6 +148,7 @@ class ServiceConfig(BaseSettings):
 
 class NotificationConfig(BaseSettings):
     """Notification configuration"""
+    model_config = SettingsConfigDict(extra='ignore')
     # Email
     sendgrid_api_key: Optional[SecretStr] = Field(None, env="SENDGRID_API_KEY")
     alert_email: str = Field(default="alerts@saasfactory.com", env="ALERT_EMAIL")
@@ -157,6 +164,7 @@ class NotificationConfig(BaseSettings):
 
 class CacheConfig(BaseSettings):
     """Cache configuration"""
+    model_config = SettingsConfigDict(extra='ignore')
     redis_enabled: bool = Field(default=False, env="REDIS_ENABLED")
     redis_host: str = Field(default="localhost", env="REDIS_HOST")
     redis_port: int = Field(default=6379, env="REDIS_PORT")
@@ -171,6 +179,8 @@ class CacheConfig(BaseSettings):
 
 class Settings(BaseSettings):
     """Main application settings"""
+    # Tolerate extra env vars from various environments
+    model_config = SettingsConfigDict(extra='ignore')
     # Application
     app_name: str = Field(default="SaaS Factory", env="APP_NAME")
     app_version: str = Field(default="1.0.0", env="APP_VERSION")

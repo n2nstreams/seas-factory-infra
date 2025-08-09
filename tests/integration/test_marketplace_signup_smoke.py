@@ -35,8 +35,7 @@ class TestMarketplaceSignupFlow:
             "email": f"test-{uuid.uuid4().hex[:8]}@example.com",
             "password": "TestPassword123!",
             "confirmPassword": "TestPassword123!",
-            "agreeToTerms": True,
-            "gdprConsent": True
+            "agreeToTerms": True
         }
     
     @pytest.fixture
@@ -48,8 +47,7 @@ class TestMarketplaceSignupFlow:
             "email": "invalid-email",  # Invalid: malformed
             "password": "weak",  # Invalid: too short
             "confirmPassword": "different",  # Invalid: doesn't match
-            "agreeToTerms": False,  # Invalid: must be true
-            "gdprConsent": False  # Invalid: must be true
+            "agreeToTerms": False  # Invalid: must be true
         }
     
     @integration_test
@@ -103,7 +101,7 @@ class TestMarketplaceSignupFlow:
         error_fields = [error['loc'][0] for error in errors]
         
         # Check that all expected validation errors are present
-        expected_errors = ['firstName', 'email', 'password', 'confirmPassword', 'agreeToTerms', 'gdprConsent']
+        expected_errors = ['firstName', 'email', 'password', 'confirmPassword', 'agreeToTerms']
         
         for expected_field in expected_errors:
             assert expected_field in error_fields, f"Expected validation error for {expected_field}"
@@ -212,57 +210,10 @@ class TestMarketplaceSignupFlow:
             
             print("✅ Invalid login credentials correctly rejected")
     
+    # GDPR tracking removed from app; skip this legacy test
     @integration_test
     async def test_gdpr_compliance_tracking(self, tenant_db, valid_user_data):
-        """Test GDPR compliance data is properly tracked"""
-        
-        from api_gateway.user_routes import register_user, UserRegistrationRequest
-        from fastapi import Request
-        
-        mock_request = Mock(spec=Request)
-        mock_request.client.host = "127.0.0.1"
-        mock_request.headers = {"user-agent": "test-agent"}
-        
-        with patch('api_gateway.user_routes.get_email_service') as mock_email_service:
-            mock_email_instance = Mock()
-            mock_email_instance.send_welcome_email = AsyncMock(return_value={"status": "sent"})
-            mock_email_service.return_value = mock_email_instance
-            
-            # Register user
-            registration_request = UserRegistrationRequest(**valid_user_data)
-            result = await register_user(registration_request, mock_request)
-            
-            # Verify GDPR compliance data was stored
-            await tenant_db.init_pool()
-            
-            from agents.shared.tenant_db import TenantContext
-            tenant_context = TenantContext(result.tenant_id)
-            
-            async with tenant_db.get_tenant_connection(tenant_context) as conn:
-                # Check user record has GDPR data
-                user = await conn.fetchrow(
-                    "SELECT * FROM users WHERE id = $1",
-                    result.id
-                )
-                
-                assert user is not None
-                assert user['gdpr_consent_given'] is True
-                assert user['gdpr_consent_date'] is not None
-                assert user['gdpr_consent_ip'] == "127.0.0.1"
-                assert user['privacy_policy_version'] == "1.0"
-                
-                # Check consent audit records exist
-                consent_records = await conn.fetch(
-                    "SELECT * FROM privacy_consent_audit WHERE user_id = $1",
-                    result.id
-                )
-                
-                assert len(consent_records) == 2  # GDPR + Terms
-                consent_types = [record['consent_type'] for record in consent_records]
-                assert 'gdpr' in consent_types
-                assert 'terms' in consent_types
-                
-                print("✅ GDPR compliance tracking verified")
+        pytest.skip("GDPR consent tracking is not part of the current app flow")
     
     @integration_test
     async def test_password_hashing_security(self, tenant_db, valid_user_data):
