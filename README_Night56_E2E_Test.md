@@ -109,10 +109,10 @@ class Night56EndToEndTest:
 python tests/integration/test_night56_e2e.py
 
 # Run the demo script
-python night56_demo.py
+python examples/night-demos/night56_demo.py
 
 # Run with full test validation
-python night56_demo.py
+python examples/night-demos/night56_demo.py
 # When prompted, enter 'y' for full test
 ```
 

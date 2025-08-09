@@ -8,8 +8,10 @@ import uuid
 import json
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, BackgroundTasks
 from pydantic import BaseModel, validator
+import httpx
+import os
 
 from tenant_db import TenantDatabase, TenantContext
 
@@ -64,6 +66,7 @@ class IdeaResponse(BaseModel):
 @router.post("/submit", response_model=IdeaResponse)
 async def submit_idea(
     idea_data: IdeaSubmissionRequest,
+    background_tasks: BackgroundTasks,
     x_tenant_id: str = Header(..., description="Tenant ID"),
     x_user_id: str = Header(..., description="User ID")
 ):
@@ -111,6 +114,15 @@ async def submit_idea(
             )
             
             logger.info(f"Idea submitted successfully: {idea_id} by user {x_user_id}")
+            
+            # Trigger factory pipeline in the background
+            background_tasks.add_task(
+                trigger_factory_pipeline,
+                idea_id,
+                idea_data,
+                x_tenant_id,
+                x_user_id
+            )
             
             # Return the submitted idea
             return IdeaResponse(
@@ -221,4 +233,55 @@ async def get_my_ideas(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch ideas: {str(e)}"
-        ) 
+        )
+
+
+async def trigger_factory_pipeline(
+    idea_id: str,
+    idea_data: IdeaSubmissionRequest,
+    tenant_id: str,
+    user_id: str
+):
+    """Trigger factory pipeline for a new idea"""
+    try:
+        factory_url = os.getenv("FACTORY_URL", "http://localhost:8000")
+        
+        # Prepare factory trigger request
+        factory_trigger = {
+            "idea_id": idea_id,
+            "project_name": idea_data.title,
+            "description": idea_data.description,
+            "stage": "idea_validation",
+            "priority": "normal",
+            "metadata": {
+                "category": idea_data.category,
+                "problem": idea_data.problem,
+                "solution": idea_data.solution,
+                "target_audience": idea_data.target_audience,
+                "key_features": idea_data.key_features,
+                "business_model": idea_data.business_model,
+                "timeline": idea_data.timeline,
+                "budget": idea_data.budget_range
+            }
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{factory_url}/api/factory/trigger",
+                json=factory_trigger,
+                headers={
+                    "X-Tenant-Id": tenant_id,
+                    "X-User-Id": user_id
+                },
+                timeout=10.0
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                logger.info(f"Factory pipeline triggered for idea {idea_id}: {result['pipeline_id']}")
+            else:
+                logger.error(f"Failed to trigger factory pipeline: {response.status_code} - {response.text}")
+                
+    except Exception as e:
+        logger.error(f"Error triggering factory pipeline for idea {idea_id}: {e}")
+        # Don't raise - this is a background task 
