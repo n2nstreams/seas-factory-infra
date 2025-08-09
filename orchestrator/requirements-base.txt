@@ -12,7 +12,7 @@ starlette==0.42.0
 # HTTP Client & WebSocket
 httpx==0.28.1
 websockets>=13.0,<15.1.0
-requests==2.32.3
+requests>=2.32.0,<3.0.0
 
 # Database & ORM
 sqlalchemy==2.0.36
