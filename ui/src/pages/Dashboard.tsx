@@ -190,7 +190,6 @@ export default function Dashboard() {
 
   // Calculate metrics from real user data
   const totalBuildHours = projects.reduce((sum, project) => sum + project.buildHours, 0);
-  const activeBuilds = projects.filter(p => p.status === 'building').length;
   
   const subscription: UserSubscription = {
     plan: 'starter', // Default for new users
@@ -213,7 +212,7 @@ export default function Dashboard() {
   // Projects will be loaded from API
 
   // Build queue will be derived from user projects
-  const builds: Build[] = projects.map((project, index) => ({
+  const builds: Build[] = projects.map((project) => ({
     id: project.id,
     projectId: project.id,
     projectName: project.name,
@@ -230,7 +229,7 @@ export default function Dashboard() {
   }));
 
   // Generate activities from user's real projects
-  const activities: ActivityItem[] = projects.map((project, index) => ({
+  const activities: ActivityItem[] = projects.map((project) => ({
     id: project.id,
     type: 'project_created' as const,
     message: `Project "${project.name}" was submitted for processing`,

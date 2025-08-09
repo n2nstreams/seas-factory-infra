@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { 
   Check, 
   Sparkles, 
-  Star, 
   ArrowRight, 
   CreditCard,
   Zap,
