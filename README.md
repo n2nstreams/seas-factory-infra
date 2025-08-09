@@ -188,17 +188,18 @@ The AI SaaS Factory uses a **three-layer architecture**:
 ### 1. Clone & Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/saas-factory.git
-cd saas-factory
+# Clone the repository (replace with your repo URL)
+git clone <REPO_URL>
+cd <REPO_DIR>
 
-# Set up Python environment
+# Set up Python environment (requires Python 3.12)
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements-base.txt
+pip install httpx  # required for tests/scripts/test_factory_pipeline.py
 
-# Set up frontend
-cd ui && npm install && cd ..
+# Set up frontend (primary app lives in `ui/`)
+cd ui && npm ci && cd ..
 ```
 
 ### 2. Environment Configuration
@@ -254,13 +255,16 @@ saas-factory/
 │   ├── ops/               # AIOps & DevOps agents
 │   ├── docs/              # DocAgent - Documentation
 │   └── shared/            # Shared utilities & components
-├── ui/                    # React dashboard & marketplace
+├── ui/                    # Primary React app (dashboard & marketplace)
+├── dashboard/             # Legacy demo app (deprecated; will be merged into `ui/`)
 ├── api-gateway/           # FastAPI gateway with routing
 ├── orchestrator/          # Vertex AI orchestration layer
 ├── infra/                 # Terraform infrastructure modules
 ├── docs/                  # Documentation & guides
 └── tests/                 # Comprehensive test suite
 ```
+
+Note: The `ui/` app is the primary frontend. The legacy `dashboard/` folder remains for historical demos and will be consolidated into `ui/`.
 
 ---
 

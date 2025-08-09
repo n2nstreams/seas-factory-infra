@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field, validator
 from enum import Enum
 import json
-from shared.tenant_db import TenantDatabase, TenantContext
+from agents.shared.tenant_db import TenantDatabase, TenantContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

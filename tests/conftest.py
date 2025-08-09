@@ -31,6 +31,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from config.settings import get_settings
 from agents.shared.tenant_db import TenantDatabase, TenantContext
+# Prevent hard dependency on real Stripe keys during collection
+os.environ.setdefault("STRIPE_API_KEY", "test-key")
 from agents.billing.stripe_integration import StripeIntegration
 from agents.notifications.slack_integration import SlackIntegration
 

@@ -1,0 +1,60 @@
+asyncapi: '2.6.0'
+info:
+  title: SaaS Factory Events
+  version: '0.1.0'
+  description: |
+    Canonical event contracts for producer/consumer services.
+    This initial stub captures idea submission and pipeline status updates.
+defaultContentType: application/json
+channels:
+  idea.submitted:
+    description: Emitted when a user submits a new idea.
+    publish:
+      message:
+        name: IdeaSubmitted
+        payload:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+            description:
+              type: string
+            tenantId:
+              type: string
+              format: uuid
+            userId:
+              type: string
+              format: uuid
+            submittedAt:
+              type: string
+              format: date-time
+  pipeline.updated:
+    description: Emitted when a factory pipeline progresses.
+    publish:
+      message:
+        name: PipelineUpdated
+        payload:
+          type: object
+          properties:
+            pipelineId:
+              type: string
+              format: uuid
+            stage:
+              type: string
+            status:
+              type: string
+              enum: [pending, running, completed, failed, skipped]
+            progress:
+              type: integer
+              minimum: 0
+              maximum: 100
+            description:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+
+

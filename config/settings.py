@@ -180,7 +180,12 @@ class CacheConfig(BaseSettings):
 class Settings(BaseSettings):
     """Main application settings"""
     # Tolerate extra env vars from various environments
-    model_config = SettingsConfigDict(extra='ignore')
+    model_config = SettingsConfigDict(
+        extra='ignore',
+        env_file='.env',
+        env_nested_delimiter='__',
+        case_sensitive=False,
+    )
     # Application
     app_name: str = Field(default="SaaS Factory", env="APP_NAME")
     app_version: str = Field(default="1.0.0", env="APP_VERSION")
@@ -207,11 +212,7 @@ class Settings(BaseSettings):
     notifications: NotificationConfig = NotificationConfig()
     cache: CacheConfig = CacheConfig()
     
-    class Config:
-        env_file = ".env"
-        env_nested_delimiter = "__"
-        case_sensitive = False
-        
+    
     @field_validator('environment', mode='before')
     def parse_environment(cls, v):
         if isinstance(v, str):

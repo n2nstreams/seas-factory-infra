@@ -1,0 +1,27 @@
+name: CI - Terraform
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+  push:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+        working-directory: infra
+      - name: Terraform init (backend disabled)
+        run: terraform -chdir=infra/prod init -backend=false
+      - name: Terraform validate
+        run: terraform -chdir=infra/prod validate
+
+
