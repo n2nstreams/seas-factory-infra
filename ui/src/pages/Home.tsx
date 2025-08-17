@@ -222,6 +222,7 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <a href="#how-it-works" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">How It Works</a>
+              <a href="/marketplace" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">Marketplace</a>
               <a href="#faq" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">FAQ</a>
               <Button 
                 size="sm" 
@@ -263,6 +264,22 @@ export default function Home() {
                 <p className="text-xl lg:text-2xl text-stone-700 leading-relaxed max-w-3xl">
                   Submit your SaaS concept and watch our AI agents design, develop, and deploy your complete application. From idea to paying customers in days, not months.
                 </p>
+                
+                {/* Visual Workflow Example */}
+                <div className="bg-white/20 backdrop-blur-sm border border-stone-400/30 rounded-xl p-4 mt-6">
+                  <div className="flex items-center justify-center space-x-3 text-sm text-stone-700">
+                    <span className="bg-green-800/20 px-2 py-1 rounded">💡 Idea</span>
+                    <span>→</span>
+                    <span className="bg-green-800/20 px-2 py-1 rounded">🎨 Design</span>
+                    <span>→</span>
+                    <span className="bg-green-800/20 px-2 py-1 rounded">⚡ Code</span>
+                    <span>→</span>
+                    <span className="bg-green-800/20 px-2 py-1 rounded">🚀 Launch</span>
+                  </div>
+                  <p className="text-xs text-stone-600 text-center mt-2">
+                    Example: "AI project management tool" → Complete SaaS in 48 hours
+                  </p>
+                </div>
               </div>
 
               {/* Email Capture Form */}
@@ -289,6 +306,12 @@ export default function Home() {
                 <p className="text-sm text-stone-600 mt-3 text-center">
                   Free during beta • No credit card required • Own 100% of your code
                 </p>
+                {/* Account Creation Prompt */}
+                <div className="mt-4 p-3 bg-green-800/10 border border-green-800/20 rounded-lg">
+                  <p className="text-sm text-green-800 font-medium text-center">
+                    💡 <strong>New here?</strong> Create your free account first to submit ideas and track progress
+                  </p>
+                </div>
               </div>
 
               {/* Alternative CTA */}
@@ -296,16 +319,18 @@ export default function Home() {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40"
-                  onClick={() => navigate('/design')}
+                  className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40 focus:ring-2 focus:ring-green-800/50 focus:outline-none"
+                  onClick={() => navigate('/signup')}
+                  aria-label="Create a free account to start building your SaaS"
                 >
-                  🎨 See Demo
+                  🚀 Create Free Account
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40"
+                  className="text-lg px-8 py-6 bg-white/25 backdrop-blur-sm border border-stone-400/50 text-stone-800 hover:bg-white/40 focus:ring-2 focus:ring-green-800/50 focus:outline-none"
                   onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  aria-label="Learn how the AI SaaS factory works"
                 >
                   How It Works
                 </Button>
@@ -487,6 +512,29 @@ export default function Home() {
               <p className="text-lg text-stone-700 mb-6">
                 Join founders who've already launched profitable SaaS businesses in days, not months.
               </p>
+              
+              {/* Subscription Overview */}
+              <div className="bg-white/25 backdrop-blur-sm border border-stone-400/30 rounded-xl p-6 mb-6">
+                <h4 className="text-lg font-semibold text-stone-900 mb-3">Simple, Transparent Pricing</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="text-center p-3 bg-green-800/10 rounded-lg">
+                    <div className="text-2xl font-bold text-green-800">$0</div>
+                    <div className="text-stone-700">Beta Access</div>
+                    <div className="text-xs text-stone-600">Free during launch</div>
+                  </div>
+                  <div className="text-center p-3 bg-stone-100/50 rounded-lg">
+                    <div className="text-2xl font-bold text-stone-800">$49</div>
+                    <div className="text-stone-700">Pro Plan</div>
+                    <div className="text-xs text-stone-600">Post-beta pricing</div>
+                  </div>
+                  <div className="text-center p-3 bg-stone-100/50 rounded-lg">
+                    <div className="text-2xl font-bold text-stone-800">$199</div>
+                    <div className="text-stone-700">Enterprise</div>
+                    <div className="text-xs text-stone-600">Custom solutions</div>
+                  </div>
+                </div>
+              </div>
+              
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl"

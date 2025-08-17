@@ -34,6 +34,62 @@ export default function SubmitIdea() {
             Describe your SaaS idea and let our AI agents handle the entire development process. 
             From concept to deployment, we've got you covered.
           </p>
+          
+          {/* Enhanced Guidance */}
+          <div className="bg-white/25 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-6 max-w-4xl mx-auto">
+            <h3 className="text-lg font-semibold text-heading mb-4">💡 How to Write a Great Idea</h3>
+            <div className="grid md:grid-cols-2 gap-6 text-left">
+              <div>
+                <h4 className="font-medium text-heading mb-2">✅ Good Examples:</h4>
+                <ul className="text-sm text-body space-y-1">
+                  <li>• "AI-powered project management tool for remote teams"</li>
+                  <li>• "Automated invoicing system for freelancers"</li>
+                  <li>• "Customer feedback collection and analysis platform"</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium text-heading mb-2">❌ Avoid:</h4>
+                <ul className="text-sm text-body space-y-1">
+                  <li>• "Something like Uber but different"</li>
+                  <li>• "A social media app"</li>
+                  <li>• "I want to make money online"</li>
+                </ul>
+              </div>
+            </div>
+            <p className="text-sm text-stone-600 mt-4 text-center">
+              <strong>Tip:</strong> Be specific about what problem you're solving and who it's for
+            </p>
+          </div>
+          
+          {/* Account Creation Prompt */}
+          {!user && (
+            <div className="bg-gradient-to-r from-green-800/10 to-green-900/10 backdrop-blur-lg border border-green-800/20 rounded-2xl p-6 max-w-4xl mx-auto mt-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-green-800 mb-3">
+                  🚀 Ready to Submit Your Idea?
+                </h3>
+                <p className="text-stone-700 mb-4">
+                  Create your free account to submit ideas, track progress, and access your dashboard
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800"
+                    onClick={() => window.location.href = '/signup'}
+                  >
+                    Create Free Account
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="border-green-300 text-green-800 hover:bg-green-50"
+                    onClick={() => window.location.href = '/signin'}
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Process Overview */}

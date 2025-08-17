@@ -157,10 +157,27 @@ export default function Marketplace() {
           <h1 className="text-4xl font-bold text-stone-900 mb-4">
             SaaS Marketplace
           </h1>
-          <p className="text-xl text-stone-600 max-w-3xl mx-auto">
+          <p className="text-xl text-stone-600 max-w-3xl mx-auto mb-8">
             Discover AI-powered SaaS solutions built by our platform. From productivity tools to enterprise solutions, 
             find the perfect software for your business needs.
           </p>
+          
+          {/* Marketplace CTA */}
+          <div className="bg-gradient-to-r from-green-800/10 to-green-900/10 backdrop-blur-lg border border-green-800/20 rounded-2xl p-6 max-w-2xl mx-auto">
+            <h3 className="text-lg font-semibold text-stone-900 mb-3">
+              🚀 Ready to Build Your Own SaaS?
+            </h3>
+            <p className="text-stone-700 mb-4">
+              Submit your idea and join the founders who've already launched profitable businesses
+            </p>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800"
+              onClick={() => window.location.href = '/submit-idea'}
+            >
+              Submit Your Idea
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -204,14 +221,21 @@ export default function Marketplace() {
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <Card key={product.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-stone-200 hover:border-green-300">
               <div className="relative">
-                <div className="h-48 bg-gradient-to-br from-green-100 to-stone-100 flex items-center justify-center">
-                  <Code2 className="w-16 h-16 text-green-600" />
+                <div className="h-48 bg-gradient-to-br from-green-100 to-stone-100 flex items-center justify-center group-hover:from-green-200 group-hover:to-stone-200 transition-colors">
+                  <div className="text-center">
+                    <Code2 className="w-16 h-16 text-green-600 mx-auto mb-2" />
+                    <p className="text-sm text-green-700 font-medium">{product.category}</p>
+                  </div>
                 </div>
                 <Badge className={`absolute top-3 right-3 ${getStatusColor(product.status)}`}>
                   {product.status === 'live' ? 'Live' : product.status === 'beta' ? 'Beta' : 'Coming Soon'}
                 </Badge>
+                {/* Price Badge */}
+                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full border border-stone-200">
+                  <span className="text-sm font-bold text-green-800">{product.price}</span>
+                </div>
               </div>
               
               <CardHeader className="pb-3">
@@ -261,11 +285,11 @@ export default function Marketplace() {
               </CardContent>
 
               <div className="px-6 pb-6 space-y-3">
-                <Button className="w-full btn-primary">
+                <Button className="w-full bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-white">
                   <Eye className="w-4 h-4 mr-2" />
                   View Demo
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full border-green-300 text-green-800 hover:bg-green-50 hover:border-green-400">
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   Get Started
                 </Button>

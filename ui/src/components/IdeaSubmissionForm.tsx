@@ -71,6 +71,27 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
     }
   };
 
+  const getStepValidationMessage = (step: number): string | null => {
+    switch (step) {
+      case 1:
+        if (!formData.projectName) return "Please enter a project name";
+        if (!formData.description) return "Please describe your project";
+        if (!formData.category) return "Please select a category";
+        return null;
+      case 2:
+        if (!formData.problem) return "Please describe the problem you're solving";
+        if (!formData.solution) return "Please explain your solution";
+        if (!formData.targetAudience) return "Please specify your target audience";
+        return null;
+      case 3:
+        if (!formData.keyFeatures) return "Please list key features";
+        if (!formData.businessModel) return "Please select a business model";
+        return null;
+      default:
+        return null;
+    }
+  };
+
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -216,6 +237,15 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
             style={{ width: `${getStepProgress()}%` }}
           />
         </div>
+        
+        {/* Validation Feedback */}
+        {!validateStep(currentStep) && (
+          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">
+              <strong>Please complete:</strong> {getStepValidationMessage(currentStep)}
+            </p>
+          </div>
+        )}
       </div>
 
       <Card className="glass-card">
@@ -240,6 +270,7 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
                     placeholder="e.g., TaskFlow Pro, Invoice Manager"
                     className="w-full"
                   />
+                  <p className="text-xs text-stone-500 mt-1">Choose a memorable name that reflects your product's purpose</p>
                 </div>
 
                 <div>
@@ -252,6 +283,7 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
                     placeholder="Brief description of what your project does"
                     className="w-full h-24 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
                   />
+                  <p className="text-xs text-stone-500 mt-1">Describe the core functionality in 2-3 sentences</p>
                 </div>
 
                 <div>
@@ -316,6 +348,7 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
                     placeholder="Describe the problem your project addresses"
                     className="w-full h-24 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
                   />
+                  <p className="text-xs text-stone-500 mt-1">Be specific: "Small businesses struggle to track project timelines" vs "Project management is hard"</p>
                 </div>
 
                 <div>
@@ -328,6 +361,7 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
                     placeholder="Explain your solution approach"
                     className="w-full h-24 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
                   />
+                  <p className="text-xs text-stone-500 mt-1">Describe the key features and how they solve the problem</p>
                 </div>
 
                 <div>
@@ -339,6 +373,7 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
                     onChange={(e) => updateFormData('targetAudience', e.target.value)}
                     placeholder="e.g., Small business owners, Freelancers, Students"
                   />
+                  <p className="text-xs text-stone-500 mt-1">Be specific about who will use and pay for your solution</p>
                 </div>
               </div>
             </div>
@@ -364,6 +399,7 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
                     placeholder="List the main features your project should have"
                     className="w-full h-24 px-3 py-2 border border-stone-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
                   />
+                  <p className="text-xs text-stone-500 mt-1">Focus on 3-5 core features that deliver the most value</p>
                 </div>
 
                 <div>
@@ -381,6 +417,7 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
                       <option key={model} value={model}>{model}</option>
                     ))}
                   </select>
+                  <p className="text-xs text-stone-500 mt-1">How will you generate revenue from your solution?</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -85,8 +85,8 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
             <Link to="/submit-idea" className="text-muted-foreground transition-colors hover:text-primary">
               Submit Idea
             </Link>
-            <Link to="/marketplace" className="text-muted-foreground transition-colors hover:text-primary">
-              Marketplace
+            <Link to="/marketplace" className="text-muted-foreground transition-colors hover:text-primary font-medium">
+              🏪 Marketplace
             </Link>
             <Link to="/pricing" className="text-muted-foreground transition-colors hover:text-primary">
               Pricing
