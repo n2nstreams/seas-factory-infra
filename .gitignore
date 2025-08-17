@@ -100,3 +100,4 @@ htmlcov/
 *.tmp
 *.temp
 y/
+.env
