@@ -31,20 +31,7 @@ resource "google_compute_backend_service" "api_backend" {
     group = google_compute_region_network_endpoint_group.api_neg.id
   }
   
-  health_checks = [google_compute_health_check.api_health_check.id]
-}
-
-# Health check for API
-resource "google_compute_health_check" "api_health_check" {
-  name               = "api-health-check"
-  project            = var.project_id
-  check_interval_sec = 30
-  timeout_sec        = 5
-  
-  http_health_check {
-    port         = 8080
-    request_path = "/"
-  }
+  # Note: Health checks are not compatible with serverless NEGs
 }
 
 # URL map for API

@@ -8,7 +8,7 @@ resource "google_cloud_run_v2_service" "frontend" {
   
   template {
     containers {
-      image = "us-central1-docker.pkg.dev/${var.project_id}/saas-factory-web/ui:0.1"
+      image = "us-central1-docker.pkg.dev/${var.project_id}/saas-factory-web/ui:latest"
       
       ports {
         container_port = 80

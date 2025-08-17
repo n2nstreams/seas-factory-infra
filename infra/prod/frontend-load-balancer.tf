@@ -31,20 +31,7 @@ resource "google_compute_backend_service" "frontend_backend" {
     group = google_compute_region_network_endpoint_group.frontend_neg.id
   }
   
-  health_checks = [google_compute_health_check.frontend_health_check.id]
-}
-
-# Health check for frontend
-resource "google_compute_health_check" "frontend_health_check" {
-  name               = "frontend-health-check"
-  project            = var.project_id
-  check_interval_sec = 30
-  timeout_sec        = 5
-  
-  http_health_check {
-    port         = 80
-    request_path = "/"
-  }
+  # Note: Health checks are not compatible with serverless NEGs
 }
 
 # URL map for frontend
