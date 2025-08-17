@@ -790,7 +790,7 @@ export default function Landing() {
                   How much does it cost and when do I pay?
                 </AccordionTrigger>
                 <AccordionContent className="text-stone-700">
-                  <strong>Currently free during our beta program.</strong> No credit card required to start. You only pay for your own cloud hosting costs (typically $10-50/month depending on usage). Post-beta pricing will be founder-friendly with transparent monthly plans starting at $49/month.
+                  <strong>Currently free during our beta program.</strong> No credit card required to start. You only pay for your own cloud hosting costs (typically $10-50/month depending on usage). Post-beta pricing will be founder-friendly with transparent monthly plans starting at $30/month.
                 </AccordionContent>
               </AccordionItem>
 

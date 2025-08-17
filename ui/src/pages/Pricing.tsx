@@ -107,7 +107,7 @@ export default function Pricing() {
                 Yearly
               </span>
               {billingPeriod === 'yearly' && (
-                <Badge className="bg-green-100 text-green-800 ml-2">
+                <Badge className="bg-green-800/20 text-green-800 ml-2">
                   Save 2 months
                 </Badge>
               )}

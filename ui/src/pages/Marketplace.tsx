@@ -14,6 +14,7 @@ import {
   ShoppingCart,
   Eye
 } from 'lucide-react';
+import { marketplaceApi } from '@/lib/api';
 
 interface SaaSProduct {
   id: string;
@@ -114,38 +115,70 @@ const categories = ['All', 'Productivity', 'Sales', 'Marketing', 'Analytics', 'C
 
 export default function Marketplace() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [sortBy, setSortBy] = useState<'rating' | 'users' | 'name'>('rating');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [sortBy, setSortBy] = useState('rating');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredProducts = mockProducts
-    .filter(product => 
-      (selectedCategory === 'All' || product.category === selectedCategory) &&
-      (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       product.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'rating':
-          return b.rating - a.rating;
-        case 'users':
-          return b.users - a.users;
-        case 'name':
-          return a.name.localeCompare(b.name);
-        default:
-          return 0;
-      }
-    });
+  // Filter and sort products
+  const filteredProducts = mockProducts.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  }).sort((a, b) => {
+    if (sortBy === 'rating') return b.rating - a.rating;
+    if (sortBy === 'users') return b.users - a.users;
+    return 0;
+  });
+
+  const handleViewDemo = async (product: SaaSProduct) => {
+    try {
+      setIsLoading(true);
+      
+      // Call the marketplace API to get demo details
+      const demoData = await marketplaceApi.getProductDemo(product.id);
+      console.log('Demo data:', demoData);
+      
+    } catch (error) {
+      console.error('Error loading demo:', error);
+      // For now, show a simple alert - in production this would show a proper modal
+      alert(`Demo for ${product.name} is not available yet. Please check back soon!`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGetStarted = async (product: SaaSProduct) => {
+    try {
+      setIsLoading(true);
+      
+      // Call the marketplace API to start onboarding
+      const onboardingData = await marketplaceApi.startProductOnboarding(product.id);
+      console.log('Onboarding started:', onboardingData);
+      
+      // Redirect to signup with product pre-selected
+      const signupUrl = `/signup?product=${encodeURIComponent(product.id)}&productName=${encodeURIComponent(product.name)}`;
+      window.location.href = signupUrl;
+      
+    } catch (error) {
+      console.error('Error starting onboarding:', error);
+      // For now, redirect to signup page
+      window.location.href = '/signup';
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'live':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-800/20 text-green-800 border-green-700/40';
       case 'beta':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-stone-700/20 text-stone-700 border-stone-600/40';
       case 'coming-soon':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-stone-600/20 text-stone-700 border-stone-500/40';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-stone-100 text-stone-800 border-stone-200';
     }
   };
 
@@ -197,7 +230,7 @@ export default function Marketplace() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="px-4 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
                 aria-label="Filter by category"
               >
                 {categories.map(category => (
@@ -207,7 +240,7 @@ export default function Marketplace() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'rating' | 'users' | 'name')}
-                className="px-4 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-600"
+                className="px-4 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
                 aria-label="Sort products by"
               >
                 <option value="rating">Sort by Rating</option>
@@ -221,12 +254,12 @@ export default function Marketplace() {
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-stone-200 hover:border-green-300">
+            <Card key={product.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-stone-200 hover:border-green-800">
               <div className="relative">
-                <div className="h-48 bg-gradient-to-br from-green-100 to-stone-100 flex items-center justify-center group-hover:from-green-200 group-hover:to-stone-200 transition-colors">
+                <div className="h-48 bg-gradient-to-br from-green-800/10 to-stone-700/10 flex items-center justify-center group-hover:from-green-800/20 group-hover:to-stone-700/20 transition-colors">
                   <div className="text-center">
-                    <Code2 className="w-16 h-16 text-green-600 mx-auto mb-2" />
-                    <p className="text-sm text-green-700 font-medium">{product.category}</p>
+                    <Code2 className="w-16 h-16 text-green-800 mx-auto mb-2" />
+                    <p className="text-sm text-green-800 font-medium">{product.category}</p>
                   </div>
                 </div>
                 <Badge className={`absolute top-3 right-3 ${getStatusColor(product.status)}`}>
@@ -254,7 +287,7 @@ export default function Marketplace() {
                     <span>{product.rating}</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <Users className="w-4 h-4 text-blue-500" />
+                    <Users className="w-4 h-4 text-stone-600" />
                     <span>{product.users.toLocaleString()}</span>
                   </div>
                 </div>
@@ -285,13 +318,22 @@ export default function Marketplace() {
               </CardContent>
 
               <div className="px-6 pb-6 space-y-3">
-                <Button className="w-full bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-white">
+                <Button 
+                  className="w-full bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-white"
+                  onClick={() => handleViewDemo(product)}
+                  disabled={isLoading}
+                >
                   <Eye className="w-4 h-4 mr-2" />
-                  View Demo
+                  {isLoading ? 'Loading...' : 'View Demo'}
                 </Button>
-                <Button variant="outline" className="w-full border-green-300 text-green-800 hover:bg-green-50 hover:border-green-400">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-green-800 text-green-800 hover:bg-green-800/10 hover:border-green-700"
+                  onClick={() => handleGetStarted(product)}
+                  disabled={isLoading}
+                >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  Get Started
+                  {isLoading ? 'Loading...' : 'Get Started'}
                 </Button>
               </div>
             </Card>
@@ -316,32 +358,32 @@ export default function Marketplace() {
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 bg-green-800/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-green-800" />
               </div>
               <div className="text-3xl font-bold text-stone-900 mb-2">50+</div>
               <div className="text-stone-600">SaaS Products Built</div>
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 bg-stone-700/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="w-8 h-8 text-stone-700" />
               </div>
               <div className="text-3xl font-bold text-stone-900 mb-2">48h</div>
               <div className="text-stone-600">Average Build Time</div>
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-purple-600" />
+              <div className="w-16 h-16 bg-stone-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-stone-700" />
               </div>
               <div className="text-3xl font-bold text-stone-900 mb-2">10K+</div>
               <div className="text-stone-600">Active Users</div>
             </div>
             
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Globe className="w-8 h-8 text-yellow-600" />
+              <div className="w-16 h-16 bg-stone-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Globe className="w-8 h-8 text-stone-600" />
               </div>
               <div className="text-3xl font-bold text-stone-900 mb-2">15+</div>
               <div className="text-stone-600">Countries Served</div>

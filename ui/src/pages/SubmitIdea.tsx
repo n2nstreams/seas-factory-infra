@@ -81,7 +81,7 @@ export default function SubmitIdea() {
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="border-green-300 text-green-800 hover:bg-green-50"
+                    className="border-green-800 text-green-800 hover:bg-green-800/10"
                     onClick={() => window.location.href = '/signin'}
                   >
                     Sign In
@@ -128,10 +128,7 @@ export default function SubmitIdea() {
         </div>
 
         {/* Main Form */}
-        <IdeaSubmissionForm 
-          userId={user?.id}
-          tenantId="5aff78c7-413b-4e0e-bbfb-090765835bab"
-        />
+        <IdeaSubmissionForm />
 
         {/* Support Links */}
         <div className="mt-12 text-center">

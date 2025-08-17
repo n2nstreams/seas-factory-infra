@@ -12,7 +12,7 @@ import {
   ArrowRight,
   Loader2
 } from "lucide-react";
-import { apiClient } from '@/lib/api';
+import { ideasApi } from '@/lib/api';
 
 interface IdeaFormData {
   projectName: string;
@@ -30,11 +30,9 @@ interface IdeaFormData {
 
 interface IdeaSubmissionFormProps {
   onSubmit?: (formData: IdeaFormData) => Promise<void>;
-  tenantId?: string;
-  userId?: string;
 }
 
-export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaSubmissionFormProps) {
+export default function IdeaSubmissionForm({ onSubmit }: IdeaSubmissionFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -114,26 +112,18 @@ export default function IdeaSubmissionForm({ onSubmit, tenantId, userId }: IdeaS
         await onSubmit(formData);
       } else {
         // Map frontend field names to backend field names
-        const mappedData = {
-          title: formData.projectName,
-          description: formData.description,
+        const result = await ideasApi.submitIdea({
+          projectName: formData.projectName,
+          projectDescription: formData.description,
           category: formData.category,
+          priorityLevel: formData.priority,
           problem: formData.problem,
           solution: formData.solution,
-          target_audience: formData.targetAudience,
-          key_features: formData.keyFeatures ? formData.keyFeatures.split(',').map(f => f.trim()) : [],
-          business_model: formData.businessModel,
+          targetAudience: formData.targetAudience,
+          keyFeatures: formData.keyFeatures,
+          businessModel: formData.businessModel,
           timeline: formData.timeline,
-          budget_range: formData.budget
-        };
-
-        // Submit idea to the API using the configured API client
-        const result = await apiClient.post('/api/ideas/submit', mappedData, {
-          skipTenantHeaders: true, // We'll add custom headers
-          headers: {
-            'x-tenant-id': tenantId || 'default',
-            'x-user-id': userId || 'default-user'
-          }
+          budgetRange: formData.budget
         });
         console.log('Idea submitted successfully:', result);
       }

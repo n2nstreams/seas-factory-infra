@@ -6,14 +6,23 @@ resource "google_cloud_run_v2_service" "frontend" {
   
   ingress = "INGRESS_TRAFFIC_ALL"
   
-
-  
   template {
     containers {
       image = "us-central1-docker.pkg/${var.project_id}/saas-factory-web/ui:latest"
       
       ports {
         container_port = 80
+      }
+      
+      # Environment variables for proper SPA routing
+      env {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+      
+      env {
+        name  = "SPA_FALLBACK"
+        value = "true"
       }
       
       # Enhanced resource configuration

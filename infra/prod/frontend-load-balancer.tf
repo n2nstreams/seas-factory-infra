@@ -37,11 +37,23 @@ resource "google_compute_backend_service" "frontend_backend" {
   # Note: Health checks are not compatible with serverless NEGs
 }
 
-# URL map for frontend
+# URL map for frontend with SPA fallback routing
 resource "google_compute_url_map" "frontend_url_map" {
   name            = "frontend-url-map"
   project         = var.project_id
   default_service = google_compute_backend_service.frontend_backend.id
+  
+  # Add path matcher for SPA routing - all routes serve the main app
+  path_matcher {
+    name            = "spa-routes"
+    default_service = google_compute_backend_service.frontend_backend.id
+    
+    # Catch all routes and serve the SPA
+    path_rule {
+      paths   = ["/*"]
+      service = google_compute_backend_service.frontend_backend.id
+    }
+  }
 }
 
 # Managed SSL certificate for frontend (including apex domain)

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket, Users, BarChart3 } from "lucide-react";
+import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket, Users, BarChart3, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import pricingData from '../data/pricing.json';
@@ -14,15 +14,27 @@ export default function Home() {
   const [currentView, setCurrentView] = useState(0); // 0 = assembly line, 1 = dashboard
   const [assemblyStage, setAssemblyStage] = useState(0); // 0 = idea, 1 = design, 2 = code, 3 = dashboard
   const [email, setEmail] = useState("");
+  const [ideaInput, setIdeaInput] = useState("");
+  const [selectedIdeaType, setSelectedIdeaType] = useState("");
 
-  // Switch between assembly line and dashboard every 8 seconds
-  useEffect(() => {
-    const viewInterval = setInterval(() => {
-      setCurrentView(prev => (prev + 1) % 2);
-    }, 8000);
+  // Suggested idea types for interactive hero
+  const suggestedIdeas = [
+    "AI Project Management Tool",
+    "Customer Analytics Dashboard", 
+    "E-commerce Automation Platform",
+    "Team Collaboration App",
+    "Data Visualization Tool",
+    "Marketing Automation Suite"
+  ];
 
-    return () => clearInterval(viewInterval);
-  }, []);
+  // Disabled automatic view switching to prevent the box from appearing unexpectedly
+  // useEffect(() => {
+  //   const viewInterval = setInterval(() => {
+  //     setCurrentView(prev => (prev + 1) % 2);
+  //   }, 8000);
+
+  //   return () => clearInterval(viewInterval);
+  // }, []);
 
   // Assembly line animation stages every 1.5 seconds when showing assembly line
   useEffect(() => {
@@ -35,12 +47,23 @@ export default function Home() {
     }
   }, [currentView]);
 
+  const handleIdeaSubmit = () => {
+    if (ideaInput.trim()) {
+      navigate('/submit-idea', { state: { idea: ideaInput } });
+    }
+  };
+
+  const handleIdeaTypeSelect = (ideaType: string) => {
+    setSelectedIdeaType(ideaType);
+    setIdeaInput(ideaType);
+  };
+
   const AssemblyLineVisual = () => (
-    <div className="relative w-full h-96 bg-gradient-to-r from-green-800/25 to-stone-700/30 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-stone-400/40 overflow-hidden">
+    <div className="relative w-full h-96 glass-strong rounded-3xl p-8 overflow-hidden">
       {/* Assembly Line Track */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="relative w-full h-2 bg-stone-300/40 rounded-full overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-800/60 to-green-900/60 rounded-full animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-green-800/60 to-stone-700/60 rounded-full animate-pulse"></div>
         </div>
       </div>
 
@@ -54,7 +77,7 @@ export default function Home() {
                  Idea
                </div>
              )}
-             <div className={`w-16 h-16 bg-gradient-to-br from-green-800 to-green-900 rounded-xl shadow-2xl transition-all duration-500 ${
+             <div className={`w-16 h-16 bg-gradient-to-br from-green-800 to-green-900 rounded-xl shadow-strong transition-all duration-500 ${
                assemblyStage === 0 ? 'animate-bounce scale-110 shadow-green-800/50' : 'scale-100'
              }`}>
                <div className="w-full h-full bg-gradient-to-r from-green-700/80 to-green-800/80 rounded-xl flex items-center justify-center">
@@ -71,14 +94,14 @@ export default function Home() {
          <div className="flex flex-col items-center space-y-4">
            <div className="relative flex flex-col items-center">
              {assemblyStage === 1 && (
-               <div className="mb-2 text-xs font-bold text-slate-700 animate-bounce whitespace-nowrap">
+               <div className="mb-2 text-xs font-bold text-stone-700 animate-bounce whitespace-nowrap">
                  Design
                </div>
              )}
-             <div className={`w-16 h-16 bg-gradient-to-br from-slate-700 to-green-800 rounded-xl shadow-2xl transition-all duration-500 ${
-               assemblyStage === 1 ? 'animate-bounce scale-110 shadow-slate-600/50' : 'scale-100'
+             <div className={`w-16 h-16 bg-gradient-to-br from-stone-700 to-green-800 rounded-xl shadow-strong transition-all duration-500 ${
+               assemblyStage === 1 ? 'animate-bounce scale-110 shadow-stone-700/50' : 'scale-100'
              }`}>
-               <div className="w-full h-full bg-gradient-to-r from-slate-600/80 to-green-700/80 rounded-xl flex items-center justify-center">
+               <div className="w-full h-full bg-gradient-to-r from-stone-600/80 to-green-800/80 rounded-xl flex items-center justify-center">
                  <Layers className="w-8 h-8 text-white" />
                </div>
                {assemblyStage === 1 && (
@@ -87,7 +110,7 @@ export default function Home() {
              </div>
            </div>
            <div className="w-8 h-8 bg-stone-600/60 rounded-full flex items-center justify-center">
-             <Wrench className="w-4 h-4 text-slate-700" />
+             <Wrench className="w-4 h-4 text-stone-700" />
            </div>
          </div>
 
@@ -99,10 +122,10 @@ export default function Home() {
                  Code
                </div>
              )}
-             <div className={`w-16 h-16 bg-gradient-to-br from-stone-700 to-green-800 rounded-xl shadow-2xl transition-all duration-500 ${
-               assemblyStage === 2 ? 'animate-bounce scale-110 shadow-stone-600/50' : 'scale-100'
+             <div className={`w-16 h-16 bg-gradient-to-br from-green-800 to-stone-700 rounded-xl shadow-strong transition-all duration-500 ${
+               assemblyStage === 2 ? 'animate-bounce scale-110 shadow-green-800/50' : 'scale-100'
              }`}>
-               <div className="w-full h-full bg-gradient-to-r from-stone-600/80 to-green-700/80 rounded-xl flex items-center justify-center">
+               <div className="w-full h-full bg-gradient-to-r from-green-700/80 to-stone-600/80 rounded-xl flex items-center justify-center">
                  <Code2 className="w-8 h-8 text-white" />
                </div>
                {assemblyStage === 2 && (
@@ -119,14 +142,14 @@ export default function Home() {
          <div className="flex flex-col items-center space-y-4">
            <div className="relative flex flex-col items-center">
              {assemblyStage === 3 && (
-               <div className="mb-2 text-xs font-bold text-green-800 animate-bounce whitespace-nowrap">
+               <div className="mb-2 text-xs font-bold text-stone-700 animate-bounce whitespace-nowrap">
                  Live Business
                </div>
              )}
-             <div className={`w-16 h-16 bg-gradient-to-br from-green-800 to-green-900 rounded-xl shadow-2xl transition-all duration-500 ${
-               assemblyStage === 3 ? 'animate-bounce scale-110 shadow-green-800/50' : 'scale-100'
+             <div className={`w-16 h-16 bg-gradient-to-br from-stone-700 to-green-800 rounded-xl shadow-strong transition-all duration-500 ${
+               assemblyStage === 3 ? 'animate-bounce scale-110 shadow-stone-700/50' : 'scale-100'
              }`}>
-               <div className="w-full h-full bg-gradient-to-r from-green-700/80 to-green-800/80 rounded-xl flex items-center justify-center">
+               <div className="w-full h-full bg-gradient-to-r from-stone-600/80 to-green-800/80 rounded-xl flex items-center justify-center">
                  <TrendingUp className="w-8 h-8 text-white" />
                </div>
                {assemblyStage === 3 && (
@@ -135,7 +158,7 @@ export default function Home() {
              </div>
            </div>
            <div className="w-8 h-8 bg-stone-600/60 rounded-full flex items-center justify-center">
-             <div className="w-3 h-3 bg-green-800 rounded-full animate-pulse"></div>
+             <div className="w-3 h-3 bg-teal-500 rounded-full animate-pulse"></div>
            </div>
          </div>
        </div>
@@ -146,7 +169,7 @@ export default function Home() {
           <div
             key={stage}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              assemblyStage >= stage ? 'bg-green-800' : 'bg-stone-400/40'
+              assemblyStage >= stage ? 'bg-green-500' : 'bg-stone-400/40'
             }`}
           />
         ))}
@@ -154,7 +177,7 @@ export default function Home() {
 
       {/* AI Factory Label */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-center">
-        <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border border-stone-400/40">
+        <div className="glass-soft rounded-full px-4 py-2">
           <span className="text-sm font-bold text-stone-800">AI Factory</span>
         </div>
       </div>
@@ -162,24 +185,24 @@ export default function Home() {
   );
 
   const DashboardVisual = () => (
-    <div className="bg-gradient-to-r from-green-800/25 to-stone-700/30 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-stone-400/40">
-      <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 space-y-6 shadow-inner border border-stone-300/60">
+    <div className="glass-strong rounded-3xl p-8">
+      <div className="card-primary p-8 space-y-6">
         <div className="flex items-center space-x-3">
-          <div className="w-4 h-4 bg-green-800 rounded-full animate-pulse shadow-lg"></div>
+          <div className="w-4 h-4 bg-green-800 rounded-full animate-pulse shadow-medium"></div>
           <span className="text-sm font-semibold text-stone-900">Live Business Dashboard</span>
-          <Badge className="bg-stone-300/60 text-stone-800 text-xs">Active</Badge>
+          <Badge className="bg-green-800/20 text-green-800 text-xs border border-green-700/40">Active</Badge>
         </div>
         <div className="space-y-4">
-          <div className="flex justify-between items-center p-4 bg-stone-200/60 rounded-xl border border-stone-300/60">
+          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-800/10 to-stone-700/10 rounded-xl border border-green-800/30">
             <span className="text-sm text-stone-800 font-medium">Monthly Revenue</span>
             <span className="text-3xl font-bold text-green-800">$12,847</span>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-stone-100/70 rounded-xl border border-stone-300/50">
+            <div className="p-4 bg-gradient-to-br from-stone-700/10 to-green-800/10 rounded-xl border border-stone-600/30">
               <div className="text-sm text-stone-700 font-medium mb-1">Active Users</div>
-              <div className="text-2xl font-bold text-green-800">1,234</div>
+              <div className="text-2xl font-bold text-stone-700">1,234</div>
             </div>
-            <div className="p-4 bg-neutral-100/70 rounded-xl border border-stone-300/50">
+            <div className="p-4 bg-gradient-to-br from-green-800/10 to-stone-700/10 rounded-xl border border-green-800/30">
               <div className="text-sm text-stone-700 font-medium mb-1">Uptime</div>
               <div className="text-2xl font-bold text-green-800">99.9%</div>
             </div>
@@ -190,8 +213,8 @@ export default function Home() {
             <span className="text-stone-700">Growth Rate</span>
             <span className="text-green-800 font-semibold">+23.5%</span>
           </div>
-          <div className="w-full bg-stone-300/60 rounded-full h-3 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-800 to-green-900 h-3 rounded-full w-3/4 animate-pulse shadow-inner"></div>
+          <div className="w-full bg-stone-200/60 rounded-full h-3 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-800 to-stone-700 h-3 rounded-full w-3/4 animate-pulse shadow-inner"></div>
           </div>
         </div>
       </div>
@@ -199,118 +222,173 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-stone-100 via-neutral-200 to-stone-200 relative overflow-hidden">
-      {/* Glassmorphism Background Elements */}
+    <div className="min-h-screen w-full bg-gradient-hero relative overflow-hidden">
+      {/* Background Elements with Darker Green & Stone Palette */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-green-800/20 to-green-900/25 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-32 w-80 h-80 bg-gradient-to-bl from-slate-700/20 to-green-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-stone-600/20 to-green-700/25 rounded-full blur-3xl animate-pulse delay-2000"></div>
-        <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
+        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-green-800/15 to-stone-700/20 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute top-40 right-32 w-80 h-80 bg-gradient-to-bl from-stone-700/15 to-green-800/20 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-green-800/15 to-stone-700/20 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-stone-700/15 to-green-800/20 rounded-full blur-3xl animate-float delay-3000"></div>
       </div>
 
-             {/* Navigation - Minimal & Conversion-Focused */}
-       <nav className="bg-white/15 backdrop-blur-md border-b border-stone-400/30 sticky top-0 z-50 w-full">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             {/* Enhanced Navigation - Streamlined & Modern */}
+       <nav className="glass-nav sticky top-0 z-50 w-full">
+         <div className="max-w-7xl mx-auto container-padding">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medium">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H9V3H7V1H5V7L1 9V11L7 13V21H9V19H11V21H13V19H15V21H17V13L23 11V9H21ZM19 10.5L17 11.5V17H15V15H13V17H11V15H9V17H7V11.5L5 10.5V9.5L7 8.5V7H9V9H11V7H13V9H15V7H17V8.5L19 9.5V10.5Z"/>
                 </svg>
               </div>
               <span className="text-xl font-bold text-stone-900">Forge95</span>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <a href="#how-it-works" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">How It Works</a>
               <a href="/marketplace" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">Marketplace</a>
               <a href="#faq" className="hidden sm:block text-stone-700 hover:text-stone-900 transition-colors font-medium">FAQ</a>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="hidden md:block text-stone-700 hover:text-stone-900"
-                onClick={() => navigate('/signin')}
-              >
-                Sign In
-              </Button>
-              <Button 
-                size="sm" 
-                className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
-                onClick={() => navigate('/signup')}
-              >
-                Get Started Free
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="btn-ghost"
+                  onClick={() => navigate('/signin')}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="btn-primary"
+                  onClick={() => navigate('/signup')}
+                >
+                  Get Started Free
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </nav>
 
-             {/* Hero Section - Enhanced */}
-       <section className="relative overflow-hidden w-full">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-none">
-            <div className="space-y-8 relative z-10">
-              <div className="space-y-6">
-                <Badge className="bg-green-800/20 backdrop-blur-sm text-green-800 border border-green-800/40 shadow-lg">
+             {/* Enhanced Hero Section - Interactive & Modern */}
+       <section className="relative overflow-hidden w-full py-20 lg:py-32">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-10 relative z-10">
+              <div className="space-y-8">
+                <Badge className="bg-gradient-to-r from-green-800/20 to-stone-700/20 backdrop-blur-sm text-green-800 border border-green-700/40 shadow-soft px-4 py-2">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Built by AI • No Code Required
                 </Badge>
-                <h1 className="text-4xl lg:text-6xl xl:text-7xl font-bold text-stone-900 leading-tight">
+                <h1 className="text-display-2 font-bold text-stone-900 leading-tight">
                   Transform Your Idea into a{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-green-900">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-800 to-stone-700">
                     Production-Ready SaaS
                   </span>{" "}
                   – Automatically
                 </h1>
-                <p className="text-xl lg:text-2xl text-stone-700 leading-relaxed max-w-3xl">
+                <p className="text-body-large text-stone-700 leading-relaxed max-w-3xl">
                   Submit your SaaS concept and watch our AI agents design, develop, and deploy your complete application. From idea to paying customers in days, not months.
                 </p>
                 
-                {/* Visual Workflow Example */}
-                <div className="bg-white/20 backdrop-blur-sm border border-stone-400/30 rounded-xl p-4 mt-6">
-                  <div className="flex items-center justify-center space-x-3 text-sm text-stone-700">
-                    <span className="bg-green-800/20 px-2 py-1 rounded">💡 Idea</span>
-                    <span>→</span>
-                    <span className="bg-green-800/20 px-2 py-1 rounded">🎨 Design</span>
-                    <span>→</span>
-                    <span className="bg-green-800/20 px-2 py-1 rounded">⚡ Code</span>
-                    <span>→</span>
-                    <span className="bg-green-800/20 px-2 py-1 rounded">🚀 Launch</span>
+                {/* Interactive Idea Prompt - New Feature */}
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <label className="text-lg font-semibold text-stone-800">
+                      What do you want to build?
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-stone-400" />
+                      <Input
+                        type="text"
+                        placeholder="Describe your SaaS idea..."
+                        value={ideaInput}
+                        onChange={(e) => setIdeaInput(e.target.value)}
+                        className="pl-12 pr-4 py-4 text-lg border-2 border-stone-300/50 rounded-xl focus:border-green-500/50 focus:ring-4 focus:ring-green-500/20 transition-all duration-300"
+                        onKeyPress={(e) => e.key === 'Enter' && handleIdeaSubmit()}
+                      />
+                    </div>
+                    
+                    {/* Suggested Idea Types */}
+                    <div className="space-y-3">
+                      <p className="text-sm text-stone-600 font-medium">Popular ideas:</p>
+                      <div className="flex flex-wrap gap-3">
+                        {suggestedIdeas.map((idea, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleIdeaTypeSelect(idea)}
+                            className={`btn-pill transition-all duration-200 ${
+                              selectedIdeaType === idea 
+                                ? 'bg-green-800/20 border-green-700 text-green-800' 
+                                : 'hover:bg-green-800/10 hover:border-green-600'
+                            }`}
+                          >
+                            {idea}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-stone-600 text-center mt-2">
+                  
+                  <Button 
+                    size="lg" 
+                    className="btn-primary w-full sm:w-auto"
+                    onClick={handleIdeaSubmit}
+                    disabled={!ideaInput.trim()}
+                  >
+                    Start Building
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
+                
+                {/* Visual Workflow Example */}
+                <div className="card-primary p-6">
+                  <div className="flex items-center justify-center space-x-4 text-sm text-stone-700">
+                                          <span className="bg-gradient-to-r from-green-800/20 to-stone-700/20 px-3 py-2 rounded-full border border-green-700/30 text-green-800">💡 Idea</span>
+                      <ArrowRight className="w-4 h-4 text-stone-500" />
+                                            <span className="bg-gradient-to-r from-stone-700/20 to-green-800/20 px-3 py-2 rounded-full border border-stone-600/30 text-stone-700">🎨 Design</span>
+                      <ArrowRight className="w-4 h-4 text-stone-500" />
+                                            <span className="bg-gradient-to-r from-green-800/20 to-stone-700/20 px-3 py-2 rounded-full border border-green-700/30 text-green-800">⚡ Code</span>
+                      <ArrowRight className="w-4 h-4 text-stone-500" />
+                      <span className="bg-gradient-to-r from-stone-700/20 to-green-800/20 px-3 py-2 rounded-full border border-stone-600/30 text-stone-700">🚀 Launch</span>
+                  </div>
+                  <p className="text-sm text-stone-600 text-center mt-3">
                     Example: "AI project management tool" → Complete SaaS in 48 hours
                   </p>
                 </div>
               </div>
 
               {/* Email Capture Form */}
-              <div className="bg-white/25 backdrop-blur-lg border border-stone-400/40 rounded-2xl p-6 shadow-xl">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <Input
-                      type="email"
-                      placeholder="Enter your work email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="bg-white/40 backdrop-blur-sm border border-stone-400/50 text-stone-800 placeholder-stone-600 text-lg py-6"
-                    />
+              <div className="card-secondary p-6">
+                <div className="text-center space-y-4">
+                  <h3 className="text-lg font-semibold text-stone-800">Get notified when we launch</h3>
+                  <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                    <div className="flex-1">
+                      <Input
+                        type="email"
+                        placeholder="Enter your work email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full py-3 border-2 border-stone-300/50 rounded-lg focus:border-green-500/50 focus:ring-4 focus:ring-green-500/20 transition-all duration-300"
+                      />
+                    </div>
+                    <Button 
+                      size="lg" 
+                      className="btn-secondary whitespace-nowrap"
+                      onClick={() => navigate('/signup')}
+                    >
+                      Start Building Now
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
                   </div>
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
-                    onClick={() => navigate('/signup')}
-                  >
-                    Start Building Now
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                </div>
-                <p className="text-sm text-stone-600 mt-3 text-center">
-                  Free during beta • No credit card required • Own 100% of your code
-                </p>
-                {/* Account Creation Prompt */}
-                <div className="mt-4 p-3 bg-green-800/10 border border-green-800/20 rounded-lg">
-                  <p className="text-sm text-green-800 font-medium text-center">
-                    💡 <strong>New here?</strong> Create your free account first to submit ideas and track progress
+                  <p className="text-sm text-stone-600 mt-3 text-center">
+                    Free during beta • No credit card required • Own 100% of your code
                   </p>
+                  {/* Account Creation Prompt */}
+                  <div className="mt-4 p-3 bg-green-800/10 border border-green-800/20 rounded-lg">
+                    <p className="text-sm text-green-800 font-medium text-center">
+                      💡 <strong>New here?</strong> Create your free account first to submit ideas and track progress
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -523,14 +601,14 @@ export default function Home() {
                     <div className="text-xs text-stone-600">Free during launch</div>
                   </div>
                   <div className="text-center p-3 bg-stone-100/50 rounded-lg">
-                    <div className="text-2xl font-bold text-stone-800">$49</div>
+                    <div className="text-2xl font-bold text-stone-800">$60</div>
                     <div className="text-stone-700">Pro Plan</div>
-                    <div className="text-xs text-stone-600">Post-beta pricing</div>
+                    <div className="text-xs text-stone-600">Starting at $30/month</div>
                   </div>
                   <div className="text-center p-3 bg-stone-100/50 rounded-lg">
-                    <div className="text-2xl font-bold text-stone-800">$199</div>
-                    <div className="text-stone-700">Enterprise</div>
-                    <div className="text-xs text-stone-600">Custom solutions</div>
+                    <div className="text-2xl font-bold text-stone-800">$120</div>
+                    <div className="text-stone-700">Scale Plan</div>
+                    <div className="text-xs text-stone-600">For growing teams</div>
                   </div>
                 </div>
               </div>
@@ -685,7 +763,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 xl:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {pricingData.tiers.map((tier) => {
               const getPlanIcon = (planId: string) => {
                 switch (planId) {
@@ -697,8 +775,6 @@ export default function Home() {
                     return <BarChart3 className="w-6 h-6 text-white" />;
                   case 'SCALE':
                     return <Users className="w-6 h-6 text-white" />;
-                  case 'ENTERPRISE':
-                    return <Shield className="w-6 h-6 text-white" />;
                   default:
                     return <Sparkles className="w-6 h-6 text-white" />;
                 }
@@ -825,7 +901,7 @@ export default function Home() {
                   How much does it cost and when do I pay?
                 </AccordionTrigger>
                 <AccordionContent className="text-stone-700">
-                  <strong>Currently free during our beta program.</strong> No credit card required to start. You only pay for your own cloud hosting costs (typically $10-50/month depending on usage). Post-beta pricing will be founder-friendly with transparent monthly plans starting at $49/month.
+                  <strong>Currently free during our beta program.</strong> No credit card required to start. You only pay for your own cloud hosting costs (typically $10-50/month depending on usage). Post-beta pricing will be founder-friendly with transparent monthly plans starting at $30/month.
                 </AccordionContent>
               </AccordionItem>
 

@@ -62,13 +62,13 @@ export default function Billing() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-800/20 text-green-800';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-stone-600/20 text-stone-700';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-700/20 text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-stone-100 text-stone-800';
     }
   };
 
@@ -125,7 +125,7 @@ export default function Billing() {
                     </p>
                     <div className="w-full bg-stone-200 rounded-full h-2 mt-2">
                       <div 
-                        className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-green-800 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${(currentPlan.buildHours.used / currentPlan.buildHours.total) * 100}%` }}
                       ></div>
                     </div>

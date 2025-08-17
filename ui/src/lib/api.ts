@@ -207,6 +207,125 @@ const getApiBaseUrl = (): string => {
 export const apiClient = new ApiClient(getApiBaseUrl());
 
 /**
+ * User Authentication API methods
+ */
+export const authApi = {
+  /**
+   * Register a new user
+   */
+  async register(userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    agreeToTerms: boolean;
+  }) {
+    return apiClient.post('/api/users/register', userData);
+  },
+
+  /**
+   * Login user
+   */
+  async login(credentials: {
+    email: string;
+    password: string;
+  }) {
+    return apiClient.post('/api/users/login', credentials);
+  },
+
+  /**
+   * Get user profile
+   */
+  async getProfile() {
+    return apiClient.get('/api/users/profile');
+  },
+
+  /**
+   * Update user profile
+   */
+  async updateProfile(profileData: any) {
+    return apiClient.put('/api/users/profile', profileData);
+  }
+};
+
+/**
+ * Marketplace API methods
+ */
+export const marketplaceApi = {
+  /**
+   * Get all marketplace products
+   */
+  async getProducts(filters?: {
+    category?: string;
+    search?: string;
+    sortBy?: string;
+  }) {
+    const queryParams = new URLSearchParams(filters);
+    return apiClient.get(`/api/marketplace/products?${queryParams}`);
+  },
+
+  /**
+   * Get product by ID
+   */
+  async getProduct(productId: string) {
+    return apiClient.get(`/api/marketplace/products/${productId}`);
+  },
+
+  /**
+   * Get product demo
+   */
+  async getProductDemo(productId: string) {
+    return apiClient.get(`/api/marketplace/products/${productId}/demo`);
+  },
+
+  /**
+   * Start product onboarding
+   */
+  async startProductOnboarding(productId: string) {
+    return apiClient.post(`/api/marketplace/products/${productId}/onboard`);
+  }
+};
+
+/**
+ * Ideas API methods
+ */
+export const ideasApi = {
+  /**
+   * Submit a new idea
+   */
+  async submitIdea(ideaData: {
+    projectName: string;
+    projectDescription: string;
+    category: string;
+    priorityLevel: string;
+    problem: string;
+    solution: string;
+    targetAudience: string;
+    keyFeatures: string;
+    businessModel: string;
+    timeline: string;
+    budgetRange: string;
+  }) {
+    return apiClient.post('/api/ideas/submit', ideaData);
+  },
+
+  /**
+   * Get user's submitted ideas
+   */
+  async getUserIdeas() {
+    return apiClient.get('/api/ideas/user');
+  },
+
+  /**
+   * Get idea by ID
+   */
+  async getIdea(ideaId: string) {
+    return apiClient.get(`/api/ideas/${ideaId}`);
+  }
+};
+
+/**
  * Orchestrator API methods
  */
 export const orchestratorApi = {

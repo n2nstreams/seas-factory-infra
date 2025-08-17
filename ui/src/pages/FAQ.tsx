@@ -69,7 +69,7 @@ const defaultFAQs: FAQItem[] = [
   },
   {
     question: "How much does it cost to build a SaaS application?",
-            answer: "We offer different pricing tiers starting with a Free plan, then $19/month for the Starter plan. The cost depends on complexity, features, and ongoing support requirements. Check our pricing page for detailed information on each tier.",
+            answer: "We offer different pricing tiers starting with a Free plan, then $30/month for the Starter plan. The cost depends on complexity, features, and ongoing support requirements. Check our pricing page for detailed information on each tier.",
     category: "Getting Started",
     source: "fallback"
   },
@@ -86,9 +86,9 @@ const categoryColors = {
   "Features": "bg-olive-100/80 text-olive-800 border-olive-200",
   "Technical": "bg-sage-100/80 text-sage-800 border-sage-200",
   "Troubleshooting": "bg-amber-100/80 text-amber-800 border-amber-200",
-  "Best Practices": "bg-blue-100/80 text-blue-800 border-blue-200",
-  "Development Status": "bg-purple-100/80 text-purple-800 border-purple-200",
-  "Known Issues": "bg-orange-100/80 text-orange-800 border-orange-200",
+  "Best Practices": "bg-stone-700/20 text-stone-700 border-stone-600/40",
+  "Development Status": "bg-stone-600/20 text-stone-700 border-stone-500/40",
+  "Known Issues": "bg-stone-500/20 text-stone-700 border-stone-400/40",
   "Planned Features": "bg-indigo-100/80 text-indigo-800 border-indigo-200",
   "General": "bg-gray-100/80 text-gray-800 border-gray-200"
 };

@@ -224,7 +224,7 @@ export default function Settings() {
                 <select
                   value={security.sessionTimeout}
                   onChange={(e) => setSecurity(prev => ({ ...prev, sessionTimeout: e.target.value }))}
-                  className="px-3 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-600"
+                  className="px-3 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800"
                   aria-label="Select session timeout"
                 >
                   <option value="1h">1 hour</option>
@@ -310,7 +310,7 @@ export default function Settings() {
                   <h4 className="font-medium text-stone-900">Language</h4>
                   <p className="text-sm text-stone-600">Choose your preferred language</p>
                 </div>
-                <select className="px-3 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-600" aria-label="Select language">
+                <select className="px-3 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800" aria-label="Select language">
                   <option value="en">English</option>
                   <option value="es">Spanish</option>
                   <option value="fr">French</option>
@@ -323,7 +323,7 @@ export default function Settings() {
                   <h4 className="font-medium text-stone-900">Time Zone</h4>
                   <p className="text-sm text-stone-600">Set your local time zone</p>
                 </div>
-                <select className="px-3 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-600" aria-label="Select time zone">
+                <select className="px-3 py-2 border border-stone-300 rounded-md bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-green-800" aria-label="Select time zone">
                   <option value="UTC">UTC</option>
                   <option value="EST">Eastern Time</option>
                   <option value="PST">Pacific Time</option>

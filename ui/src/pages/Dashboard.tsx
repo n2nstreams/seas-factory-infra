@@ -242,17 +242,17 @@ export default function Dashboard() {
       case 'active':
       case 'deployed':
       case 'completed':
-        return 'text-green-600 bg-green-100';
+        return 'text-green-800 bg-green-800/20';
       case 'building':
       case 'running':
-        return 'text-blue-600 bg-blue-100';
+        return 'text-stone-700 bg-stone-700/20';
       case 'failed':
-        return 'text-red-600 bg-red-100';
+        return 'text-red-700 bg-red-700/20';
       case 'paused':
       case 'queued':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'text-stone-600 bg-stone-600/20';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'text-stone-700 bg-stone-100';
     }
   };
 
@@ -510,10 +510,10 @@ export default function Dashboard() {
                       <div key={project.id} className="flex items-center justify-between p-4 glass-card">
                         <div className="flex items-center space-x-3">
                           <div className={`w-3 h-3 rounded-full ${
-                            project.status === 'deployed' ? 'bg-green-500' :
-                            project.status === 'building' ? 'bg-blue-500' :
-                            project.status === 'active' ? 'bg-yellow-500' :
-                            'bg-gray-500'
+                            project.status === 'deployed' ? 'bg-green-800' :
+                            project.status === 'building' ? 'bg-stone-700' :
+                            project.status === 'active' ? 'bg-stone-600' :
+                            'bg-stone-500'
                           }`} />
                           <div>
                             <p className="font-medium text-heading">{project.name}</p>
@@ -577,12 +577,12 @@ export default function Dashboard() {
                   {activities.slice(0, 5).map((activity) => (
                     <div key={activity.id} className="flex items-start space-x-3 p-4 glass-card">
                       <div className={`w-2 h-2 rounded-full mt-2 ${
-                        activity.type === 'build_completed' ? 'bg-green-500' :
-                        activity.type === 'build_started' ? 'bg-blue-500' :
-                        activity.type === 'build_failed' ? 'bg-red-500' :
-                        activity.type === 'project_created' ? 'bg-purple-500' :
-                        activity.type === 'payment_processed' ? 'bg-green-500' :
-                        'bg-gray-500'
+                        activity.type === 'build_completed' ? 'bg-green-800' :
+                        activity.type === 'build_started' ? 'bg-stone-700' :
+                        activity.type === 'build_failed' ? 'bg-red-700' :
+                        activity.type === 'project_created' ? 'bg-stone-600' :
+                        activity.type === 'payment_processed' ? 'bg-green-800' :
+                        'bg-stone-500'
                       }`} />
                       <div className="flex-1">
                         <p className="text-sm text-heading">{activity.message}</p>
@@ -615,10 +615,10 @@ export default function Dashboard() {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-3">
                             <div className={`w-4 h-4 rounded-full ${
-                              project.status === 'deployed' ? 'bg-green-500' :
-                              project.status === 'building' ? 'bg-blue-500' :
-                              project.status === 'active' ? 'bg-yellow-500' :
-                              'bg-gray-500'
+                              project.status === 'deployed' ? 'bg-green-800' :
+                              project.status === 'building' ? 'bg-stone-700' :
+                              project.status === 'active' ? 'bg-stone-600' :
+                              'bg-stone-500'
                             }`} />
                             <div>
                               <h3 className="font-semibold text-heading">{project.name}</h3>
@@ -824,12 +824,12 @@ export default function Dashboard() {
                     {activities.map((activity) => (
                       <div key={activity.id} className="flex items-start space-x-4 p-4 glass-card">
                         <div className={`w-3 h-3 rounded-full mt-2 ${
-                          activity.type === 'build_completed' ? 'bg-green-500' :
-                          activity.type === 'build_started' ? 'bg-blue-500' :
-                          activity.type === 'build_failed' ? 'bg-red-500' :
-                          activity.type === 'project_created' ? 'bg-purple-500' :
-                          activity.type === 'payment_processed' ? 'bg-green-500' :
-                          'bg-gray-500'
+                          activity.type === 'build_completed' ? 'bg-green-800' :
+                          activity.type === 'build_started' ? 'bg-stone-700' :
+                          activity.type === 'build_failed' ? 'bg-red-700' :
+                          activity.type === 'project_created' ? 'bg-stone-600' :
+                          activity.type === 'payment_processed' ? 'bg-green-800' :
+                          'bg-stone-500'
                         }`} />
                         <div className="flex-1">
                           <p className="text-sm text-heading">{activity.message}</p>

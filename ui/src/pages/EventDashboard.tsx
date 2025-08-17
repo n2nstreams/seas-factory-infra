@@ -186,20 +186,20 @@ const EventDashboard: React.FC = () => {
   // Get priority color
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500/10 text-red-700 border-red-500/20';
-      case 'normal': return 'bg-blue-500/10 text-blue-700 border-blue-500/20';
-      case 'low': return 'bg-green-500/10 text-green-700 border-green-500/20';
-      default: return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+      case 'high': return 'bg-red-700/10 text-red-700 border-red-700/20';
+      case 'normal': return 'bg-stone-700/10 text-stone-700 border-stone-700/20';
+      case 'low': return 'bg-green-800/10 text-green-800 border-green-800/20';
+      default: return 'bg-stone-500/10 text-stone-700 border-stone-500/20';
     }
   };
 
   // Get agent status color
   const getAgentStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-500/10 text-green-700 border-green-500/20';
-      case 'inactive': return 'bg-red-500/10 text-red-700 border-red-500/20';
-      case 'warning': return 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20';
-      default: return 'bg-gray-500/10 text-gray-700 border-gray-500/20';
+      case 'active': return 'bg-green-800/10 text-green-800 border-green-800/20';
+      case 'inactive': return 'bg-red-700/10 text-red-700 border-red-700/20';
+      case 'warning': return 'bg-stone-600/10 text-stone-700 border-stone-600/20';
+      default: return 'bg-stone-500/10 text-stone-700 border-stone-500/20';
     }
   };
 
@@ -220,11 +220,11 @@ const EventDashboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg backdrop-blur-sm border ${
                 isConnected 
-                  ? 'bg-green-500/10 text-green-700 border-green-500/20' 
-                  : 'bg-red-500/10 text-red-700 border-red-500/20'
+                  ? 'bg-green-800/10 text-green-800 border-green-800/20' 
+                  : 'bg-red-700/10 text-red-700 border-red-700/20'
               }`}>
                 <div className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-green-500' : 'bg-red-500'
+                  isConnected ? 'bg-green-800' : 'bg-red-700'
                 }`} />
                 <span className="text-sm font-medium">
                   {isConnected ? 'Connected' : 'Disconnected'}
@@ -386,8 +386,8 @@ const EventDashboard: React.FC = () => {
                       Communication between agents and orchestrator
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      <Badge className="bg-blue-500/10 text-blue-700 border-blue-500/20">agent_request</Badge>
-                      <Badge className="bg-green-500/10 text-green-700 border-green-500/20">agent_response</Badge>
+                      <Badge className="bg-stone-700/10 text-stone-700 border-stone-700/20">agent_request</Badge>
+                      <Badge className="bg-green-800/10 text-green-800 border-green-800/20">agent_response</Badge>
                       <Badge className="bg-red-500/10 text-red-700 border-red-500/20">agent_error</Badge>
                     </div>
                   </div>
@@ -399,8 +399,8 @@ const EventDashboard: React.FC = () => {
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20">system_health</Badge>
-                      <Badge className="bg-purple-500/10 text-purple-700 border-purple-500/20">metrics</Badge>
-                      <Badge className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20">alerts</Badge>
+                      <Badge className="bg-stone-600/10 text-stone-700 border-stone-600/20">metrics</Badge>
+                      <Badge className="bg-stone-500/10 text-stone-700 border-stone-500/20">alerts</Badge>
                     </div>
                   </div>
                 </div>

@@ -19,9 +19,10 @@ import {
   Users,
   Zap,
   Star,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from "lucide-react";
-import { apiClient } from '@/lib/api';
+import { authApi } from '@/lib/api';
 import { useAuth } from '@/App';
 
 export default function Signup() {
@@ -51,6 +52,11 @@ export default function Signup() {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
+    
+    // Clear submit error when user makes changes
+    if (errors.submit) {
+      setErrors(prev => ({ ...prev, submit: '' }));
+    }
   };
 
   const validateForm = () => {
@@ -71,13 +77,16 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear any previous errors
+    setErrors({});
+    
     if (validateForm()) {
       try {
         setIsSubmitting(true);
-        setErrors({});
         
-        // Submit registration to API
-        const result = await apiClient.post('/api/users/register', formData);
+        // Submit registration using the new authApi
+        const result = await authApi.register(formData);
         console.log('Registration successful:', result);
         
         // Set user data in auth context
@@ -85,7 +94,7 @@ export default function Signup() {
           id: result.id,
           name: result.name,
           email: result.email,
-          plan: result.plan || 'pro',
+          plan: result.plan || 'starter',
           buildHours: {
             used: 0,
             total: result.plan === 'pro' ? 'unlimited' : 42
@@ -100,11 +109,23 @@ export default function Signup() {
           window.location.href = '/dashboard';
         }, 2000);
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Registration error:', error);
-        setErrors({ 
-          submit: error instanceof Error ? error.message : 'Registration failed. Please try again.' 
-        });
+        
+        // Handle different types of errors
+        let errorMessage = 'Registration failed. Please try again.';
+        
+        if (error.status === 400) {
+          errorMessage = error.data?.detail || 'Invalid registration data. Please check your information.';
+        } else if (error.status === 409) {
+          errorMessage = 'A user with this email already exists. Please try logging in instead.';
+        } else if (error.status === 0) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setErrors({ submit: errorMessage });
       } finally {
         setIsSubmitting(false);
       }
@@ -187,10 +208,10 @@ export default function Signup() {
   };
 
   const getPasswordStrengthColor = (strength: number) => {
-    if (strength <= 2) return 'bg-red-500';
-    if (strength <= 3) return 'bg-yellow-500';
-    if (strength <= 4) return 'bg-green-600';
-    return 'bg-green-800';
+    if (strength <= 2) return 'bg-red-700';
+    if (strength <= 3) return 'bg-stone-600';
+    if (strength <= 4) return 'bg-green-800';
+    return 'bg-green-900';
   };
 
   const getPasswordStrengthText = (strength: number) => {
@@ -448,37 +469,39 @@ export default function Signup() {
                   </div>
                   {formData.confirmPassword && formData.password === formData.confirmPassword && (
                     <div className="flex items-center space-x-2 mt-1">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-xs text-green-600">Passwords match</span>
+                                      <CheckCircle className="w-4 h-4 text-green-800" />
+                <span className="text-xs text-green-800">Passwords match</span>
                     </div>
                   )}
                   {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-start space-x-3">
                     <input
                       type="checkbox"
                       id="agreeToTerms"
                       name="agreeToTerms"
                       checked={formData.agreeToTerms}
                       onChange={handleInputChange}
-                      className="mt-1 h-4 w-4 text-green-800 focus:ring-green-800 border-stone-300 rounded"
+                      className="mt-1 h-5 w-5 text-green-800 focus:ring-2 focus:ring-green-800 focus:ring-offset-2 border-stone-300 rounded cursor-pointer"
+                      aria-describedby="terms-description"
                     />
-                    <label htmlFor="agreeToTerms" className="text-sm text-body">
+                    <label htmlFor="agreeToTerms" className="text-sm text-body cursor-pointer leading-relaxed">
                       I agree to the{" "}
-                      <a href="#" className="text-accent hover:underline">
+                      <a href="/terms" className="text-accent hover:underline font-medium">
                         Terms of Service
                       </a>{" "}
                       and{" "}
-                      <a href="/privacy" className="text-accent hover:underline">
+                      <a href="/privacy" className="text-accent hover:underline font-medium">
                         Privacy Policy
                       </a>
+                      <span id="terms-description" className="sr-only">
+                        You must agree to the terms and privacy policy to continue
+                      </span>
                     </label>
                   </div>
-                  {errors.agreeToTerms && <p className="text-red-500 text-xs">{errors.agreeToTerms}</p>}
-                  
-
+                  {errors.agreeToTerms && <p className="text-red-500 text-xs ml-8">{errors.agreeToTerms}</p>}
                 </div>
 
                 <Button 
@@ -486,25 +509,32 @@ export default function Signup() {
                   className="w-full btn-primary"
                   disabled={!formData.agreeToTerms || isSubmitting}
                 >
-                  {isSubmitting ? 'Creating Account...' : 'Create Account'}
-                  {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
                 </Button>
                 
                 {errors.submit && (
-                  <p className="text-red-500 text-sm mt-2 text-center">{errors.submit}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                    <p className="text-red-800 text-sm font-medium">{errors.submit}</p>
+                  </div>
                 )}
-                
+
                 {registrationSuccess && (
-                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
                       <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                      <div>
-                        <p className="text-green-800 font-medium">Account created successfully!</p>
-                        <p className="text-green-600 text-sm mt-1">
-                          Redirecting you to your dashboard in a moment...
-                        </p>
-                      </div>
+                      <p className="text-green-800 text-sm font-medium">Account created successfully!</p>
                     </div>
+                    <p className="text-green-700 text-sm">Redirecting to your dashboard...</p>
                   </div>
                 )}
               </form>

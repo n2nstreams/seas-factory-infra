@@ -1,297 +1,166 @@
-Got it — thanks for clarifying. Since I generated the report.md for you earlier, here’s the exact full text replica of that file:
-
-⸻
-
-Forge95 User Journey Audit (August 12, 2025)
+Forge95 User Journey Audit – After Routing Fixes (August 17 2025)
 
 Executive summary
 
-Forge95’s vision is to provide a fully automated AI SaaS factory that takes a founder’s idea and delivers a production-ready SaaS product in days rather than months. The masterplan describes a 12-week build-out on Google Cloud with a hybrid multi-agent architecture. The public site promises that users can submit an idea, have AI agents build and deploy it, and then access their product through a marketplace with a subscription-based model.
+After the reported routing fixes, Forge95.com shows notable improvements.  Navigating via internal menu links now exposes pages that previously returned 404 or 502 errors.  A SaaS Marketplace page is live and lists a range of AI‑powered products, and the multi‑step idea submission wizard flows from Step 1 to Step 3 without crashing.  The sign‑in form is reachable and styled consistently.  Overall the experience feels more complete than earlier versions.
 
-During this user journey audit, I evaluated Forge95.com as a first-time visitor. The flows tested included homepage discovery, account creation, login/logout, idea submission, marketplace browsing, subscription/payment (where visible), and support. The overall experience demonstrated clear ambition and an engaging concept. However, there are multiple UX, performance, and clarity issues that could block or frustrate new users.
+However, severe functional issues remain: direct URL access often returns an nginx 404 page, account creation still fails due to a Request failed: Failed to fetch error, the idea submission cannot be completed, and marketplace actions (e.g., “View Demo”, “Get Started”) are non‑interactive.  These problems block any real use of the platform.  Visual design has improved slightly, but the site still requires aesthetic refinement to match competitors and deliver a modern, compelling experience.
+
+
+Detailed findings
+
+Home & landing page
+
+Observation
+Comment
+Clear hero section
+The hero headline (“Transform Your Idea into a Production‑Ready SaaS – Automatically”) is bold and attention‑grabbing.  Sub‑headline explains the AI SaaS factory concept clearly.  A metrics card (“Live Business Dashboard”) shows monthly revenue and active users, giving credibility.
+Navigation improvements
+Top bar includes links to How It Works, Marketplace, Pricing, FAQ, Sign In, and Get Started Free.  On the www.forge95.com version, clicking these links keeps you within a single‑page app and reveals new sections correctly.
+How It Works
+The anchor scrolls to three cards explaining the process: 1) Submit Your Idea, 2) AI Agents Build It, 3) Launch Your SaaS.  Each card details the step and has icons and notes such as “Typically completed in 24‑48 hours”.  The flow is clear and loads smoothly.
+Pricing section
+Pricing cards (Free, Starter, Pro, Scale, Enterprise) show monthly prices and features.  Buttons like “Get Started Free”, “Start Building”, “Scale Up” etc. are present, but all redirect to the sign‑up form.
+FAQ section
+The FAQ uses collapsible accordions; clicking a question reveals the answer.  This improves interactivity and clarity.
+
+
+Navigation & routing
+
+Observation
+Clarity & Accuracy
+Performance
+Internal links work on www subdomain
+Navigating to Marketplace, Submit Idea and Sign In via the top menu on www.forge95.com loads their respective pages.
+Pages load quickly; minimal lag.
+Direct URLs still broken
+Typing or visiting forge95.com/marketplace, forge95.com/submit-idea or forge95.com/signin directly returns a 404 Not Found page.  This indicates server‑side routing is still misconfigured for deep links.
+Poor – the SPA relies on client‑side routing; server does not fallback to index.html.
+Domain inconsistency
+http://forge95.com sometimes resolves to the correct SPA; https://forge95.com or www.forge95.com may behave differently.  Users could see entirely different experiences depending on the scheme and subdomain.
+Inconsistent.
+Back/forward navigation
+The SPA scrolls to anchors but pressing the browser back button returns to previous page/section correctly; however, due to 404 errors when using direct URLs, navigation can trap the user in error pages.
+Acceptable within the SPA; broken for full URLs.
+
+
+Account creation & login
+
+Observation
+Issues
+Sign‑in page accessible via menu
+Clicking Sign In loads a welcome page with social login (GitHub/Google) and email/password fields.  The design is clean and includes remember‑me checkbox and a support link.
+Sign‑up flow still fails
+The sign‑up form collects first/last name, email, password and requires agreement to Terms of Service, but submitting the form returns Request failed: Failed to fetch and the account is not created.
+Cannot log in
+Without a working sign‑up, sign‑in cannot be tested.  Attempting to sign in with dummy credentials redirects to /dashboard but yields a 404 Not Found.
+Checkbox usability
+On the sign‑up form, the Terms‑of‑Service checkbox is small and tricky to click; the tick mark appears only when clicking the text – potential accessibility issue.
+
+Idea submission flow
+
+Step
+Findings
+Step 1 – Your Idea
+Fields: Project Name, Project Description, Category (dropdown) and Priority Level radio buttons.  Selecting a category and clicking Next progresses smoothly to Step 2.
+Step 2 – Problem & Solution
+Fields for describing the problem, how the solution works, and target audience.  Validation messages and guidance text are present.  Clicking Next progresses to Step 3.
+Step 3 – Business Details
+Fields for key features, business model (select), timeline (select), budget range (input).  Dropdowns include options such as “Subscription (SaaS)” and timelines from 1‑2 weeks to More than 1 year.
+Submission error
+Clicking Submit Idea results in a red alert: “Submission Error: Request failed: Failed to fetch”.  The idea is not submitted and no further steps appear.
+Support links
+Each step provides buttons “View Example Ideas”, “Check Pricing”, and “View Documentation”.  These appear to be placeholders; clicking them does not open any modal or new page.
+
+
+Marketplace
+
+Feature
+Findings
+Marketplace page (via menu)
+The page now loads and displays a grid of SaaS products with prices and status tags (Beta/Live).  Cards show rating stars, user count, key features and tech stack badges.
+Demo & Get Started buttons
+Each card includes View Demo and Get Started buttons, but clicking them does nothing – no modal, no navigation or message.  The CTA in the banner (“Submit Your Idea”) also fails to redirect.
+Search & filters
+There is a search bar, category dropdown and “Sort by Rating” control; these elements appear static – no filtering occurs when interacting with them.
+
+
+Pricing & contact
+
+Feature
+Findings
+Pricing cards
+Plans from Free to Enterprise list features and use consistent card styling.  All CTAs lead to the same sign‑up page, which currently fails.
+Contact Sales
+The “Contact Sales” button uses a mailto: link that is blocked in our environment.  There is no inline contact form.
+Support & chat
+A green chat bubble persists across pages, but clicking it does not open a chat window (no response).  Footer links for Documentation, Community, Help Center point back to the same SPA sections (they appear unimplemented).
+
+
+Overall user experience
+	•	Clarity: The high‑level value proposition and process are clearly communicated.  However, missing functionalities (unresponsive CTAs, submission errors) create confusion.  Domain inconsistencies mean some users may land on a broken site.
+	•	Performance: Within the SPA, scrolling and loading are smooth.  The 404 pages load quickly (because they’re static) but degrade confidence.
+	•	Accuracy: Many routes and buttons do not lead to the expected outcomes (e.g., sign‑up fails, submit idea fails, marketplace buttons unresponsive).
+	•	Accessibility: Font sizes and contrast are acceptable on most sections; however, checkboxes are small, and some form guidance text is light grey.  Keyboard navigation works but could be improved (e.g., focusing on form labels).  Alt text is missing from some decorative images.
 
 ⸻
 
-Critical issues
+Issues (with reproduction steps)
 
-1. Account creation / login
-	•	Issue: The sign-up flow is not consistently accessible from all pages. Links sometimes blend into the UI and are not visually prominent.
-	•	Reproduction: From homepage → click “Start Building Now” → redirected to submit page without explicit prompt to create account first.
-	•	Impact: New users may miss account creation entirely or feel disoriented when required later.
+Critical
+	1.	Direct routing returns 404 – server does not rewrite all routes to the SPA.
+	•	Steps: Open browser and navigate directly to forge95.com/marketplace or forge95.com/signin.
+	•	Result: A 404 Not Found page appears.
+	•	Impact: Search engine links or bookmarks will break; deep linking is impossible.
+	2.	Account creation fails – cannot create an account.
+	•	Steps: Click Get Started Free, fill sign‑up form with valid data, agree to Terms.
+	•	Result: A red message appears: “Request failed: Failed to fetch”.
+	•	Impact: Users cannot register, blocking all gated functionality.
+	3.	Idea submission fails – final submit results in error.
+	•	Steps: Navigate to Submit Idea via menu (on forge95.com), complete Steps 1‑3 and click Submit Idea.
+	•	Result: A red alert “Submission Error: Request failed: Failed to fetch” appears.
+	•	Impact: The core promise of submitting ideas to the AI factory is unusable.
+	4.	Marketplace CTAs non‑functional – product demos or purchase flows unreachable.
+	•	Steps: On the Marketplace page, click View Demo or Get Started on any product card.
+	•	Result: The button visually changes state but nothing else happens.
+	•	Impact: Users cannot explore or purchase existing SaaS products.
 
-2. Submit idea flow
-	•	Issue: On navigating to /submit-idea, the form loads but guidance is minimal. No clear example prompts or validations.
-	•	Reproduction: Homepage → CTA → form. Submitting with incomplete fields produces generic error.
-	•	Impact: Friction and confusion for users trying to engage with the factory’s core promise.
+Major
+	1.	Domain inconsistency – www.forge95.com and forge95.com behave differently; some pages only work on one or the other.
+	2.	Sign‑in redirect fails – after entering dummy credentials (or hitting Sign In), the app navigates to /dashboard but displays 404 Not Found.
+	3.	Support chat not working – chat bubble does not open any widget or contact form.
+	4.	Placeholder links – Buttons such as “View Example Ideas”, “Check Pricing”, “View Documentation”, and “Submit Your Idea” on the marketplace do not lead anywhere.
 
-3. Marketplace navigation
-	•	Issue: The marketplace link and content are not clearly discoverable from the main menu. Layout feels placeholder.
-	•	Reproduction: Homepage → navigation bar → inconsistent availability of “Marketplace”.
-	•	Impact: Undermines the “browse and buy” vision central to monetization.
-
-⸻
-
-Major issues
-	1.	Performance
-	•	Some pages (Submit Idea, Marketplace) take noticeable seconds to load.
-	•	Causes doubt about reliability of underlying system.
-	2.	Clarity of value proposition
-	•	Hero section explains “AI SaaS Factory,” but does not visually walk a new user through the steps.
-	•	Competing sites (e.g., Base44) often show diagrams or workflows.
-	3.	Subscription / payment
-	•	No visible subscription tiers or clear path to payment.
-	•	Without this, prospective users cannot gauge cost or seriousness.
-
-⸻
-
-Minor issues
-	•	UI scaling: On smaller screens, hero text and buttons overlap.
-	•	Accessibility: No alt-text on major images. Color contrast insufficient in secondary sections.
-	•	Consistency: Footer links vary in styling and are missing hover states.
-
-⸻
-
-Visual criticisms & recommendations
-	•	Homepage hero
-	•	Current: Large bold text + CTA, but lacks supportive imagery.
-	•	Recommendation: Add visual storytelling (workflow diagram, animated illustration of “idea → product”).
-	•	Forms
-	•	Current: Stark, text-only forms.
-	•	Recommendation: Use progressive disclosure, labels inside fields, examples like “e.g., AI note-taking app.”
-	•	Marketplace cards
-	•	Current: Placeholder tiles with limited detail.
-	•	Recommendation: Add product imagery, pricing badges, hover states, and filters.
-	•	Color palette & contrast
-	•	Some muted grays reduce readability.
-	•	Recommendation: Increase contrast, especially on CTAs and nav links.
+Minor
+	•	Checkbox for terms is too small; may not be obvious for all users.
+	•	Some text (e.g., form helper text) is light grey and fails contrast guidelines.
+	•	No alt text on dashboard graphic and icons.
+	•	Buttons change colour when clicked but provide no loading feedback or navigation, causing uncertainty.
+	•	Hitting Enter in forms sometimes does nothing; explicit click is required.
 
 ⸻
 
 Opportunities for improvement
-	1.	Guided onboarding wizard: Walk users step-by-step through account creation, idea submission, and marketplace exploration.
-	2.	Live demo or sample product: Let first-time visitors explore an example SaaS app already generated.
-	3.	Subscription tiers: Even if early, show “Free / Pro / Enterprise” with clear features.
-	4.	Accessibility compliance: Add alt-text, improve contrast, ensure keyboard navigation.
-	5.	Performance optimizations: Implement caching, lazy-loading, and compress imagery.
+	1.	Configure server routing to serve index.html for all unmatched routes so that direct URLs (e.g., /signin, /marketplace) load the SPA correctly.  Add 301 redirects between www and non‑www and enforce HTTPS.
+	2.	Fix backend API connectivity for sign‑up and idea submission.  Ensure API endpoints accept CORS requests and return meaningful errors instead of Failed to fetch.  Provide success confirmation and guidance after submission.
+	3.	Implement marketplace actions.  Each product card should open a product detail page or modal with screenshots and features.  “Get Started” should lead to a sign‑up flow pre‑populated with the selected product.  Search and filter controls should update the list.
+	4.	Provide on‑page sign‑in/sign‑up fallback.  If the user lands on a 404 page via direct URL, redirect them to the home page or show a friendly message with a link back.
+	5.	Enhance chat/support by integrating a chat widget or support email form; ensure the chat icon opens something.
+	6.	Improve accessibility: enlarge checkboxes, increase contrast of helper text, add alt text to images.  Support keyboard navigation across form fields.
+	7.	Visual and UX refinements: unify button styles, add hover effects, use consistent paddings.  Consider adding product images or icons to each marketplace card.  Show progress indicators for actions like sign‑up or submit idea.
+	8.	Consolidate content across domains.  Host all content under a single domain; update DNS or SSL certificates to avoid certificate mismatch and 404 errors.
 
 ⸻
 
-Positive highlights
-	•	Modern aesthetic: Typography and layout are clean, minimal, and professional.
-	•	Strong branding: “Forge95” conveys strength, speed, and industrial quality, aligned with the “factory” metaphor.
-	•	Clear ambition: Messaging and CTAs reinforce the idea of rapid SaaS creation, consistent with the masterplan.
-	•	Future extensibility: Marketplace structure hints at scalable multi-product ecosystem.
+Positive highlights & progress
+	•	Marketplace page available – the new marketplace shows multiple AI‑powered SaaS products with pricing and feature lists.  This is a significant step toward the marketplace vision.
+	•	Multi‑step idea wizard – the idea submission flow now progresses through several steps with clear labels and helpful placeholder text; validation ensures mandatory fields are filled.
+	•	Interactive FAQ – collapsible FAQ improves user experience.
+	•	Consistent branding – The green colour palette, icons, and typography are coherent across pages.
+	•	Improved messaging – benefit‑driven headlines and testimonials emphasize launching in days and saving development costs.
 
 ⸻
 
+Conclusion
 
-Re-enable Domain Mappings: Once conflicts resolved, deploy custom domains
-Test Custom Domain Access: Verify forge95.com works with custom domains
-
-# Custom Domain Testing Report
-
-## Domain Status Summary
-
-### ✅ **www.forge95.com - FRONTEND (WORKING)**
-- **Status**: ✅ Fully Functional
-- **SSL Certificate**: ✅ Valid (expires Oct 24, 2025)
-- **DNS Resolution**: ✅ 34.8.52.39
-- **Content**: ✅ React app loads correctly
-- **Response**: HTTP/2 200
-- **Features**: 
-  - React application loads
-  - Vite build assets accessible
-  - Root div present for React mounting
-
-### ✅ **api.forge95.com - API (WORKING)**
-- **Status**: ✅ Fully Functional
-- **SSL Certificate**: ✅ Valid (expires Oct 24, 2025)
-- **DNS Resolution**: ✅ 34.160.208.144
-- **Content**: ✅ FastAPI backend responding
-- **Response**: HTTP/2 404 (root), 200 (health endpoint)
-- **Features**:
-  - Health endpoint: `/health` returns healthy status
-  - API documentation: `/docs` serves Swagger UI
-  - OpenAPI schema: `/openapi.json` accessible
-  - Orchestrator endpoint available
-
-### ⚠️ **forge95.com - APEX DOMAIN (IN PROGRESS)**
-- **Status**: 🔄 SSL Certificate Provisioning
-- **SSL Certificate**: 🔄 Being provisioned (includes both forge95.com and www.forge95.com)
-- **DNS Resolution**: ✅ 34.8.52.39
-- **Content**: ⏳ Waiting for SSL certificate validation
-- **Issue**: SSL certificate is being provisioned by Google Cloud
-- **Expected Resolution**: 10-60 minutes for full SSL certificate validation
-
-## Technical Details
-
-### DNS Configuration
-- **Apex Domain (forge95.com)**: 34.8.52.39
-- **WWW Subdomain (www.forge95.com)**: 34.8.52.39  
-- **API Subdomain (api.forge95.com)**: 34.160.208.144
-
-### SSL Certificates
-- **www.forge95.com**: ✅ Valid until Oct 24, 2025
-- **api.forge95.com**: ✅ Valid until Oct 24, 2025
-- **forge95.com**: 🔄 Being provisioned (new certificate includes both domains)
-
-### Load Balancer Configuration
-- **Frontend**: Single IP serving both apex and www domains
-- **API**: Separate IP for API services
-- **SSL Termination**: ✅ Working correctly for www and api subdomains, 🔄 In progress for apex domain
-
-## Issues Identified & Resolved
-
-### ✅ **1. Apex Domain SSL Certificate Mismatch - RESOLVED**
-**Problem**: The apex domain (forge95.com) was receiving SSL certificate for www.forge95.com
-**Solution**: Updated SSL certificate configuration to include both `forge95.com` and `www.forge95.com`
-**Status**: ✅ Fixed - New certificate being provisioned
-
-### ✅ **2. Domain Mapping Dependencies - RESOLVED**
-**Problem**: Apex domain mapping was missing SSL certificate dependency
-**Solution**: Added proper dependency on SSL certificate in domain mapping
-**Status**: ✅ Fixed - Domain mapping properly configured
-
-### 🔄 **3. SSL Certificate Provisioning - IN PROGRESS**
-**Current Status**: New SSL certificate is being provisioned by Google Cloud
-**Expected Time**: 10-60 minutes for full validation and propagation
-**Impact**: Apex domain temporarily unavailable until certificate is fully provisioned
-
-## Infrastructure Changes Applied
-
-### SSL Certificate Update
-- **Action**: Updated frontend SSL certificate to include both `forge95.com` and `www.forge95.com`
-- **Method**: Temporarily disabled HTTPS infrastructure, updated certificate, re-enabled infrastructure
-- **Result**: New certificate being provisioned with proper domain coverage
-
-### Domain Mapping Configuration
-- **Action**: Added SSL certificate dependency to apex domain mapping
-- **Result**: Proper dependency chain established for SSL certificate validation
-
-## Current Test Results
-
-| Domain | Status | SSL | DNS | Content | Notes |
-|--------|--------|-----|-----|---------|-------|
-| https://forge95.com | 🔄 | 🔄 | ✅ | ⏳ | SSL cert provisioning |
-| https://www.forge95.com | ✅ | ✅ | ✅ | ✅ | Fully working |
-| https://api.forge95.com | ✅ | ✅ | ✅ | ✅ | Fully working |
-
-## Next Steps
-
-### Immediate Actions
-1. **Wait for SSL Certificate Provisioning** - Allow 10-60 minutes for Google Cloud to complete certificate validation
-2. **Test Apex Domain** - Verify https://forge95.com works once certificate is provisioned
-3. **Full Domain Testing** - Test all three domains end-to-end
-
-### Verification Steps
-1. **SSL Certificate Status** - Check if certificate shows `ACTIVE` status
-2. **Apex Domain Access** - Test https://forge95.com for successful connection
-3. **Domain Redirect** - Verify forge95.com properly serves frontend content
-
-## Recommendations
-
-### SSL Certificate Management
-- **Monitor Provisioning**: SSL certificates can take 10-60 minutes to fully provision
-- **Domain Validation**: Ensure DNS records are properly configured before certificate requests
-- **Certificate Monitoring**: Set up alerts for certificate expiration
-
-### Long-term Improvements
-1. **Domain Health Monitoring** - Add monitoring for all custom domains
-2. **SSL Certificate Alerts** - Notify team of certificate expiration
-3. **Automated Testing** - Regular domain accessibility tests
-
----
-
-**Testing Completed**: August 17, 2025
-**Last Update**: SSL Certificate Fix Applied
-**Tester**: AI Assistant
-**Infrastructure**: Google Cloud Platform (Cloud Run + Load Balancer)
-**Domain Provider**: forge95.com
-**Status**: 🔄 SSL Certificate Provisioning in Progress
-
-
-## 🚀 **Infrastructure Improvements Completed While Waiting**
-
-While waiting for the SSL certificate to provision, we've implemented several infrastructure improvements:
-
-### ✅ **1. Terraform Provider Updates**
-- **Action**: Upgraded Google Cloud providers from v4.85 to v5.45.2
-- **Benefit**: Latest security patches, new features, and improved performance
-- **Impact**: Better compatibility with latest Google Cloud services
-
-### ✅ **2. Enhanced Network Configuration**
-- **Action**: Added comprehensive flow logging and monitoring to VPC subnets
-- **Benefit**: Better network visibility and security monitoring
-- **Features**: 
-  - 5-second aggregation intervals
-  - 50% flow sampling
-  - Full metadata capture
-
-### ✅ **3. Improved Cloud Run Services**
-- **Action**: Enhanced resource management and configuration
-- **Benefit**: Better performance and resource utilization
-- **Features**:
-  - Optimized resource limits
-  - Better scaling configurations
-  - Improved service reliability
-
-### ✅ **4. Infrastructure Documentation**
-- **Action**: Added comprehensive comments and documentation
-- **Benefit**: Better maintainability and team understanding
-- **Features**:
-  - Clear service descriptions
-  - Configuration explanations
-  - Future enhancement notes
-
-### ✅ **5. Code Quality Improvements**
-- **Action**: Fixed syntax issues and validation errors
-- **Benefit**: Cleaner, more maintainable infrastructure code
-- **Features**:
-  - Validated Terraform configuration
-  - Removed unsupported features
-  - Consistent code structure
-
-## 📊 **Current Infrastructure Status**
-
-| Component | Status | Improvements Made |
-|-----------|--------|-------------------|
-| **SSL Certificate** | 🔄 Provisioning | ✅ Configuration fixed |
-| **Frontend Service** | ✅ Working | ✅ Enhanced configuration |
-| **API Gateway** | ✅ Working | ✅ Enhanced configuration |
-| **Load Balancers** | ✅ Working | ✅ Optimized setup |
-| **Network** | ✅ Working | ✅ Enhanced monitoring |
-| **Terraform** | ✅ Updated | ✅ Latest providers |
-
-## 🎉 **SSL Certificate Successfully Provisioned!**
-
-**All three domains are now working correctly:**
-
-### ✅ **https://forge95.com** - APEX DOMAIN
-- **Status**: ✅ Fully Working
-- **Response**: HTTP/2 200
-- **Content**: Frontend React application loads correctly
-
-### ✅ **https://www.forge95.com** - FRONTEND
-- **Status**: ✅ Fully Working  
-- **Response**: HTTP/2 200
-- **Content**: Frontend React application loads correctly
-
-### ✅ **https://api.forge95.com** - API
-- **Status**: ✅ Fully Working
-- **Response**: HTTP/2 404 (root), 200 (health endpoint)
-- **Content**: FastAPI backend responding correctly
-
-## 🎯 **Mission Accomplished!**
-
-All custom domain requirements have been successfully met:
-1. ✅ **forge95.com** - Loads frontend
-2. ✅ **www.forge95.com** - Loads frontend  
-3. ✅ **api.forge95.com** - Responds with API
-
----
-
-**Infrastructure Improvements Completed**: August 17, 2025
-**SSL Certificate Status**: ✅ Fully Active
-**Overall Progress**: 100% Complete
-**All Domains**: ✅ Working Perfectly
-
+Forge95.com has made progress by exposing the Marketplace and Idea Submission flows through internal navigation.  The site articulates a compelling vision of AI‑driven SaaS creation and provides an attractive, modern aesthetic.  Nonetheless, severe functional gaps persist: account creation, idea submission, and product demos all fail due to backend or routing issues.  Domain inconsistencies and unresponsive buttons hinder trust and make the experience unpredictable.  Fixing these critical issues, stabilizing routes, and refining the UI/UX will be essential steps toward delivering on the promise of an accessible AI SaaS factory.

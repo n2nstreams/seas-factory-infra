@@ -34,7 +34,12 @@ export default function ChatWidget() {
       setIsLoading(true);
 
       try {
-        const response = await fetch('http://localhost:8088/chat', { // Assuming chat agent runs on 8088
+        // Use the production API endpoint
+        const apiUrl = import.meta.env.DEV 
+          ? 'http://localhost:8088/chat' 
+          : 'https://api.forge95.com/api/chat';
+        
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -44,6 +49,10 @@ export default function ChatWidget() {
             history: messages,
           }),
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
         if (!response.body) {
           throw new Error('No response body');
@@ -68,9 +77,22 @@ export default function ChatWidget() {
         }
       } catch (error) {
         console.error('Error fetching chat response:', error);
+        
+        // Provide more helpful error messages
+        let errorMessage = 'Sorry, something went wrong.';
+        if (error instanceof Error) {
+          if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Unable to connect to chat service. Please try again later.';
+          } else if (error.message.includes('HTTP 500')) {
+            errorMessage = 'Chat service is temporarily unavailable. Please try again later.';
+          } else {
+            errorMessage = `Error: ${error.message}`;
+          }
+        }
+        
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: 'Sorry, something went wrong.' },
+          { role: 'assistant', content: errorMessage },
         ]);
       } finally {
         setIsLoading(false);

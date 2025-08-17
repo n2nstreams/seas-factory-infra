@@ -201,28 +201,28 @@ export default function AdminDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-800/20 text-green-800 border-green-700/40';
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-700/20 text-red-800 border-red-600/40';
       case 'in_review':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-stone-600/20 text-stone-700 border-stone-500/40';
       case 'pending':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-stone-700/20 text-stone-700 border-stone-600/40';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-stone-100 text-stone-800 border-stone-200';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-500';
+        return 'bg-red-700';
       case 'medium':
-        return 'bg-yellow-500';
+        return 'bg-stone-600';
       case 'low':
-        return 'bg-gray-500';
+        return 'bg-stone-500';
       default:
-        return 'bg-gray-400';
+        return 'bg-stone-400';
     }
   };
 
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
                       {Math.round((stats.approved_ideas / Math.max(stats.total_ideas, 1)) * 100)}%
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-green-800 rounded-xl flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                 </div>
@@ -350,7 +350,7 @@ export default function AdminDashboard() {
                       {Math.round(stats.avg_review_time_days || 0)}d
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-stone-700 rounded-xl flex items-center justify-center">
                     <BarChart3 className="w-6 h-6 text-white" />
                   </div>
                 </div>
@@ -434,7 +434,7 @@ export default function AdminDashboard() {
                           {tenant.plan}
                         </Badge>
                         {tenant.isolation_mode === 'isolated' && (
-                          <Badge className="bg-purple-600 text-white text-xs">
+                          <Badge className="bg-stone-600 text-white text-xs">
                             <Database className="w-3 h-3 mr-1" />
                             Isolated
                           </Badge>
@@ -630,7 +630,7 @@ export default function AdminDashboard() {
                             {tenant.status}
                           </Badge>
                           {tenant.isolation_mode === 'isolated' && (
-                            <Badge className="bg-purple-600 text-white text-xs">
+                            <Badge className="bg-stone-600 text-white text-xs">
                               <Database className="w-3 h-3 mr-1" />
                               Isolated
                             </Badge>
@@ -664,7 +664,7 @@ export default function AdminDashboard() {
                           <Button
                             size="sm"
                             onClick={() => handleTenantIsolation(tenant.id, 'Admin-initiated isolation upgrade')}
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                            className="bg-stone-600 hover:bg-stone-700 text-white"
                           >
                             <Database className="w-4 h-4 mr-1" />
                             Isolate
@@ -699,19 +699,19 @@ export default function AdminDashboard() {
               {stats && (
                 <div className="flex justify-between items-center">
                   <span className="text-body">Approved</span>
-                  <span className="font-semibold text-heading text-green-600">{stats.approved_ideas}</span>
+                                            <span className="font-semibold text-heading text-green-800">{stats.approved_ideas}</span>
                 </div>
               )}
               {stats && (
                 <div className="flex justify-between items-center">
                   <span className="text-body">Rejected</span>
-                  <span className="font-semibold text-heading text-red-600">{stats.rejected_ideas}</span>
+                  <span className="font-semibold text-heading text-red-700">{stats.rejected_ideas}</span>
                 </div>
               )}
               {stats && (
                 <div className="flex justify-between items-center">
                   <span className="text-body">In Review</span>
-                  <span className="font-semibold text-heading text-yellow-600">{stats.in_review_ideas}</span>
+                  <span className="font-semibold text-heading text-stone-600">{stats.in_review_ideas}</span>
                 </div>
               )}
             </div>
