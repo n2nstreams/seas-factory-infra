@@ -89,7 +89,7 @@ jobs:
       
       - name: Create or update PR comment
         if: ${{ github.event_name == 'pull_request' && (github.event.pull_request.head.repo.fork == false) && github.actor != 'dependabot[bot]' && secrets.WIF_PROVIDER != '' && secrets.GCP_SA_EMAIL != '' }}
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.number }}
