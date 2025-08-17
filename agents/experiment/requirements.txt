@@ -1,6 +1,0 @@
-fastapi
-pydantic
-uvicorn
-python-dotenv
-requests
-google-cloud-bigquery 
