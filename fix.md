@@ -1,3 +1,4 @@
+
 Alright, I dug through the repo and here’s what jumped out—what’s risky, what’s messy, and how I’d tighten it up fast.
 
 High-impact issues (fix these first)
