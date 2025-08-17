@@ -11,6 +11,9 @@ import SignIn from '@/pages/SignIn';
 import SubmitIdea from '@/pages/SubmitIdea';
 import ChatWidget from './components/ChatWidget';
 import FAQPage from './pages/FAQ';
+import Marketplace from './pages/Marketplace';
+import Billing from './pages/Billing';
+import Settings from './pages/Settings';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DPA from '@/pages/DPA';
@@ -98,6 +101,9 @@ function AppContent() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/dpa" element={<DPA />} />

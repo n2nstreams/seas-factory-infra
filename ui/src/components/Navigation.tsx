@@ -85,6 +85,9 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
             <Link to="/submit-idea" className="text-muted-foreground transition-colors hover:text-primary">
               Submit Idea
             </Link>
+            <Link to="/marketplace" className="text-muted-foreground transition-colors hover:text-primary">
+              Marketplace
+            </Link>
             <Link to="/pricing" className="text-muted-foreground transition-colors hover:text-primary">
               Pricing
             </Link>
@@ -154,27 +157,27 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                     </div>
 
                     <div className="py-2">
-                      <a
-                        href="/dashboard"
-                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                      >
-                        <Activity className="w-4 h-4" />
-                        <span>Dashboard</span>
-                      </a>
-                      <a
-                        href="/billing"
-                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        <span>Billing</span>
-                      </a>
-                      <a
-                        href="/settings"
-                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                      >
-                        <Settings className="w-4 h-4" />
-                        <span>Settings</span>
-                      </a>
+                                        <Link
+                    to="/dashboard"
+                    className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                  >
+                    <Activity className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                                          <Link
+                      to="/billing"
+                      className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Billing</span>
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Settings</span>
+                    </Link>
                     </div>
 
                     <div className="border-t border-stone-200/50 pt-2">
@@ -192,14 +195,14 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
             </div>
           ) : (
             <div className="flex items-center space-x-4">
-              <a
-                href="/signin"
+              <Link
+                to="/signin"
                 className="text-body hover:text-heading transition-colors font-medium"
               >
                 Sign In
-              </a>
+              </Link>
               <Button asChild className="btn-primary">
-                <a href="/signup">Get Started</a>
+                <Link to="/signup">Get Started</Link>
               </Button>
             </div>
           )}
@@ -228,6 +231,10 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                 <Lightbulb className="w-5 h-5" />
                 <span className="font-medium">Submit Idea</span>
               </Link>
+              <Link to="/marketplace" className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-body hover:bg-stone-100/50 hover:text-heading">
+                <Package className="w-5 h-5" />
+                <span className="font-medium">Marketplace</span>
+              </Link>
               {navItems.map((item) => {
                 if (item.requiresAuth && !user) return null;
                 
@@ -236,9 +243,9 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                                (item.href !== '/' && currentPage?.startsWith(item.href));
                 
                 return (
-                  <a
+                  <Link
                     key={item.name}
-                    href={item.href}
+                    to={item.href}
                     className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                       isActive 
                         ? 'bg-stone-100/50 text-heading' 
@@ -248,7 +255,7 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                   >
                     <item.icon className="w-5 h-5" />
                     <span className="font-medium">{item.name}</span>
-                  </a>
+                  </Link>
                 );
               })}
               <Link to="/faq" className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-body hover:bg-stone-100/50 hover:text-heading">
@@ -282,22 +289,22 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                   </div>
 
                   <div className="space-y-2">
-                    <a
-                      href="/billing"
+                    <Link
+                      to="/billing"
                       className="flex items-center space-x-3 p-3 text-body hover:bg-stone-100/50 hover:text-heading transition-colors rounded-lg"
                       onClick={() => setIsOpen(false)}
                     >
                       <CreditCard className="w-5 h-5" />
                       <span>Billing</span>
-                    </a>
-                    <a
-                      href="/settings"
+                    </Link>
+                    <Link
+                      to="/settings"
                       className="flex items-center space-x-3 p-3 rounded-lg transition-colors text-body hover:bg-stone-100/50 hover:text-heading"
                       onClick={() => setIsOpen(false)}
                     >
                       <Settings className="w-5 h-5" />
                       <span>Settings</span>
-                    </a>
+                    </Link>
                     <button
                       onClick={() => {
                         onSignOut?.();
@@ -312,17 +319,17 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                 </div>
               ) : (
                 <div className="pt-4 border-t border-stone-200/50 space-y-2">
-                  <a
-                    href="/signin"
+                  <Link
+                    to="/signin"
                     className="flex items-center justify-center p-3 text-body hover:bg-stone-100/50 hover:text-heading transition-colors rounded-lg"
                     onClick={() => setIsOpen(false)}
                   >
                     Sign In
-                  </a>
+                  </Link>
                   <Button asChild className="btn-primary w-full">
-                    <a href="/signup" onClick={() => setIsOpen(false)}>
+                    <Link to="/signup" onClick={() => setIsOpen(false)}>
                       Get Started
-                    </a>
+                    </Link>
                   </Button>
                 </div>
               )}

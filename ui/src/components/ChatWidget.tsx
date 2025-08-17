@@ -82,13 +82,13 @@ export default function ChatWidget() {
     <>
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-xl z-50 bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 backdrop-blur-sm border border-stone-400/40"
+        className="fixed bottom-8 right-8 rounded-full w-16 h-16 shadow-xl z-50 bg-gradient-to-r from-green-800 to-green-900 hover:from-green-900 hover:to-stone-800 backdrop-blur-sm border border-stone-400/40 sm:bottom-8 sm:right-8"
       >
         {isOpen ? <X className="w-6 h-6 text-white" /> : <MessageSquare className="w-6 h-6 text-white" />}
       </Button>
 
       {isOpen && (
-        <Card className="fixed bottom-28 right-8 w-96 h-[600px] flex flex-col shadow-2xl z-50 bg-white/25 backdrop-blur-lg border border-stone-400/40">
+        <Card className="fixed bottom-28 right-8 w-80 sm:w-96 h-[500px] sm:h-[600px] flex flex-col shadow-2xl z-50 bg-white/25 backdrop-blur-lg border border-stone-400/40 max-h-[calc(100vh-8rem)]">
           <CardHeader className="flex flex-row items-center justify-between bg-white/15 backdrop-blur-sm border-b border-stone-400/30">
             <CardTitle className="text-stone-900 font-bold">Chat with our AI</CardTitle>
             <Button 
