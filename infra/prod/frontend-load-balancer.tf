@@ -21,11 +21,12 @@ resource "google_compute_region_network_endpoint_group" "frontend_neg" {
 
 # Backend service for frontend
 resource "google_compute_backend_service" "frontend_backend" {
-  name                  = "frontend-backend-service"
-  project               = var.project_id
-  protocol              = "HTTP"
-  timeout_sec           = 30
-  load_balancing_scheme = "EXTERNAL_MANAGED"
+  name                            = "frontend-backend-service"
+  project                         = var.project_id
+  protocol                        = "HTTP"
+  timeout_sec                     = 30
+  load_balancing_scheme           = "EXTERNAL"
+  connection_draining_timeout_sec = 0
   
   backend {
     group = google_compute_region_network_endpoint_group.frontend_neg.id

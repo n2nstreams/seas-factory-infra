@@ -21,11 +21,12 @@ resource "google_compute_region_network_endpoint_group" "api_neg" {
 
 # Backend service for API Gateway
 resource "google_compute_backend_service" "api_backend" {
-  name                  = "api-backend-service"
-  project               = var.project_id
-  protocol              = "HTTP"
-  timeout_sec           = 30
-  load_balancing_scheme = "EXTERNAL_MANAGED"
+  name                            = "api-backend-service"
+  project                         = var.project_id
+  protocol                        = "HTTP"
+  timeout_sec                     = 30
+  load_balancing_scheme           = "EXTERNAL"
+  connection_draining_timeout_sec = 0
   
   backend {
     group = google_compute_region_network_endpoint_group.api_neg.id
