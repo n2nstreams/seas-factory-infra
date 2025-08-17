@@ -42,6 +42,8 @@ resource "google_cloud_run_v2_service" "gateway" {
   
   ingress = "INGRESS_TRAFFIC_ALL"
   
+
+  
   template {
     service_account = google_service_account.gateway_sa.email
     
@@ -62,6 +64,7 @@ resource "google_cloud_run_v2_service" "gateway" {
         value = "30"
       }
       
+      # Enhanced resource configuration
       resources {
         limits = {
           cpu    = "1"
@@ -74,11 +77,6 @@ resource "google_cloud_run_v2_service" "gateway" {
       max_instance_count = 10
       min_instance_count = 0
     }
-    
-    # VPC access for private connectivity (if needed)
-    # vpc_access {
-    #   connector = module.network_base.serverless_connector_name
-    # }
   }
   
   traffic {
@@ -88,6 +86,7 @@ resource "google_cloud_run_v2_service" "gateway" {
 }
 
 # Allow public access to the gateway service
+# Note: Consider implementing more restrictive access controls for production
 resource "google_cloud_run_service_iam_member" "gateway_public_access" {
   location = google_cloud_run_v2_service.gateway.location
   project  = google_cloud_run_v2_service.gateway.project

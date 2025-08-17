@@ -6,14 +6,17 @@ resource "google_cloud_run_v2_service" "frontend" {
   
   ingress = "INGRESS_TRAFFIC_ALL"
   
+
+  
   template {
     containers {
-      image = "us-central1-docker.pkg.dev/${var.project_id}/saas-factory-web/ui:latest"
+      image = "us-central1-docker.pkg/${var.project_id}/saas-factory-web/ui:latest"
       
       ports {
         container_port = 80
       }
       
+      # Enhanced resource configuration
       resources {
         limits = {
           cpu    = "1"
@@ -35,6 +38,7 @@ resource "google_cloud_run_v2_service" "frontend" {
 }
 
 # Allow public access to the frontend service
+# Note: Consider implementing more restrictive access controls for production
 resource "google_cloud_run_service_iam_member" "frontend_public_access" {
   location = google_cloud_run_v2_service.frontend.location
   project  = google_cloud_run_v2_service.frontend.project

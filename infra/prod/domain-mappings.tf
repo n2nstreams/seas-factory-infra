@@ -41,7 +41,7 @@ resource "google_cloud_run_domain_mapping" "frontend_domain_mapping" {
   ]
 }
 
-# Optional: Domain mapping for bare domain (forge95.com -> www.forge95.com)
+# Domain mapping for apex domain (forge95.com -> frontend service)
 resource "google_cloud_run_domain_mapping" "apex_domain_mapping" {
   location = var.region
   name     = var.domain_name
@@ -56,7 +56,8 @@ resource "google_cloud_run_domain_mapping" "apex_domain_mapping" {
   }
 
   depends_on = [
-    google_cloud_run_v2_service.frontend
+    google_cloud_run_v2_service.frontend,
+    google_compute_managed_ssl_certificate.frontend_ssl_cert
   ]
 }
 

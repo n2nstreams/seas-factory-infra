@@ -1,3 +1,14 @@
+# Common labels for all resources
+locals {
+  common_labels = {
+    project     = var.project_id
+    environment = "production"
+    managed_by  = "terraform"
+    owner       = var.owner_email
+    cost_center = "saas-factory"
+  }
+}
+
 module "network_base" {
   source  = "terraform-google-modules/network/google"
   version = "~> 7.0"
@@ -13,6 +24,11 @@ module "network_base" {
       subnet_region         = var.region
       subnet_private_access = "true"
       subnet_flow_logs      = "true"
+      log_config = {
+        aggregation_interval = "INTERVAL_5_SEC"
+        flow_sampling       = 0.5
+        metadata            = "INCLUDE_ALL_METADATA"
+      }
     },
     {
       subnet_name           = "private-subnet"
@@ -20,6 +36,11 @@ module "network_base" {
       subnet_region         = var.region
       subnet_private_access = "true"
       subnet_flow_logs      = "true"
+      log_config = {
+        aggregation_interval = "INTERVAL_5_SEC"
+        flow_sampling       = 0.5
+        metadata            = "INCLUDE_ALL_METADATA"
+      }
     }
   ]
 }
@@ -29,6 +50,8 @@ resource "google_compute_router" "router" {
   network = module.network_base.network_name
   region  = var.region
   project = var.project_id
+  
+
 }
 
 module "cloud-nat" {
@@ -42,4 +65,8 @@ module "cloud-nat" {
 
   log_config_enable = true
   log_config_filter = "ERRORS_ONLY"
+  
+  # Enhanced NAT configuration
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  nat_ips = []
 } 

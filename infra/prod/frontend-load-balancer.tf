@@ -5,6 +5,8 @@ resource "google_compute_global_address" "frontend_lb_ip" {
   name         = "frontend-lb-ip"
   address_type = "EXTERNAL"
   project      = var.project_id
+  
+
 }
 
 # Serverless NEG for frontend Cloud Run service
@@ -42,13 +44,13 @@ resource "google_compute_url_map" "frontend_url_map" {
   default_service = google_compute_backend_service.frontend_backend.id
 }
 
-# Managed SSL certificate for frontend
+# Managed SSL certificate for frontend (including apex domain)
 resource "google_compute_managed_ssl_certificate" "frontend_ssl_cert" {
   name    = "frontend-ssl-cert"
   project = var.project_id
   
   managed {
-    domains = ["${var.www_subdomain}.${var.domain_name}"]
+    domains = ["${var.domain_name}", "${var.www_subdomain}.${var.domain_name}"]
   }
 }
 
