@@ -3,17 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { authApi } from '@/lib/api';
-import { 
-  Mail, 
-  Lock, 
-  Github, 
-  Eye, 
-  EyeOff, 
+import { authApi, tenantUtils } from '@/lib/api';
+import { useAuth } from '@/App';
+import {
+  Mail,
+  Lock,
+  Github,
+  Eye,
+  EyeOff,
   ArrowRight,
   LogIn,
   Code2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface SignInFormData {
   email: string;
@@ -22,6 +24,9 @@ interface SignInFormData {
 }
 
 export default function SignIn() {
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<SignInFormData>({
     email: '',
     password: '',
@@ -73,25 +78,34 @@ export default function SignIn() {
     setErrors({});
 
     try {
+      // Initialize tenant context
+      tenantUtils.initializeTenantContext();
+
       // Call the actual backend API
       const result = await authApi.login({
         email: formData.email,
         password: formData.password
       });
-      
+
       console.log('Login successful:', result);
-      
-      // Store user data in localStorage or context
+
+      // Set user data in auth context
       if (result.id) {
-        localStorage.setItem('user', JSON.stringify({
+        const userData = {
           id: result.id,
           email: result.email,
           name: result.name || formData.email,
-          plan: result.plan || 'starter'
-        }));
-        
-        // Redirect to dashboard on success
-        window.location.href = '/dashboard';
+          plan: result.plan || 'starter',
+          buildHours: {
+            used: 0,
+            total: result.plan === 'pro' ? 'unlimited' : 42
+          }
+        };
+
+        setUser(userData);
+
+        // Navigate to dashboard using React Router
+        navigate('/dashboard');
       } else {
         throw new Error('Invalid response from server');
       }
@@ -151,7 +165,18 @@ export default function SignIn() {
         
         // Simulate successful authentication
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          const userData = {
+            id: 'demo-user',
+            email: 'demo@example.com',
+            name: 'Demo User',
+            plan: 'starter' as const,
+            buildHours: {
+              used: 0,
+              total: 42
+            }
+          };
+          setUser(userData);
+          navigate('/dashboard');
         }, 1000);
         return;
       }

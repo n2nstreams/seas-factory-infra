@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { authApi, marketplaceApi } from '@/lib/api';
 import { useAuth } from '@/App';
+import { useNavigate } from 'react-router-dom';
 
 interface SelectedProduct {
   id: string;
@@ -36,6 +37,7 @@ interface SelectedProduct {
 
 export default function Signup() {
   const { setUser } = useAuth();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -138,7 +140,7 @@ export default function Signup() {
         console.log('Registration successful:', result);
         
         // Set user data in auth context
-        setUser({
+        const userData = {
           id: result.id,
           name: result.name,
           email: result.email,
@@ -147,14 +149,16 @@ export default function Signup() {
             used: 0,
             total: result.plan === 'pro' ? 'unlimited' : 42
           }
-        });
-        
+        };
+
+        setUser(userData);
+
         // Show success message and redirect
         setRegistrationSuccess(true);
-        
+
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          navigate('/dashboard');
         }, 2000);
         
       } catch (error: any) {
@@ -229,7 +233,18 @@ export default function Signup() {
         
         // Simulate successful signup
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          const userData = {
+            id: 'demo-user-signup',
+            email: 'demo@example.com',
+            name: 'Demo User',
+            plan: 'starter' as const,
+            buildHours: {
+              used: 0,
+              total: 42
+            }
+          };
+          setUser(userData);
+          navigate('/dashboard');
         }, 1000);
         return;
       }

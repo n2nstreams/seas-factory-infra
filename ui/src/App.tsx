@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect, createContext, useContext } from 'react';
 import Home from '@/pages/Home';
 import Dashboard from '@/pages/Dashboard';
@@ -47,6 +47,22 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Protected Route Component
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  redirectTo?: string;
+}
+
+function ProtectedRoute({ children, redirectTo = '/signin' }: ProtectedRouteProps) {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -102,15 +118,41 @@ function AppContent() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/billing" element={<Billing />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/dpa" element={<DPA />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/events" element={<EventDashboard />} />
-          <Route path="/design" element={<DesignDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* Protected Routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/billing" element={
+            <ProtectedRoute>
+              <Billing />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          } />
+          <Route path="/events" element={
+            <ProtectedRoute>
+              <EventDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/design" element={
+            <ProtectedRoute>
+              <DesignDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
         </Routes>
       </main>
       <ChatWidget />
