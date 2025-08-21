@@ -22,8 +22,8 @@ from pydantic import BaseModel, EmailStr, validator
 import asyncpg
 import bcrypt
 
-from api_gateway.tenant_db import TenantDatabase, TenantContext
-from api_gateway.email_service import get_email_service, EmailRecipient, WelcomeEmailData
+from tenant_db import TenantDatabase, TenantContext
+from email_service import get_email_service, EmailRecipient, WelcomeEmailData
 
 logger = logging.getLogger(__name__)
 

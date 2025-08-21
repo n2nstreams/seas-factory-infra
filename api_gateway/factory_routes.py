@@ -22,8 +22,8 @@ from pydantic import BaseModel, Field
 import asyncpg
 import httpx
 
-from api_gateway.tenant_db import TenantDatabase, TenantContext
-from api_gateway.websocket_manager import get_websocket_manager, EventMessage
+from tenant_db import TenantDatabase, TenantContext
+from websocket_manager import get_websocket_manager, EventMessage
 
 logger = logging.getLogger(__name__)
 

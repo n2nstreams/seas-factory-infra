@@ -19,8 +19,8 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 
 # Import from the shared modules
-from api_gateway.tenant_db import TenantDatabase, TenantContext
-from api_gateway.access_control import (
+from tenant_db import TenantDatabase, TenantContext
+from access_control import (
     require_subscription, AccessLevel, get_tenant_subscription, 
     subscription_verifier, AccessControlError, TenantSubscription
 )

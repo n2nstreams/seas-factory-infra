@@ -23,7 +23,7 @@ from pydantic import BaseModel, EmailStr
 
 # Add shared modules to path
 sys.path.append(os.path.dirname(__file__))
-from api_gateway.tenant_db import TenantDatabase, TenantContext
+from tenant_db import TenantDatabase, TenantContext
 
 logger = logging.getLogger(__name__)
 

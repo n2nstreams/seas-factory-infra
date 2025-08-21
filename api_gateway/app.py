@@ -17,12 +17,12 @@ from datetime import datetime
 from google.cloud import bigquery
 
 # Import admin routes
-from api_gateway.admin_routes import admin_router
-from api_gateway.user_routes import router as user_router
-from api_gateway.privacy_routes import router as privacy_router
-from api_gateway.ideas_routes import router as ideas_router
-from api_gateway.factory_routes import router as factory_router
-from api_gateway.websocket_manager import get_websocket_manager
+from admin_routes import admin_router
+from user_routes import router as user_router
+from privacy_routes import router as privacy_router
+from ideas_routes import router as ideas_router
+from factory_routes import router as factory_router
+from websocket_manager import get_websocket_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

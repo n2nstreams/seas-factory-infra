@@ -13,7 +13,7 @@ from pydantic import BaseModel, validator
 import httpx
 import os
 
-from api_gateway.tenant_db import TenantDatabase, TenantContext
+from tenant_db import TenantDatabase, TenantContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -48,10 +48,10 @@ resource "google_cloud_run_v2_service" "gateway" {
     service_account = google_service_account.gateway_sa.email
     
     containers {
-      image = "us-central1-docker.pkg.dev/${var.project_id}/saas-factory/api-gateway:v0.3"
+      image = "us-central1-docker.pkg.dev/${var.project_id}/saas-factory/api-gateway:v1.0"
       
       ports {
-        container_port = 8080
+        container_port = 8000
       }
       
       env {
