@@ -1,29 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Code2, 
-  Eye, 
-  EyeOff, 
-  Shield, 
-  Sparkles, 
-  Github, 
-  Mail, 
-  Lock, 
-  User, 
+import {
+  Code2,
+  Eye,
+  EyeOff,
+  Shield,
+  Sparkles,
+  Github,
+  Mail,
+  Lock,
+  User,
   CheckCircle,
   ArrowRight,
   Users,
   Zap,
   Star,
   TrendingUp,
-  Loader2
+  Loader2,
+  ShoppingCart,
+  Info
 } from "lucide-react";
-import { authApi } from '@/lib/api';
+import { authApi, marketplaceApi } from '@/lib/api';
 import { useAuth } from '@/App';
+
+interface SelectedProduct {
+  id: string;
+  name: string;
+  price: string;
+  category: string;
+}
 
 export default function Signup() {
   const { setUser } = useAuth();
@@ -31,6 +40,8 @@ export default function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<SelectedProduct | null>(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -47,15 +58,52 @@ export default function Signup() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
-    
+
     // Clear submit error when user makes changes
     if (errors.submit) {
       setErrors(prev => ({ ...prev, submit: '' }));
+    }
+  };
+
+  // Parse URL parameters and load selected product
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product');
+    const productName = urlParams.get('productName');
+
+    if (productId && productName) {
+      // Product info from URL parameters
+      setSelectedProduct({
+        id: productId,
+        name: productName,
+        price: urlParams.get('price') || '$29/month',
+        category: urlParams.get('category') || 'Productivity'
+      });
+    } else if (productId) {
+      // Load product details from API
+      loadProductDetails(productId);
+    }
+  }, []);
+
+  const loadProductDetails = async (productId: string) => {
+    try {
+      setIsLoadingProduct(true);
+      const productData = await marketplaceApi.getProduct(productId);
+      setSelectedProduct({
+        id: productData.id,
+        name: productData.name,
+        price: productData.price,
+        category: productData.category
+      });
+    } catch (error) {
+      console.error('Error loading product details:', error);
+    } finally {
+      setIsLoadingProduct(false);
     }
   };
 
@@ -328,6 +376,31 @@ export default function Signup() {
                 <p className="text-body mt-2">Start building your SaaS business today</p>
               </div>
             </CardHeader>
+
+            {/* Selected Product Display */}
+            {selectedProduct && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="w-5 h-5 text-green-800" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-green-900">Selected Product</h4>
+                      <Badge variant="outline" className="text-green-700 border-green-300">
+                        {selectedProduct.category}
+                      </Badge>
+                    </div>
+                    <p className="text-green-800 font-medium">{selectedProduct.name}</p>
+                    <p className="text-green-700 text-sm">{selectedProduct.price}</p>
+                    <div className="mt-2 flex items-center space-x-1 text-green-700 text-sm">
+                      <Info className="w-4 h-4" />
+                      <span>Complete signup to get started with this product</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <CardContent className="space-y-6">
               {/* Social Login */}

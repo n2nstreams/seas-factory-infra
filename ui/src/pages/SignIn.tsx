@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { authApi } from '@/lib/api';
 import { 
   Mail, 
   Lock, 
@@ -72,14 +73,28 @@ export default function SignIn() {
     setErrors({});
 
     try {
-      // TODO: Implement actual sign-in logic
-      console.log('Signing in with:', formData);
+      // Call the actual backend API
+      const result = await authApi.login({
+        email: formData.email,
+        password: formData.password
+      });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Login successful:', result);
       
-      // Redirect to dashboard on success
-      window.location.href = '/dashboard';
+      // Store user data in localStorage or context
+      if (result.id) {
+        localStorage.setItem('user', JSON.stringify({
+          id: result.id,
+          email: result.email,
+          name: result.name || formData.email,
+          plan: result.plan || 'starter'
+        }));
+        
+        // Redirect to dashboard on success
+        window.location.href = '/dashboard';
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
       console.error('Sign in error:', error);
       setErrors({ submit: 'Invalid email or password. Please try again.' });
