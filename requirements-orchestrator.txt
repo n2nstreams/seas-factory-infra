@@ -6,9 +6,9 @@
 # Orchestrator-specific dependencies
 flask==3.1.1
 google-adk==1.5.0
-autogen-agentchat==0.7.2
+# autogen-agentchat>=0.6.0,<0.8.0  # Temporarily disabled due to protobuf conflict
 langgraph==0.5.1
-langgraph-sdk==0.2.0
+langgraph-sdk==0.1.42
 langsmith==0.4.4
 mcp==1.10.1
 
