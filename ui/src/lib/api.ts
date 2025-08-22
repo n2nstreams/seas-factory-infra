@@ -254,6 +254,13 @@ export const authApi = {
  */
 export const marketplaceApi = {
   /**
+   * Get all marketplace categories
+   */
+  async getCategories() {
+    return apiClient.get('/api/marketplace/categories');
+  },
+
+  /**
    * Get all marketplace products
    */
   async getProducts(filters?: {

@@ -43,7 +43,6 @@ export default function Signup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<SelectedProduct | null>(null);
-  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -94,7 +93,6 @@ export default function Signup() {
 
   const loadProductDetails = async (productId: string) => {
     try {
-      setIsLoadingProduct(true);
       const productData = await marketplaceApi.getProduct(productId);
       setSelectedProduct({
         id: productData.id,
@@ -104,8 +102,6 @@ export default function Signup() {
       });
     } catch (error) {
       console.error('Error loading product details:', error);
-    } finally {
-      setIsLoadingProduct(false);
     }
   };
 
@@ -147,7 +143,7 @@ export default function Signup() {
           plan: result.plan || 'starter',
           buildHours: {
             used: 0,
-            total: result.plan === 'pro' ? 'unlimited' : 42
+            total: result.plan === 'pro' ? 'unlimited' as const : 42
           }
         };
 
@@ -580,7 +576,7 @@ export default function Signup() {
                         errors.agreeToTerms ? 'border-red-500 text-red-500' : 'border-stone-300 text-green-800'
                       }`}
                       aria-describedby="terms-description"
-                      aria-invalid={!!errors.agreeToTerms}
+                      aria-invalid={errors.agreeToTerms ? "true" : "false"}
                     />
                     <label htmlFor="agreeToTerms" className="text-sm text-body cursor-pointer leading-relaxed">
                       I agree to the{" "}

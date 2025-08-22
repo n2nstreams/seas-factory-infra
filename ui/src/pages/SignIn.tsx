@@ -98,7 +98,7 @@ export default function SignIn() {
           plan: result.plan || 'starter',
           buildHours: {
             used: 0,
-            total: result.plan === 'pro' ? 'unlimited' : 42
+            total: result.plan === 'pro' ? 'unlimited' as const : 42
           }
         };
 

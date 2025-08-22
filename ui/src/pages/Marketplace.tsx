@@ -343,7 +343,7 @@ export default function Marketplace() {
         </div>
 
         {/* Empty State */}
-        {filteredProducts.length === 0 && (
+        {products.length === 0 && (
           <div className="text-center py-12">
             <Code2 className="w-16 h-16 text-stone-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-stone-900 mb-2">No products found</h3>
