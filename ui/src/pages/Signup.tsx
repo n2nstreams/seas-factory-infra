@@ -166,11 +166,15 @@ export default function Signup() {
         
         // Handle different types of errors
         let errorMessage = 'Registration failed. Please try again.';
-        
+
         if (error.status === 400) {
           errorMessage = error.data?.detail || 'Invalid registration data. Please check your information.';
         } else if (error.status === 409) {
           errorMessage = 'A user with this email already exists. Please try logging in instead.';
+        } else if (error.status === 422) {
+          errorMessage = 'Please check your information and try again.';
+        } else if (error.status === 500) {
+          errorMessage = 'Server error. Please try again in a few moments.';
         } else if (error.status === 0) {
           errorMessage = 'Network error. Please check your connection and try again.';
         } else if (error.message) {
@@ -572,16 +576,19 @@ export default function Signup() {
                       name="agreeToTerms"
                       checked={formData.agreeToTerms}
                       onChange={handleInputChange}
-                      className="mt-1 h-5 w-5 text-green-800 focus:ring-2 focus:ring-green-800 focus:ring-offset-2 border-stone-300 rounded cursor-pointer"
+                      className={`mt-1 h-5 w-5 focus:ring-2 focus:ring-green-800 focus:ring-offset-2 border rounded cursor-pointer ${
+                        errors.agreeToTerms ? 'border-red-500 text-red-500' : 'border-stone-300 text-green-800'
+                      }`}
                       aria-describedby="terms-description"
+                      aria-invalid={!!errors.agreeToTerms}
                     />
                     <label htmlFor="agreeToTerms" className="text-sm text-body cursor-pointer leading-relaxed">
                       I agree to the{" "}
-                      <a href="/terms" className="text-accent hover:underline font-medium">
+                      <a href="/terms" className="text-accent hover:underline font-medium" target="_blank" rel="noopener noreferrer">
                         Terms of Service
                       </a>{" "}
                       and{" "}
-                      <a href="/privacy" className="text-accent hover:underline font-medium">
+                      <a href="/privacy" className="text-accent hover:underline font-medium" target="_blank" rel="noopener noreferrer">
                         Privacy Policy
                       </a>
                       <span id="terms-description" className="sr-only">
@@ -612,7 +619,25 @@ export default function Signup() {
                 
                 {errors.submit && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                    <p className="text-red-800 text-sm font-medium">{errors.submit}</p>
+                    <p className="text-red-800 text-sm font-medium mb-2">{errors.submit}</p>
+                    {errors.submit.includes('email already exists') && (
+                      <Button
+                        variant="link"
+                        className="text-red-700 hover:text-red-800 p-0 h-auto"
+                        onClick={() => window.location.href = '/signin'}
+                      >
+                        Click here to sign in instead
+                      </Button>
+                    )}
+                    {errors.submit.includes('Network error') && (
+                      <Button
+                        variant="link"
+                        className="text-red-700 hover:text-red-800 p-0 h-auto"
+                        onClick={() => window.location.reload()}
+                      >
+                        Try again
+                      </Button>
+                    )}
                   </div>
                 )}
 

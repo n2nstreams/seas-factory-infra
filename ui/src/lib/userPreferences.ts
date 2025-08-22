@@ -180,6 +180,71 @@ export class UserPreferencesManager {
 // Export singleton instance for easy use
 export const userPreferences = UserPreferencesManager.getInstance();
 
+/**
+ * Session state management utilities
+ */
+export const sessionUtils = {
+  /**
+   * Check if user session is valid
+   */
+  isValidSession: (): boolean => {
+    try {
+      const user = localStorage.getItem('user');
+      if (!user) return false;
+
+      const parsedUser = JSON.parse(user);
+      // Check if user object has required fields
+      return !!(parsedUser.id && parsedUser.email && parsedUser.name);
+    } catch (error) {
+      console.warn('Invalid session data:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Get current user from session
+   */
+  getCurrentUser: (): any => {
+    if (!sessionUtils.isValidSession()) return null;
+
+    try {
+      const user = localStorage.getItem('user');
+      return user ? JSON.parse(user) : null;
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Clear all session data
+   */
+  clearSession: (): void => {
+    try {
+      localStorage.removeItem('user');
+      localStorage.removeItem('tenantContext');
+      // Clear any other session-related data
+      const keysToRemove = Object.keys(localStorage).filter(key =>
+        key.startsWith('session_') || key.startsWith('auth_')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Error clearing session:', error);
+    }
+  },
+
+  /**
+   * Initialize session with user data
+   */
+  initializeSession: (userData: any): void => {
+    try {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Error initializing session:', error);
+    }
+  }
+};
+
 // Export utility functions for common operations
 export const onboardingUtils = {
   isCompleted: () => userPreferences.isOnboardingCompleted(),

@@ -19,6 +19,8 @@ import TermsOfService from '@/pages/TermsOfService';
 import DPA from '@/pages/DPA';
 import Navigation from './components/Navigation';
 import './App.css';
+import { tenantUtils } from '@/lib/api';
+import { sessionUtils } from '@/lib/userPreferences';
 
 // User Context for authentication state
 interface User {
@@ -69,29 +71,32 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Load user from localStorage on app start
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
+    const savedUser = sessionUtils.getCurrentUser();
     if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('user');
-      }
+      setUser(savedUser);
+      // Sync tenant context with loaded user
+      tenantUtils.syncWithUser(savedUser);
     }
   }, []);
 
   const handleSetUser = (newUser: User | null) => {
     setUser(newUser);
     if (newUser) {
-      localStorage.setItem('user', JSON.stringify(newUser));
+      sessionUtils.initializeSession(newUser);
+      // Sync tenant context with user authentication
+      tenantUtils.syncWithUser(newUser);
     } else {
-      localStorage.removeItem('user');
+      sessionUtils.clearSession();
+      // Clear tenant context when user logs out
+      tenantUtils.clearTenantContext();
     }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
+    sessionUtils.clearSession();
+    // Clear tenant context when user logs out
+    tenantUtils.clearTenantContext();
   };
 
   return (

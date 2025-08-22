@@ -37,8 +37,22 @@ export default function IdeaSubmissionForm({ onSubmit }: IdeaSubmissionFormProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  
-  const [formData, setFormData] = useState<IdeaFormData>({
+
+  // Load form data from localStorage to persist across sessions
+  const loadFormData = (): IdeaFormData => {
+    try {
+      const saved = localStorage.getItem('idea-form-draft');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULT_FORM_DATA, ...parsed };
+      }
+    } catch (error) {
+      console.warn('Failed to load form data:', error);
+    }
+    return { ...DEFAULT_FORM_DATA };
+  };
+
+  const DEFAULT_FORM_DATA: IdeaFormData = {
     projectName: '',
     description: '',
     problem: '',
@@ -50,10 +64,25 @@ export default function IdeaSubmissionForm({ onSubmit }: IdeaSubmissionFormProps
     budget: '',
     priority: 'medium',
     category: ''
-  });
+  };
+
+  const [formData, setFormData] = useState<IdeaFormData>(loadFormData);
+
+  // Save form data to localStorage whenever it changes
+  const saveFormData = (data: IdeaFormData) => {
+    try {
+      localStorage.setItem('idea-form-draft', JSON.stringify(data));
+    } catch (error) {
+      console.warn('Failed to save form data:', error);
+    }
+  };
 
   const updateFormData = (field: keyof IdeaFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      saveFormData(newData);
+      return newData;
+    });
   };
 
   const validateStep = (step: number): boolean => {
@@ -113,26 +142,51 @@ export default function IdeaSubmissionForm({ onSubmit }: IdeaSubmissionFormProps
       } else {
         // Map frontend field names to backend field names
         const result = await ideasApi.submitIdea({
-          projectName: formData.projectName,
-          projectDescription: formData.description,
+          title: formData.projectName,
+          description: formData.description,
           category: formData.category,
           priorityLevel: formData.priority,
           problem: formData.problem,
           solution: formData.solution,
           targetAudience: formData.targetAudience,
-          keyFeatures: formData.keyFeatures,
+          keyFeatures: [formData.keyFeatures], // Backend expects array
           businessModel: formData.businessModel,
           timeline: formData.timeline,
-          budgetRange: formData.budget
+          budget_range: formData.budget // Backend uses budget_range
         });
         console.log('Idea submitted successfully:', result);
       }
 
       setSubmitSuccess(true);
       setCurrentStep(4);
-    } catch (error) {
+
+      // Clear form draft after successful submission
+      try {
+        localStorage.removeItem('idea-form-draft');
+      } catch (error) {
+        console.warn('Failed to clear form draft:', error);
+      }
+    } catch (error: any) {
       console.error('Error submitting idea:', error);
-      setSubmitError(error instanceof Error ? error.message : 'An unexpected error occurred');
+
+      // Provide user-friendly error messages
+      let errorMessage = 'An unexpected error occurred while submitting your idea.';
+
+      if (error?.status === 401) {
+        errorMessage = 'Please sign in to submit your idea. Your session may have expired.';
+      } else if (error?.status === 403) {
+        errorMessage = 'You don\'t have permission to submit ideas. Please contact support.';
+      } else if (error?.status === 422) {
+        errorMessage = 'Please check your information and try again. Some fields may be missing or invalid.';
+      } else if (error?.status === 500) {
+        errorMessage = 'Server error. Please try again in a few moments.';
+      } else if (error?.status === 0) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

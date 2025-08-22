@@ -295,17 +295,17 @@ export const ideasApi = {
    * Submit a new idea
    */
   async submitIdea(ideaData: {
-    projectName: string;
-    projectDescription: string;
-    category: string;
-    priorityLevel: string;
-    problem: string;
-    solution: string;
-    targetAudience: string;
-    keyFeatures: string;
-    businessModel: string;
-    timeline: string;
-    budgetRange: string;
+    title: string;
+    description: string;
+    category?: string;
+    priorityLevel?: string;
+    problem?: string;
+    solution?: string;
+    targetAudience?: string;
+    keyFeatures?: string[];
+    businessModel?: string;
+    timeline?: string;
+    budget_range?: string;
   }) {
     return apiClient.post('/api/ideas/submit', ideaData);
   },
@@ -417,7 +417,7 @@ export const tenantUtils = {
   setTenantContext(tenantId: string, userId?: string) {
     const context: TenantContext = { tenantId, userId };
     apiClient.setDefaultTenantContext(context);
-    
+
     // Store in localStorage for persistence
     localStorage.setItem('tenantContext', JSON.stringify(context));
   },
@@ -460,13 +460,25 @@ export const tenantUtils = {
   initializeTenantContext() {
     // Try to load from storage first
     const storedContext = this.loadTenantContextFromStorage();
-    
+
     if (!storedContext) {
       // Set default context
       this.setTenantContext('default', 'default-user');
     }
-    
+
     return apiClient.getTenantContext();
+  },
+
+  /**
+   * Sync tenant context with user authentication state
+   */
+  syncWithUser(user: any) {
+    if (user && user.id) {
+      // Use a default tenant ID since we don't have it in the user object
+      this.setTenantContext('5aff78c7-413b-4e0e-bbfb-090765835bab', user.id);
+    } else {
+      this.clearTenantContext();
+    }
   }
 };
 
