@@ -159,14 +159,13 @@ jobs:
         if: success() && hashFiles('./coverage.xml') != ''
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: false
 
   test-gpt4o:
     runs-on: ubuntu-latest
     name: Test with GPT-4o
-    if: ${{ secrets.OPENAI_API_KEY != '' }}
-    
+
     services:
       postgres:
         image: pgvector/pgvector:pg15
@@ -183,22 +182,38 @@ jobs:
           - 5432:5432
 
     steps:
+      - name: Check for OpenAI API Key
+        id: check-secret
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "Skipping GPT-4o tests - OPENAI_API_KEY not available"
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
       - uses: actions/checkout@v4
-      
+        if: steps.check-secret.outputs.should_skip == 'false'
+
       - name: Set up Python
         uses: actions/setup-python@v5
+        if: steps.check-secret.outputs.should_skip == 'false'
         with:
           python-version: '3.12'
-          
+
       - name: Cache Python dependencies
+        if: steps.check-secret.outputs.should_skip == 'false'
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-            
+
       - name: Install dependencies
+        if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           python -m pip install --upgrade pip
           # Install common development dependencies
@@ -209,6 +224,7 @@ jobs:
           if [ -f orchestrator/requirements.txt ]; then pip install -r orchestrator/requirements.txt; fi
           
       - name: Validate orchestrator dependencies
+        if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           if [ -f orchestrator/requirements.in ]; then
             echo "Checking orchestrator dependency lock file..."
@@ -223,23 +239,27 @@ jobs:
             rm requirements.txt.tmp
             echo "✓ Orchestrator dependencies are in sync"
           fi
-          
+
       - name: Create pgvector extension
+        if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           PGPASSWORD=localpass psql -h localhost -U factoryadmin -d factorydb -c "CREATE EXTENSION IF NOT EXISTS vector;"
-          
+
       - name: Lint with ruff
+        if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           # Stop the build if there are Python syntax errors or undefined names
           ruff check --select=E9,F63,F7,F82 --statistics .
           # Exit-zero treats all errors as warnings
           ruff check --exit-zero --statistics .
-          
+
       - name: Format check with black
+        if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           black --check --diff .
-          
+
       - name: Run tests with GPT-4o
+        if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           # Check for test files in project directories only (exclude venv and third-party)
           TEST_FILES=$(find . -name "*test*.py" -o -name "test_*.py" 2>/dev/null | grep -v -E "(\.venv|venv|env|y/google-cloud-sdk|orchestrator/\.venv)" | head -1)
@@ -262,22 +282,24 @@ jobs:
           DB_PORT: 5432
           MODEL_PROVIDER: gpt4o
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          
+
       - name: Setup Snyk CLI
+        if: steps.check-secret.outputs.should_skip == 'false'
         uses: snyk/actions/setup@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          
+
       - name: Run Snyk Security Scan
+        if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           # Run Snyk test on all projects
           echo "Running Snyk security scan..."
           snyk test --all-projects --json > snyk-results.json || true
-          
+
           # Display results summary
           echo "Snyk scan completed. Results:"
           snyk test --all-projects --severity-threshold=high || echo "High/Critical vulnerabilities found"
-          
+
           # Upload results as artifact
           if [ -f snyk-results.json ]; then
             echo "Snyk results file created successfully"
@@ -288,18 +310,18 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
-        
+
       - name: Upload Snyk results
         uses: actions/upload-artifact@v4
-        if: always()
+        if: steps.check-secret.outputs.should_skip == 'false' && always()
         with:
           name: snyk-security-report-gpt4o
           path: snyk-results.json
           retention-days: 30
-          
+
       - name: Upload coverage to Codecov
-        if: success() && hashFiles('./coverage.xml') != ''
+        if: steps.check-secret.outputs.should_skip == 'false' && success() && hashFiles('./coverage.xml') != ''
         uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: false 
