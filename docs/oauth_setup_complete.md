@@ -1,206 +1,96 @@
-# Complete OAuth Setup Guide - SaaS Factory
+# OAuth Setup Complete Guide - SaaS Factory
 
 ## Overview
+This guide provides step-by-step instructions for setting up Google and GitHub OAuth applications to complete the OAuth authentication system implementation.
 
-This guide provides step-by-step instructions to complete the OAuth authentication setup for the SaaS Factory platform. The backend and frontend code is already implemented - we just need to configure the OAuth applications and environment variables.
+## Current Status
+✅ **OAuth Backend Implementation**: 100% Complete  
+✅ **OAuth Frontend Integration**: 100% Complete  
+✅ **OAuth Database Integration**: 100% Complete  
+🔄 **OAuth App Configuration**: In Progress  
+🔄 **Environment Setup**: In Progress  
 
-## Prerequisites
+## Phase 1: Google OAuth Setup
 
-- Access to Google Cloud Console (for Google OAuth)
-- Access to GitHub Developer Settings (for GitHub OAuth)
-- SaaS Factory backend and frontend running locally
+### Step 1: Create Google OAuth Application
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project: `summer-nexus-463503-e1`
+3. Navigate to **APIs & Services** > **Credentials**
+4. Click **+ CREATE CREDENTIALS** > **OAuth client ID**
+5. Configure the OAuth consent screen if prompted:
+   - User Type: External
+   - App name: SaaS Factory
+   - User support email: your-email@domain.com
+   - Developer contact information: your-email@domain.com
 
-## Step 1: Google OAuth Setup
+### Step 2: Configure OAuth Client
+1. **Application type**: Web application
+2. **Name**: SaaS Factory OAuth Client
+3. **Authorized redirect URIs**:
+   - Development: `http://localhost:8000/auth/callback/google`
+   - Production: `https://api-backend-xyz.run.app/auth/callback/google`
+4. Click **Create**
 
-### 1.1 Create Google OAuth 2.0 Credentials
+### Step 3: Save Google OAuth Credentials
+- **Client ID**: Copy the generated client ID
+- **Client Secret**: Copy the generated client secret
+- Store these securely for environment configuration
 
-1. **Go to Google Cloud Console**
-   - Navigate to [Google Cloud Console](https://console.cloud.google.com/)
-   - Select your project: `summer-nexus-463503-e1`
+## Phase 2: GitHub OAuth Setup
 
-2. **Enable OAuth 2.0 API**
-   - Go to **APIs & Services** > **Library**
-   - Search for "Google+ API" or "OAuth 2.0"
-   - Enable the API if not already enabled
+### Step 1: Create GitHub OAuth Application
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Click **New OAuth App**
+3. Fill in the application details:
+   - **Application name**: SaaS Factory
+   - **Homepage URL**: 
+     - Development: `http://localhost:3000`
+     - Production: `https://app.saasfactory.com`
+   - **Application description**: OAuth authentication for SaaS Factory platform
+   - **Authorization callback URL**:
+     - Development: `http://localhost:8000/auth/callback/github`
+     - Production: `https://api-backend-xyz.run.app/auth/callback/github`
 
-3. **Create OAuth 2.0 Credentials**
-   - Go to **APIs & Services** > **Credentials**
-   - Click **Create Credentials** > **OAuth 2.0 Client IDs**
-   - Choose **Web application** as the application type
+### Step 2: Save GitHub OAuth Credentials
+- **Client ID**: Copy the generated client ID
+- **Client Secret**: Click **Generate a new client secret** and copy it
+- Store these securely for environment configuration
 
-4. **Configure OAuth Client**
-   - **Name**: `SaaS Factory OAuth Client`
-   - **Authorized JavaScript origins**:
-     ```
-     http://localhost:3000
-     http://localhost:5173
-     http://localhost:5175
-     http://127.0.0.1:3000
-     http://127.0.0.1:5173
-     http://127.0.0.1:5175
-     ```
-   - **Authorized redirect URIs**:
-     ```
-     http://localhost:8000/auth/callback/google
-     http://127.0.0.1:8000/auth/callback/google
-     ```
+## Phase 3: Environment Configuration
 
-5. **Save Credentials**
-   - Click **Create**
-   - Copy the **Client ID** and **Client Secret**
-   - Keep these secure - you'll need them for configuration
-
-### 1.2 Configure Google OAuth Environment Variables
-
-Update your backend environment file:
+### Development Environment
+Update `config/environments/development.env`:
 
 ```bash
-# config/environments/development.env
+# OAuth Configuration
 GOOGLE_OAUTH_ENABLED=true
 GOOGLE_CLIENT_ID=your_google_client_id_here
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 GOOGLE_REDIRECT_URI=/auth/callback/google
-```
 
-Update your frontend environment file:
-
-```bash
-# ui/.env.local
-VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
-```
-
-## Step 2: GitHub OAuth Setup
-
-### 2.1 Create GitHub OAuth App
-
-1. **Go to GitHub Developer Settings**
-   - Navigate to [GitHub Settings > Developer settings > OAuth Apps](https://github.com/settings/developers)
-   - Click **New OAuth App**
-
-2. **Configure OAuth App**
-   - **Application name**: `SaaS Factory`
-   - **Homepage URL**: `http://localhost:3000` (or your preferred development URL)
-   - **Application description**: `OAuth authentication for SaaS Factory platform`
-   - **Authorization callback URL**: `http://localhost:8000/auth/callback/github`
-
-3. **Register Application**
-   - Click **Register application**
-   - Copy the **Client ID** and **Client Secret**
-
-### 2.2 Configure GitHub OAuth Environment Variables
-
-Update your backend environment file:
-
-```bash
-# config/environments/development.env
 GITHUB_OAUTH_ENABLED=true
 GITHUB_CLIENT_ID=your_github_client_id_here
 GITHUB_CLIENT_SECRET=your_github_client_secret_here
 GITHUB_REDIRECT_URI=/auth/callback/github
 ```
 
-Update your frontend environment file:
-
-```bash
-# ui/.env.local
-VITE_GITHUB_CLIENT_ID=your_github_client_id_here
-```
-
-## Step 3: Environment Configuration
-
-### 3.1 Backend Environment Setup
-
-Create or update `config/environments/development.env`:
-
-```bash
-# OAuth Configuration
-GOOGLE_OAUTH_ENABLED=true
-GOOGLE_CLIENT_ID=your_actual_google_client_id
-GOOGLE_CLIENT_SECRET=your_actual_google_client_secret
-GOOGLE_REDIRECT_URI=/auth/callback/google
-
-GITHUB_OAUTH_ENABLED=true
-GITHUB_CLIENT_ID=your_actual_github_client_id
-GITHUB_CLIENT_SECRET=your_actual_github_client_secret
-GITHUB_REDIRECT_URI=/auth/callback/github
-
-# JWT Configuration (if not already set)
-JWT_SECRET_KEY=your_secure_jwt_secret_key_here
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION_HOURS=24
-```
-
-### 3.2 Frontend Environment Setup
-
+### Frontend Environment
 Create `ui/.env.local`:
 
 ```bash
 # OAuth Configuration
-VITE_GOOGLE_CLIENT_ID=your_actual_google_client_id
-VITE_GITHUB_CLIENT_ID=your_actual_github_client_id
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+VITE_GITHUB_CLIENT_ID=your_github_client_id_here
 
 # API Configuration
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-## Step 4: Testing OAuth Configuration
-
-### 4.1 Check OAuth Status
-
-Test the OAuth configuration endpoint:
+### Production Environment
+Update `config/environments/production.env`:
 
 ```bash
-curl http://localhost:8000/auth/status
-```
-
-Expected response:
-```json
-{
-  "google_oauth_enabled": true,
-  "github_oauth_enabled": true,
-  "google_client_id_configured": true,
-  "github_client_id_configured": true
-}
-```
-
-### 4.2 Test OAuth Flow
-
-1. **Start Backend**
-   ```bash
-   cd api_gateway
-   python -m uvicorn app:app --reload --port 8000
-   ```
-
-2. **Start Frontend**
-   ```bash
-   cd ui
-   npm run dev
-   ```
-
-3. **Test OAuth Flow**
-   - Navigate to `http://localhost:3000/signin`
-   - Click "Continue with Google" or "Continue with GitHub"
-   - Complete the OAuth flow
-   - Verify user creation and authentication
-
-## Step 5: Production Configuration
-
-### 5.1 Update OAuth App Settings
-
-**Google OAuth:**
-- Add production domains to authorized origins
-- Add production callback URLs
-- Update environment variables
-
-**GitHub OAuth:**
-- Update homepage URL to production domain
-- Update callback URL to production domain
-- Update environment variables
-
-### 5.2 Production Environment Variables
-
-```bash
-# Production OAuth Configuration
+# OAuth Configuration
 GOOGLE_OAUTH_ENABLED=true
 GOOGLE_CLIENT_ID=your_production_google_client_id
 GOOGLE_CLIENT_SECRET=your_production_google_client_secret
@@ -212,56 +102,104 @@ GITHUB_CLIENT_SECRET=your_production_github_client_secret
 GITHUB_REDIRECT_URI=/auth/callback/github
 ```
 
-## Troubleshooting
+## Phase 4: OAuth Flow Testing
 
-### Common Issues
+### Test Google OAuth
+1. Start the development servers:
+   ```bash
+   # Backend
+   cd api_gateway && python -m uvicorn app:app --reload --port 8000
+   
+   # Frontend
+   cd ui && npm run dev
+   ```
 
-1. **404 Error on OAuth Callback**
-   - Verify redirect URIs match exactly
-   - Check backend OAuth routes are included
-   - Ensure environment variables are set
+2. Navigate to `http://localhost:3000/signin`
+3. Click "Continue with Google"
+4. Complete the OAuth flow
+5. Verify user creation and authentication
 
-2. **OAuth Flow Not Starting**
-   - Check client IDs are configured
-   - Verify OAuth is enabled in settings
-   - Check browser console for errors
+### Test GitHub OAuth
+1. Click "Continue with GitHub"
+2. Complete the OAuth flow
+3. Verify user creation and authentication
 
-3. **User Not Created**
-   - Check database connection
-   - Verify tenant isolation settings
-   - Check backend logs for errors
+## Phase 5: Production Deployment
 
-### Debug Steps
+### Update OAuth App Settings
+1. **Google OAuth**: Update redirect URIs to production URLs
+2. **GitHub OAuth**: Update callback URLs to production URLs
+3. **Environment Variables**: Update production environment files
+4. **Deploy**: Deploy updated configuration to production
 
-1. Check OAuth status endpoint
-2. Verify environment variables
-3. Check backend logs
-4. Test OAuth flow step by step
-5. Verify database user creation
+### Production URLs
+- **API Gateway**: `https://api-backend-xyz.run.app`
+- **Frontend**: `https://app.saasfactory.com`
+- **Google Callback**: `https://api-backend-xyz.run.app/auth/callback/google`
+- **GitHub Callback**: `https://api-backend-xyz.run.app/auth/callback/github`
 
 ## Security Considerations
 
-1. **Client Secrets**: Never expose client secrets in frontend code
-2. **Redirect URIs**: Use exact matching for security
-3. **HTTPS**: Use HTTPS in production for all OAuth flows
-4. **State Parameter**: Consider implementing state parameter validation
-5. **Token Storage**: Store JWT tokens securely
+### OAuth Security Best Practices
+1. **Client Secrets**: Never commit OAuth secrets to version control
+2. **Redirect URIs**: Use exact match redirect URIs
+3. **State Parameter**: OAuth state validation is implemented for CSRF protection
+4. **HTTPS**: Use HTTPS in production for all OAuth flows
+5. **Scope Limitation**: Request minimal OAuth scopes needed
+
+### Environment Variable Security
+1. **Development**: Use `.env.local` files (gitignored)
+2. **Production**: Use Google Cloud Secret Manager
+3. **CI/CD**: Inject OAuth credentials securely during deployment
+
+## Troubleshooting
+
+### Common Issues
+1. **"OAuth not configured"**: Check environment variables are set correctly
+2. **"Invalid redirect URI"**: Verify callback URLs match OAuth app settings
+3. **"Client ID not configured"**: Ensure OAuth environment variables are loaded
+4. **"OAuth error"**: Check OAuth app configuration and scopes
+
+### Debug Steps
+1. Check browser console for OAuth errors
+2. Verify backend logs for OAuth flow issues
+3. Confirm environment variables are loaded correctly
+4. Test OAuth endpoints directly with curl/Postman
+
+## Success Criteria
+
+### Development Environment
+- [ ] Google OAuth signup/login working
+- [ ] GitHub OAuth signup/login working
+- [ ] OAuth users properly created
+- [ ] Tenant isolation maintained
+- [ ] JWT tokens generated correctly
+
+### Production Environment
+- [ ] Production OAuth apps configured
+- [ ] Production environment variables set
+- [ ] OAuth flows working in production
+- [ ] Security measures in place
+- [ ] Monitoring and logging active
 
 ## Next Steps
 
-After completing this setup:
-
-1. Test OAuth flows thoroughly in development
-2. Update production OAuth app settings
-3. Deploy with production environment variables
-4. Monitor OAuth performance and error rates
-5. Implement additional security measures as needed
+1. **Complete OAuth App Setup**: Create Google and GitHub OAuth applications
+2. **Configure Environment Variables**: Set OAuth credentials in environment files
+3. **Test OAuth Flows**: Verify end-to-end OAuth functionality
+4. **Deploy to Production**: Update production OAuth configuration
+5. **Monitor Performance**: Track OAuth success rates and performance
 
 ## Support
 
-If you encounter issues:
-1. Check the troubleshooting section above
-2. Review backend and frontend logs
-3. Verify OAuth app configuration
-4. Test with minimal configuration
-5. Contact the development team
+For OAuth setup assistance:
+- Check OAuth provider documentation
+- Review backend logs for detailed error messages
+- Verify environment variable configuration
+- Test OAuth endpoints individually
+
+---
+
+**Status**: OAuth Implementation Ready for Configuration  
+**Estimated Completion Time**: 1 hour  
+**Priority**: High - Required for user authentication
