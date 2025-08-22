@@ -101,3 +101,6 @@ htmlcov/
 *.temp
 y/
 .env
+
+
+ai_docs/references/

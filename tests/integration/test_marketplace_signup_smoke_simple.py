@@ -12,22 +12,22 @@ def test_api_routes_exist():
     print(f"Current working directory: {os.getcwd()}")
     print(f"Script location: {os.path.dirname(__file__)}")
     
-    # List files in api-gateway directory to debug
-    if os.path.exists('api-gateway'):
-        print(f"Files in api-gateway: {os.listdir('api-gateway')}")
+    # List files in api_gateway directory to debug
+    if os.path.exists('api_gateway'):
+        print(f"Files in api_gateway: {os.listdir('api_gateway')}")
     else:
-        print("api-gateway directory not found in current directory")
-    
+        print("api_gateway directory not found in current directory")
+
     api_files = [
         'user_routes.py',
-        'admin_routes.py', 
+        'admin_routes.py',
         'factory_routes.py',
         'ideas_routes.py'
     ]
-    
+
     missing_files = []
     for file_name in api_files:
-        file_path = os.path.join('api-gateway', file_name)
+        file_path = os.path.join('api_gateway', file_name)
         if os.path.exists(file_path):
             print(f"✅ Found route file: {file_name}")
         else:
@@ -40,7 +40,7 @@ def test_api_routes_exist():
 
 def test_signup_endpoint_exists():
     """Test that signup endpoint is defined in user_routes"""
-    user_routes_path = os.path.join('api-gateway', 'user_routes.py')
+    user_routes_path = os.path.join('api_gateway', 'user_routes.py')
     
     if not os.path.exists(user_routes_path):
         print(f"ERROR: Could not find {user_routes_path}")

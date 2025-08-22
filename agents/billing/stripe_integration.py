@@ -497,9 +497,48 @@ class StripeIntegration:
         except Exception as e:
             logger.error(f"Error sending payment receipt email: {e}")
         
-        # TODO: Update tenant database
-        # - Log successful payment
-        # - Update billing status
+        # Update tenant database with payment information
+        try:
+            await self.tenant_db.init_pool()
+            async with self.tenant_db.get_admin_connection(TenantContext(customer.metadata.get("tenant_id", "unknown"))) as conn:
+                # Log successful payment
+                await conn.execute(
+                    """
+                    INSERT INTO payment_logs (
+                        id, tenant_id, customer_id, payment_id, amount, currency,
+                        status, payment_method, metadata, created_at
+                    )
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    """,
+                    str(uuid.uuid4()),
+                    customer.metadata.get("tenant_id"),
+                    customer_id,
+                    payment_id,
+                    amount,
+                    "USD",
+                    "succeeded",
+                    "stripe",
+                    json.dumps({"stripe_payment_id": payment_id}),
+                    datetime.now()
+                )
+
+                # Update billing status for tenant
+                await conn.execute(
+                    """
+                    UPDATE tenants
+                    SET billing_status = 'active',
+                        last_payment_date = $1,
+                        updated_at = NOW()
+                    WHERE id = $2
+                    """,
+                    datetime.now(),
+                    customer.metadata.get("tenant_id")
+                )
+
+                logger.info(f"Payment {payment_id} logged and tenant billing status updated")
+        except Exception as db_error:
+            logger.error(f"Failed to update tenant database for payment {payment_id}: {db_error}")
+            # Continue execution even if database update fails - payment was successful
         
         return {
             "status": "handled",
@@ -516,10 +555,60 @@ class StripeIntegration:
         
         logger.error(f"Payment failed: {payment_id} for customer: {customer_id}")
         
-        # TODO: Update tenant database
-        # - Log failed payment
-        # - Send payment failure notification
-        # - Potentially suspend service
+        # Update tenant database with failed payment information
+        try:
+            # Try to get tenant_id from customer metadata
+            tenant_id = None
+            try:
+                customer = await self.get_customer(customer_id)
+                if customer:
+                    tenant_id = customer.metadata.get("tenant_id")
+            except Exception as e:
+                logger.warning(f"Could not retrieve customer {customer_id} for failed payment: {e}")
+
+            if tenant_id:
+                await self.tenant_db.init_pool()
+                async with self.tenant_db.get_admin_connection(TenantContext(tenant_id)) as conn:
+                    # Log failed payment
+                    await conn.execute(
+                        """
+                        INSERT INTO payment_logs (
+                            id, tenant_id, customer_id, payment_id, amount, currency,
+                            status, payment_method, error_message, metadata, created_at
+                        )
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                        """,
+                        str(uuid.uuid4()),
+                        tenant_id,
+                        customer_id,
+                        payment_id,
+                        0,  # Amount not available in failed payment data
+                        "USD",
+                        "failed",
+                        "stripe",
+                        f"Payment failed for customer {customer_id}",
+                        json.dumps({"stripe_payment_id": payment_id}),
+                        datetime.now()
+                    )
+
+                    # Update billing status to indicate payment failure
+                    await conn.execute(
+                        """
+                        UPDATE tenants
+                        SET billing_status = 'payment_failed',
+                            payment_failure_count = COALESCE(payment_failure_count, 0) + 1,
+                            last_payment_attempt = $1,
+                            updated_at = NOW()
+                        WHERE id = $2
+                        """,
+                        datetime.now(),
+                        tenant_id
+                    )
+
+                    logger.info(f"Payment failure {payment_id} logged for tenant {tenant_id}")
+
+        except Exception as db_error:
+            logger.error(f"Failed to update tenant database for failed payment {payment_id}: {db_error}")
         
         return {
             "status": "handled",
@@ -566,9 +655,62 @@ class StripeIntegration:
         except Exception as e:
             logger.error(f"Error sending welcome email: {e}")
         
-        # TODO: Update tenant database
-        # - Activate subscription
-        # - Log successful signup
+        # Update tenant database with subscription activation
+        try:
+            if customer_id and subscription_id:
+                # Get customer to retrieve tenant_id
+                customer = await self.get_customer(customer_id)
+                if customer and customer.metadata.get("tenant_id"):
+                    tenant_id = customer.metadata.get("tenant_id")
+                    await self.tenant_db.init_pool()
+                    async with self.tenant_db.get_admin_connection(TenantContext(tenant_id)) as conn:
+                        # Activate subscription and update tenant
+                        await conn.execute(
+                            """
+                            UPDATE tenants
+                            SET status = 'active',
+                                plan = $1,
+                                subscription_status = 'active',
+                                stripe_customer_id = $2,
+                                stripe_subscription_id = $3,
+                                subscription_start_date = $4,
+                                updated_at = NOW()
+                            WHERE id = $5
+                            """,
+                            subscription.tier.value if subscription else 'starter',
+                            customer_id,
+                            subscription_id,
+                            datetime.now(),
+                            tenant_id
+                        )
+
+                        # Log successful signup
+                        await conn.execute(
+                            """
+                            INSERT INTO signup_events (
+                                id, tenant_id, customer_id, subscription_id, event_type,
+                                event_data, created_at
+                            )
+                            VALUES ($1, $2, $3, $4, $5, $6, $7)
+                            """,
+                            str(uuid.uuid4()),
+                            tenant_id,
+                            customer_id,
+                            subscription_id,
+                            "checkout_completed",
+                            json.dumps({
+                                "session_id": session_id,
+                                "subscription_id": subscription_id,
+                                "customer_id": customer_id,
+                                "plan": subscription.tier.value if subscription else 'starter'
+                            }),
+                            datetime.now()
+                        )
+
+                        logger.info(f"Checkout completed: subscription {subscription_id} activated for tenant {tenant_id}")
+
+        except Exception as db_error:
+            logger.error(f"Failed to update tenant database for checkout {session_id}: {db_error}")
         
         return {
             "status": "handled",

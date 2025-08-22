@@ -942,7 +942,73 @@ class AIOpsAgent:
             if alert.anomaly.severity == AlertSeverity.CRITICAL and self.error_reporting_client:
                 self.error_reporting_client.report_exception()
             
-            # TODO: Add email/Slack/PagerDuty integrations here
+            # Send alert notifications via email and Slack
+            try:
+                alert_subject = f"[AIOps Alert] {alert.severity.value.upper()}: {alert.title}"
+                alert_body = f"""
+                Alert ID: {alert.id}
+                Severity: {alert.severity.value.upper()}
+                Title: {alert.title}
+                Description: {alert.description}
+                Source: {alert.source}
+                Timestamp: {alert.created_at}
+
+                Metrics: {json.dumps(alert.metrics, indent=2)}
+                Tags: {json.dumps(alert.tags, indent=2)}
+
+                This alert requires immediate attention.
+                """
+
+                # Send email notification if configured
+                email_config = os.getenv("ALERT_EMAIL")
+                if email_config:
+                    from email_service import get_email_service, EmailRecipient
+                    email_service = get_email_service()
+                    recipient = EmailRecipient(email=email_config, name="Alert System")
+                    await email_service.send_alert_notification_email(recipient, alert_subject, alert_body)
+
+                # Send Slack notification if configured
+                slack_webhook = os.getenv("SLACK_WEBHOOK_URL")
+                if slack_webhook:
+                    import aiohttp
+                    slack_payload = {
+                        "text": alert_subject,
+                        "blocks": [
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": f"🚨 {alert.severity.value.upper()} Alert"
+                                }
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": f"*{alert.title}*\n{alert.description}"
+                                }
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": f"*Source:* {alert.source}\n*Time:* {alert.created_at}"
+                                }
+                            }
+                        ]
+                    }
+
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(slack_webhook, json=slack_payload) as response:
+                            if response.status == 200:
+                                logger.info(f"Slack notification sent for alert {alert.id}")
+                            else:
+                                logger.error(f"Failed to send Slack notification: {response.status}")
+
+                logger.info(f"Alert notifications sent for {alert.id}")
+
+            except Exception as notify_error:
+                logger.error(f"Failed to send alert notifications: {notify_error}")
             self.logger.info(f"Alert notifications sent for {alert.alert_id}")
             
         except Exception as e:
@@ -1649,7 +1715,18 @@ async def acknowledge_alert(
 ):
     """Acknowledge an alert"""
     
-    success = await aiops_agent.acknowledge_alert(alert_id, "user")  # TODO: Get actual user from context
+    # Get actual user from request context or use system user
+    user_id = "system"  # Default to system user
+    try:
+        # Try to get user from request context if available
+        if hasattr(request, 'user') and request.user:
+            user_id = request.user.get('id', 'system')
+        elif hasattr(request, 'headers'):
+            user_id = request.headers.get('x-user-id', 'system')
+    except Exception as e:
+        logger.warning(f"Could not extract user from context: {e}")
+
+    success = await aiops_agent.acknowledge_alert(alert_id, user_id)
     
     if success:
         return {"status": "success", "message": f"Alert {alert_id} acknowledged"}
@@ -1666,7 +1743,18 @@ async def resolve_alert(
 ):
     """Resolve an alert"""
     
-    success = await aiops_agent.resolve_alert(alert_id, "user", resolution_note)  # TODO: Get actual user
+    # Get actual user from request context or use system user
+    user_id = "system"  # Default to system user
+    try:
+        # Try to get user from request context if available
+        if hasattr(request, 'user') and request.user:
+            user_id = request.user.get('id', 'system')
+        elif hasattr(request, 'headers'):
+            user_id = request.headers.get('x-user-id', 'system')
+    except Exception as e:
+        logger.warning(f"Could not extract user from context: {e}")
+
+    success = await aiops_agent.resolve_alert(alert_id, user_id, resolution_note)
     
     if success:
         return {"status": "success", "message": f"Alert {alert_id} resolved"}

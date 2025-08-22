@@ -34,15 +34,15 @@ class DatabaseConfig(BaseSettings):
     """Database configuration"""
     # Ignore unknown environment variables to be CI-friendly
     model_config = SettingsConfigDict(extra='ignore')
-    host: str = Field(default="localhost", env="DB_HOST")
-    port: int = Field(default=5432, env="DB_PORT")
-    name: str = Field(default="factorydb", env="DB_NAME")
-    user: str = Field(default="factoryadmin", env="DB_USER")
-    password: SecretStr = Field(default="", env="DB_PASSWORD")
-    max_connections: int = Field(default=20, env="DB_MAX_CONNECTIONS")
-    min_connections: int = Field(default=5, env="DB_MIN_CONNECTIONS")
-    connection_timeout: int = Field(default=60, env="DB_CONNECTION_TIMEOUT")
-    ssl_mode: str = Field(default="prefer", env="DB_SSL_MODE")
+    host: str = Field(default="localhost", json_schema_extra={"env": "DB_HOST"})
+    port: int = Field(default=5432, json_schema_extra={"env": "DB_PORT"})
+    name: str = Field(default="factorydb", json_schema_extra={"env": "DB_NAME"})
+    user: str = Field(default="factoryadmin", json_schema_extra={"env": "DB_USER"})
+    password: SecretStr = Field(default="", json_schema_extra={"env": "DB_PASSWORD"})
+    max_connections: int = Field(default=20, json_schema_extra={"env": "DB_MAX_CONNECTIONS"})
+    min_connections: int = Field(default=5, json_schema_extra={"env": "DB_MIN_CONNECTIONS"})
+    connection_timeout: int = Field(default=60, json_schema_extra={"env": "DB_CONNECTION_TIMEOUT"})
+    ssl_mode: str = Field(default="prefer", json_schema_extra={"env": "DB_SSL_MODE"})
     
     @property
     def url(self) -> str:
@@ -58,34 +58,34 @@ class DatabaseConfig(BaseSettings):
 class GoogleCloudConfig(BaseSettings):
     """Google Cloud Platform configuration"""
     model_config = SettingsConfigDict(extra='ignore')
-    project_id: str = Field(default="summer-nexus-463503-e1", env="PROJECT_ID")
-    region: str = Field(default="us-central1", env="GOOGLE_CLOUD_REGION")
-    service_account_key_path: Optional[str] = Field(None, env="GOOGLE_APPLICATION_CREDENTIALS")
-    
+    project_id: str = Field(default="summer-nexus-463503-e1", json_schema_extra={"env": "PROJECT_ID"})
+    region: str = Field(default="us-central1", json_schema_extra={"env": "GOOGLE_CLOUD_REGION"})
+    service_account_key_path: Optional[str] = Field(None, json_schema_extra={"env": "GOOGLE_APPLICATION_CREDENTIALS"})
+
     # Storage
-    storage_bucket: str = Field(default="", env="GOOGLE_STORAGE_BUCKET")
-    
+    storage_bucket: str = Field(default="", json_schema_extra={"env": "GOOGLE_STORAGE_BUCKET"})
+
     # Monitoring
-    monitoring_enabled: bool = Field(default=True, env="MONITORING_ENABLED")
-    
+    monitoring_enabled: bool = Field(default=True, json_schema_extra={"env": "MONITORING_ENABLED"})
+
     # Secret Manager
-    secret_manager_enabled: bool = Field(default=True, env="SECRET_MANAGER_ENABLED")
+    secret_manager_enabled: bool = Field(default=True, json_schema_extra={"env": "SECRET_MANAGER_ENABLED"})
 
 
 class AIConfig(BaseSettings):
     """AI/ML service configuration"""
     model_config = SettingsConfigDict(extra='ignore')
-    openai_api_key: SecretStr = Field(default="", env="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-4o", env="OPENAI_MODEL")
-    openai_max_tokens: int = Field(default=4000, env="OPENAI_MAX_TOKENS")
-    openai_temperature: float = Field(default=0.7, env="OPENAI_TEMPERATURE")
-    
+    openai_api_key: SecretStr = Field(default="", json_schema_extra={"env": "OPENAI_API_KEY"})
+    openai_model: str = Field(default="gpt-4o", json_schema_extra={"env": "OPENAI_MODEL"})
+    openai_max_tokens: int = Field(default=4000, json_schema_extra={"env": "OPENAI_MAX_TOKENS"})
+    openai_temperature: float = Field(default=0.7, json_schema_extra={"env": "OPENAI_TEMPERATURE"})
+
     # Google AI
-    google_ai_enabled: bool = Field(default=True, env="GOOGLE_AI_ENABLED")
-    google_ai_model: str = Field(default="gemini-1.5-pro", env="GOOGLE_AI_MODEL")
-    
+    google_ai_enabled: bool = Field(default=True, json_schema_extra={"env": "GOOGLE_AI_ENABLED"})
+    google_ai_model: str = Field(default="gemini-1.5-pro", json_schema_extra={"env": "GOOGLE_AI_MODEL"})
+
     # Model provider selection
-    model_provider: str = Field(default="openai", env="MODEL_PROVIDER")
+    model_provider: str = Field(default="openai", json_schema_extra={"env": "MODEL_PROVIDER"})
     
     @field_validator('model_provider')
     def validate_model_provider(cls, v):
@@ -98,83 +98,83 @@ class SecurityConfig(BaseSettings):
     """Security configuration"""
     model_config = SettingsConfigDict(extra='ignore')
     # JWT
-    jwt_secret_key: SecretStr = Field(default="test-secret-key", env="JWT_SECRET_KEY")
-    jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
-    jwt_expiration_hours: int = Field(default=24, env="JWT_EXPIRATION_HOURS")
-    
+    jwt_secret_key: SecretStr = Field(default="test-secret-key", json_schema_extra={"env": "JWT_SECRET_KEY"})
+    jwt_algorithm: str = Field(default="HS256", json_schema_extra={"env": "JWT_ALGORITHM"})
+    jwt_expiration_hours: int = Field(default=24, json_schema_extra={"env": "JWT_EXPIRATION_HOURS"})
+
     # API Keys
-    github_token: Optional[SecretStr] = Field(None, env="GITHUB_TOKEN")
-    stripe_api_key: Optional[SecretStr] = Field(None, env="STRIPE_API_KEY")
-    stripe_webhook_secret: Optional[SecretStr] = Field(None, env="STRIPE_WEBHOOK_SECRET")
-    
+    github_token: Optional[SecretStr] = Field(None, json_schema_extra={"env": "GITHUB_TOKEN"})
+    stripe_api_key: Optional[SecretStr] = Field(None, json_schema_extra={"env": "STRIPE_API_KEY"})
+    stripe_webhook_secret: Optional[SecretStr] = Field(None, json_schema_extra={"env": "STRIPE_WEBHOOK_SECRET"})
+
     # Security scanning
-    snyk_token: Optional[SecretStr] = Field(None, env="SNYK_TOKEN")
-    snyk_org: Optional[str] = Field(None, env="SNYK_ORG")
-    
+    snyk_token: Optional[SecretStr] = Field(None, json_schema_extra={"env": "SNYK_TOKEN"})
+    snyk_org: Optional[str] = Field(None, json_schema_extra={"env": "SNYK_ORG"})
+
     # CORS
-    cors_origins: List[str] = Field(default=["*"], env="CORS_ORIGINS")
-    cors_credentials: bool = Field(default=True, env="CORS_CREDENTIALS")
-    
+    cors_origins: List[str] = Field(default=["*"], json_schema_extra={"env": "CORS_ORIGINS"})
+    cors_credentials: bool = Field(default=True, json_schema_extra={"env": "CORS_CREDENTIALS"})
+
     # Rate limiting
-    rate_limit_enabled: bool = Field(default=True, env="RATE_LIMIT_ENABLED")
-    rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
-    rate_limit_window: int = Field(default=60, env="RATE_LIMIT_WINDOW")
+    rate_limit_enabled: bool = Field(default=True, json_schema_extra={"env": "RATE_LIMIT_ENABLED"})
+    rate_limit_requests: int = Field(default=100, json_schema_extra={"env": "RATE_LIMIT_REQUESTS"})
+    rate_limit_window: int = Field(default=60, json_schema_extra={"env": "RATE_LIMIT_WINDOW"})
 
 
 class ServiceConfig(BaseSettings):
     """Service URLs and endpoints"""
     model_config = SettingsConfigDict(extra='ignore')
     # Core services
-    orchestrator_url: str = Field(default="http://localhost:8080", env="ORCHESTRATOR_URL")
-    api_gateway_url: str = Field(default="http://localhost:8000", env="API_GATEWAY_URL")
-    
+    orchestrator_url: str = Field(default="http://localhost:8080", json_schema_extra={"env": "ORCHESTRATOR_URL"})
+    api_gateway_url: str = Field(default="http://localhost:8000", json_schema_extra={"env": "API_GATEWAY_URL"})
+
     # Agent services
-    techstack_agent_url: str = Field(default="http://localhost:8081", env="TECHSTACK_AGENT_URL")
-    design_agent_url: str = Field(default="http://localhost:8082", env="DESIGN_AGENT_URL")
-    dev_agent_url: str = Field(default="http://localhost:8083", env="DEV_AGENT_URL")
-    review_agent_url: str = Field(default="http://localhost:8084", env="REVIEW_AGENT_URL")
-    ui_dev_agent_url: str = Field(default="http://localhost:8085", env="UI_DEV_AGENT_URL")
-    qa_agent_url: str = Field(default="http://localhost:8086", env="QA_AGENT_URL")
-    
+    techstack_agent_url: str = Field(default="http://localhost:8081", json_schema_extra={"env": "TECHSTACK_AGENT_URL"})
+    design_agent_url: str = Field(default="http://localhost:8082", json_schema_extra={"env": "DESIGN_AGENT_URL"})
+    dev_agent_url: str = Field(default="http://localhost:8083", json_schema_extra={"env": "DEV_AGENT_URL"})
+    review_agent_url: str = Field(default="http://localhost:8084", json_schema_extra={"env": "REVIEW_AGENT_URL"})
+    ui_dev_agent_url: str = Field(default="http://localhost:8085", json_schema_extra={"env": "UI_DEV_AGENT_URL"})
+    qa_agent_url: str = Field(default="http://localhost:8086", json_schema_extra={"env": "QA_AGENT_URL"})
+
     # External services
-    figma_api_url: str = Field(default="https://api.figma.com", env="FIGMA_API_URL")
-    github_api_url: str = Field(default="https://api.github.com", env="GITHUB_API_URL")
-    stripe_api_url: str = Field(default="https://api.stripe.com", env="STRIPE_API_URL")
-    
+    figma_api_url: str = Field(default="https://api.figma.com", json_schema_extra={"env": "FIGMA_API_URL"})
+    github_api_url: str = Field(default="https://api.github.com", json_schema_extra={"env": "GITHUB_API_URL"})
+    stripe_api_url: str = Field(default="https://api.stripe.com", json_schema_extra={"env": "STRIPE_API_URL"})
+
     # WebSocket
-    websocket_max_connections: int = Field(default=100, env="WEBSOCKET_MAX_CONNECTIONS")
-    websocket_ping_interval: int = Field(default=30, env="WEBSOCKET_PING_INTERVAL")
+    websocket_max_connections: int = Field(default=100, json_schema_extra={"env": "WEBSOCKET_MAX_CONNECTIONS"})
+    websocket_ping_interval: int = Field(default=30, json_schema_extra={"env": "WEBSOCKET_PING_INTERVAL"})
 
 
 class NotificationConfig(BaseSettings):
     """Notification configuration"""
     model_config = SettingsConfigDict(extra='ignore')
     # Email
-    sendgrid_api_key: Optional[SecretStr] = Field(None, env="SENDGRID_API_KEY")
-    alert_email: str = Field(default="alerts@saasfactory.com", env="ALERT_EMAIL")
-    
+    sendgrid_api_key: Optional[SecretStr] = Field(None, json_schema_extra={"env": "SENDGRID_API_KEY"})
+    alert_email: str = Field(default="alerts@saasfactory.com", json_schema_extra={"env": "ALERT_EMAIL"})
+
     # Slack
-    slack_webhook_url: Optional[SecretStr] = Field(None, env="SLACK_WEBHOOK_URL")
-    slack_channel: str = Field(default="#alerts", env="SLACK_CHANNEL")
-    
+    slack_webhook_url: Optional[SecretStr] = Field(None, json_schema_extra={"env": "SLACK_WEBHOOK_URL"})
+    slack_channel: str = Field(default="#alerts", json_schema_extra={"env": "SLACK_CHANNEL"})
+
     # PagerDuty
-    pagerduty_api_key: Optional[SecretStr] = Field(None, env="PAGERDUTY_API_KEY")
-    pagerduty_service_key: Optional[SecretStr] = Field(None, env="PAGERDUTY_SERVICE_KEY")
+    pagerduty_api_key: Optional[SecretStr] = Field(None, json_schema_extra={"env": "PAGERDUTY_API_KEY"})
+    pagerduty_service_key: Optional[SecretStr] = Field(None, json_schema_extra={"env": "PAGERDUTY_SERVICE_KEY"})
 
 
 class CacheConfig(BaseSettings):
     """Cache configuration"""
     model_config = SettingsConfigDict(extra='ignore')
-    redis_enabled: bool = Field(default=False, env="REDIS_ENABLED")
-    redis_host: str = Field(default="localhost", env="REDIS_HOST")
-    redis_port: int = Field(default=6379, env="REDIS_PORT")
-    redis_db: int = Field(default=0, env="REDIS_DB")
-    redis_password: Optional[SecretStr] = Field(None, env="REDIS_PASSWORD")
-    redis_ttl: int = Field(default=3600, env="REDIS_TTL")
-    
+    redis_enabled: bool = Field(default=False, json_schema_extra={"env": "REDIS_ENABLED"})
+    redis_host: str = Field(default="localhost", json_schema_extra={"env": "REDIS_HOST"})
+    redis_port: int = Field(default=6379, json_schema_extra={"env": "REDIS_PORT"})
+    redis_db: int = Field(default=0, json_schema_extra={"env": "REDIS_DB"})
+    redis_password: Optional[SecretStr] = Field(None, json_schema_extra={"env": "REDIS_PASSWORD"})
+    redis_ttl: int = Field(default=3600, json_schema_extra={"env": "REDIS_TTL"})
+
     # Memory cache
-    memory_cache_enabled: bool = Field(default=True, env="MEMORY_CACHE_ENABLED")
-    memory_cache_size: int = Field(default=1000, env="MEMORY_CACHE_SIZE")
+    memory_cache_enabled: bool = Field(default=True, json_schema_extra={"env": "MEMORY_CACHE_ENABLED"})
+    memory_cache_size: int = Field(default=1000, json_schema_extra={"env": "MEMORY_CACHE_SIZE"})
 
 
 class Settings(BaseSettings):
@@ -187,21 +187,21 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
     # Application
-    app_name: str = Field(default="SaaS Factory", env="APP_NAME")
-    app_version: str = Field(default="1.0.0", env="APP_VERSION")
-    environment: Environment = Field(default=Environment.DEVELOPMENT, env="ENVIRONMENT")
-    debug: bool = Field(default=False, env="DEBUG")
-    log_level: LogLevel = Field(default=LogLevel.INFO, env="LOG_LEVEL")
-    
+    app_name: str = Field(default="SaaS Factory", json_schema_extra={"env": "APP_NAME"})
+    app_version: str = Field(default="1.0.0", json_schema_extra={"env": "APP_VERSION"})
+    environment: Environment = Field(default=Environment.DEVELOPMENT, json_schema_extra={"env": "ENVIRONMENT"})
+    debug: bool = Field(default=False, json_schema_extra={"env": "DEBUG"})
+    log_level: LogLevel = Field(default=LogLevel.INFO, json_schema_extra={"env": "LOG_LEVEL"})
+
     # Server
-    host: str = Field(default="0.0.0.0", env="HOST")
-    port: int = Field(default=8080, env="PORT")
-    workers: int = Field(default=1, env="WORKERS")
-    
+    host: str = Field(default="0.0.0.0", json_schema_extra={"env": "HOST"})
+    port: int = Field(default=8080, json_schema_extra={"env": "PORT"})
+    workers: int = Field(default=1, json_schema_extra={"env": "WORKERS"})
+
     # Feature flags
-    auto_commit_enabled: bool = Field(default=False, env="ENABLE_AUTO_COMMIT")
-    auto_pr_enabled: bool = Field(default=False, env="ENABLE_AUTO_PR")
-    tenant_isolation_enabled: bool = Field(default=True, env="TENANT_ISOLATION_ENABLED")
+    auto_commit_enabled: bool = Field(default=False, json_schema_extra={"env": "ENABLE_AUTO_COMMIT"})
+    auto_pr_enabled: bool = Field(default=False, json_schema_extra={"env": "ENABLE_AUTO_PR"})
+    tenant_isolation_enabled: bool = Field(default=True, json_schema_extra={"env": "TENANT_ISOLATION_ENABLED"})
     
     # Sub-configurations
     database: DatabaseConfig = DatabaseConfig()

@@ -38,24 +38,46 @@ class TenantDatabase:
     async def init_pool(self):
         """Initialize connection pool"""
         if self._pool is None:
-            self._pool = await asyncpg.create_pool(
-                host=self.db_host,
-                port=self.db_port,
-                database=self.db_name,
-                user=self.db_user,
-                password=self.db_password,
-                min_size=1,
-                max_size=10,
-                command_timeout=60
-            )
-            logger.info("Database connection pool initialized")
+            try:
+                self._pool = await asyncpg.create_pool(
+                    host=self.db_host,
+                    port=self.db_port,
+                    database=self.db_name,
+                    user=self.db_user,
+                    password=self.db_password,
+                    min_size=1,
+                    max_size=10,
+                    command_timeout=60
+                )
+                try:
+                    logger.info("Database connection pool initialized")
+                except Exception as log_error:
+                    # Silently handle logging errors to prevent crashes
+                    print(f"[INFO] Database connection pool initialized (logging failed: {log_error})")
+            except Exception as e:
+                try:
+                    logger.error(f"Failed to initialize database connection pool: {e}")
+                except Exception as log_error:
+                    print(f"[ERROR] Failed to initialize database connection pool: {e} (logging failed: {log_error})")
+                raise
     
     async def close_pool(self):
         """Close connection pool"""
         if self._pool:
-            await self._pool.close()
-            self._pool = None
-            logger.info("Database connection pool closed")
+            try:
+                await self._pool.close()
+                self._pool = None
+                try:
+                    logger.info("Database connection pool closed")
+                except Exception as log_error:
+                    # Silently handle logging errors to prevent crashes
+                    print(f"[INFO] Database connection pool closed (logging failed: {log_error})")
+            except Exception as e:
+                try:
+                    logger.error(f"Error closing database connection pool: {e}")
+                except Exception as log_error:
+                    print(f"[ERROR] Error closing database connection pool: {e} (logging failed: {log_error})")
+                raise
     
     @asynccontextmanager
     async def get_tenant_connection(self, tenant_context: TenantContext):
@@ -675,18 +697,25 @@ async def get_default_tenant_context() -> TenantContext:
 import atexit
 def _safe_close_pool():
     try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        # No running loop; create a temporary loop to close cleanly
-        loop = asyncio.new_event_loop()
+        # Try to get existing loop first
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If loop is running, schedule the cleanup as a task
+                asyncio.create_task(tenant_db.close_pool())
+                return
+        except RuntimeError:
+            # No running loop; create a temporary loop to close cleanly
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
         try:
             loop.run_until_complete(tenant_db.close_pool())
         finally:
-            loop.close()
-        return
-    try:
-        loop.run_until_complete(tenant_db.close_pool())
-    except Exception:
-        pass
+            if 'loop' in locals():
+                loop.close()
+    except Exception as e:
+        # Silent failure for cleanup - don't crash on exit
+        print(f"[INFO] Database cleanup failed: {e}")
 
 atexit.register(_safe_close_pool)
