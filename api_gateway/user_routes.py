@@ -249,11 +249,23 @@ async def register_user(user_data: UserRegistrationRequest, request: Request):
             
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error registering user: {e}")
+    except asyncpg.exceptions.UniqueViolationError as e:
+        logger.warning(f"User registration failed - email already exists: {user_data.email}")
+        raise HTTPException(
+            status_code=409,
+            detail="A user with this email already exists"
+        )
+    except asyncpg.exceptions.PostgresError as e:
+        logger.error(f"Database error during user registration: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Internal server error during registration"
+            detail="Database error during registration. Please try again."
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error registering user: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error during registration. Please try again."
         )
 
 @router.post("/login")

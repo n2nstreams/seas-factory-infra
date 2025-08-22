@@ -30,17 +30,32 @@ class IdeaSubmissionRequest(BaseModel):
     title: str
     description: str
     category: Optional[str] = "general"
-    
+
     # Step 2: Problem & Solution
     problem: Optional[str] = None
     solution: Optional[str] = None
     target_audience: Optional[str] = None
-    
+
     # Step 3: Business Details
     key_features: Optional[List[str]] = []
     business_model: Optional[str] = None
     timeline: Optional[str] = None
     budget_range: Optional[str] = None
+
+    # Legacy field names for backward compatibility
+    keyFeatures: Optional[str] = None  # Frontend might send this
+    priorityLevel: Optional[str] = None  # Frontend sends this instead of priority
+
+    class Config:
+        # Allow both snake_case and camelCase field names
+        allow_population_by_field_name = True
+        fields = {
+            'key_features': 'keyFeatures',
+            'budget_range': 'budgetRange',
+            'target_audience': 'targetAudience',
+            'business_model': 'businessModel',
+            'priority_level': 'priorityLevel'
+        }
     
     @validator('title')
     def title_must_not_be_empty(cls, v):
@@ -83,6 +98,12 @@ async def submit_idea(
         now = datetime.utcnow()
         
         async with tenant_db.get_tenant_connection(tenant_context) as conn:
+            # Handle key features - convert string to list if needed
+            key_features = idea_data.key_features or []
+            if idea_data.keyFeatures and not key_features:
+                # Convert comma-separated string to list
+                key_features = [feature.strip() for feature in idea_data.keyFeatures.split(',') if feature.strip()]
+
             # Insert the idea into the database
             await conn.execute(
                 """
@@ -103,7 +124,7 @@ async def submit_idea(
                 idea_data.problem,
                 idea_data.solution,
                 idea_data.target_audience,
-                str(idea_data.key_features or []),
+                str(key_features),
                 idea_data.business_model,
                 idea_data.timeline,
                 idea_data.budget_range,
