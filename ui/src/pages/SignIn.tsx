@@ -120,16 +120,16 @@ export default function SignIn() {
   const handleSocialLogin = (provider: string) => {
     console.log(`Initiating ${provider} OAuth flow`);
     
-    // OAuth configuration
+    // OAuth configuration - use environment variables or defaults
     const oauthConfigs = {
       github: {
-        clientId: 'your_github_client_id',
+        clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id',
         redirectUri: `${window.location.origin}/auth/callback/github`,
         scope: 'user:email',
         authUrl: 'https://github.com/login/oauth/authorize'
       },
       google: {
-        clientId: 'your_google_client_id',
+        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your_google_client_id',
         redirectUri: `${window.location.origin}/auth/callback/google`,
         scope: 'openid email profile',
         authUrl: 'https://accounts.google.com/oauth2/v2/auth'
@@ -143,52 +143,38 @@ export default function SignIn() {
       return;
     }
 
+    // Check if OAuth is properly configured
+    if (config.clientId === 'your_github_client_id' || config.clientId === 'your_google_client_id') {
+      console.error(`${provider} OAuth not configured. Please set VITE_${provider.toUpperCase()}_CLIENT_ID environment variable.`);
+      alert(`${provider} OAuth is not configured. Please contact support.`);
+      return;
+    }
+
     try {
       // Store current path for redirect after authentication
       sessionStorage.setItem('oauth_redirect_path', window.location.pathname);
       
-      // Build OAuth URL
+      // Build OAuth URL with proper parameters
       const params = new URLSearchParams({
         client_id: config.clientId,
         redirect_uri: config.redirectUri,
         scope: config.scope,
         response_type: 'code',
-        state: btoa(JSON.stringify({ provider, timestamp: Date.now() }))
+        ...(provider === 'google' && {
+          access_type: 'offline',
+          prompt: 'consent'
+        })
       });
-
-      const oauthUrl = `${config.authUrl}?${params.toString()}`;
       
-      // For development/demo purposes, show what would happen
-      if (import.meta.env.DEV) {
-        console.log(`Would redirect to: ${oauthUrl}`);
-        alert(`OAuth flow initiated for ${provider}!\n\nIn production, this would redirect to:\n${oauthUrl}\n\nFor demo purposes, redirecting to dashboard...`);
-        
-        // Simulate successful authentication
-        setTimeout(() => {
-          const userData = {
-            id: 'demo-user',
-            email: 'demo@example.com',
-            name: 'Demo User',
-            plan: 'starter' as const,
-            buildHours: {
-              used: 0,
-              total: 42
-            }
-          };
-          setUser(userData);
-          navigate('/dashboard');
-        }, 1000);
-        return;
-      }
-
-      // In production, redirect to OAuth provider
+      const oauthUrl = `${config.authUrl}?${params.toString()}`;
+      console.log(`Redirecting to ${provider} OAuth: ${oauthUrl}`);
+      
+      // Redirect to OAuth provider
       window.location.href = oauthUrl;
       
     } catch (error) {
-      console.error(`${provider} OAuth error:`, error);
-      setErrors({ 
-        submit: `Failed to initiate ${provider} authentication. Please try again.` 
-      });
+      console.error(`Error initiating ${provider} OAuth:`, error);
+      alert(`Failed to start ${provider} authentication. Please try again.`);
     }
   };
 

@@ -17,6 +17,8 @@ import Settings from './pages/Settings';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DPA from '@/pages/DPA';
+import OAuthSuccess from '@/pages/OAuthSuccess';
+import OAuthError from '@/pages/OAuthError';
 import Navigation from './components/Navigation';
 import './App.css';
 import { tenantUtils } from '@/lib/api';
@@ -121,6 +123,8 @@ function AppContent() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/auth/success" element={<OAuthSuccess />} />
+          <Route path="/auth/error" element={<OAuthError />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />

@@ -10,6 +10,7 @@ asyncpg==0.29.0
 
 # Authentication
 bcrypt==4.1.2
+PyJWT==2.8.0
 
 # Google Cloud
 google-cloud-bigquery==3.17.2

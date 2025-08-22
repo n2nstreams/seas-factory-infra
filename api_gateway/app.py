@@ -23,6 +23,7 @@ from privacy_routes import router as privacy_router
 from ideas_routes import router as ideas_router
 from factory_routes import router as factory_router
 from marketplace_routes import router as marketplace_router
+from oauth_routes import router as oauth_router
 from websocket_manager import get_websocket_manager
 
 # Configure logging
@@ -63,6 +64,7 @@ app.include_router(privacy_router)
 app.include_router(ideas_router)
 app.include_router(factory_router)
 app.include_router(marketplace_router)
+app.include_router(oauth_router)
 
 # Health check endpoint
 @app.get("/health")

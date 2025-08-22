@@ -102,8 +102,23 @@ class SecurityConfig(BaseSettings):
     jwt_algorithm: str = Field(default="HS256", json_schema_extra={"env": "JWT_ALGORITHM"})
     jwt_expiration_hours: int = Field(default=24, json_schema_extra={"env": "JWT_EXPIRATION_HOURS"})
 
+    # OAuth Configuration
+    # Google OAuth
+    google_oauth_enabled: bool = Field(default=False, json_schema_extra={"env": "GOOGLE_OAUTH_ENABLED"})
+    google_client_id: Optional[str] = Field(None, json_schema_extra={"env": "GOOGLE_CLIENT_ID"})
+    google_client_secret: Optional[SecretStr] = Field(None, json_schema_extra={"env": "GOOGLE_CLIENT_SECRET"})
+    google_redirect_uri: str = Field(default="/auth/callback/google", json_schema_extra={"env": "GOOGLE_REDIRECT_URI"})
+    
+    # GitHub OAuth
+    github_oauth_enabled: bool = Field(default=False, json_schema_extra={"env": "GITHUB_OAUTH_ENABLED"})
+    github_client_id: Optional[str] = Field(None, json_schema_extra={"env": "GITHUB_CLIENT_ID"})
+    github_client_secret: Optional[SecretStr] = Field(None, json_schema_extra={"env": "GITHUB_CLIENT_SECRET"})
+    github_redirect_uri: str = Field(default="/auth/callback/github", json_schema_extra={"env": "GITHUB_REDIRECT_URI"})
+
     # API Keys
     github_token: Optional[SecretStr] = Field(None, json_schema_extra={"env": "GITHUB_TOKEN"})
+    github_client_id: Optional[str] = Field(None, json_schema_extra={"env": "GITHUB_CLIENT_ID"})
+    github_client_secret: Optional[SecretStr] = Field(None, json_schema_extra={"env": "GITHUB_CLIENT_SECRET"})
     stripe_api_key: Optional[SecretStr] = Field(None, json_schema_extra={"env": "STRIPE_API_KEY"})
     stripe_webhook_secret: Optional[SecretStr] = Field(None, json_schema_extra={"env": "STRIPE_WEBHOOK_SECRET"})
 
