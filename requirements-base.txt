@@ -56,7 +56,7 @@ click==8.2.1
 aiofiles==24.1.0
 
 # Background Tasks
-celery==5.4.0
+celery==5.5.3
 
 # External Services
 stripe==12.3.0
