@@ -37,11 +37,17 @@ jobs:
           
           # Test Cloud Run access
           echo "Testing Cloud Run access..."
-          gcloud run services list --region=us-central1 --limit=5
+          gcloud run services list --region=us-central1 --limit=5 || {
+            echo "❌ Cloud Run access failed"
+            exit 1
+          }
           
           # Test Artifact Registry access
           echo "Testing Artifact Registry access..."
-          gcloud artifacts repositories list --limit=5
+          gcloud artifacts repositories list --limit=5 || {
+            echo "❌ Artifact Registry access failed"
+            exit 1
+          }
           
           # Test project info
           echo "Project info:"
@@ -52,13 +58,25 @@ jobs:
       - name: Build and push UI image
         run: |
           cd ui
-          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }} .
+          echo "Building UI Docker image..."
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }} . || {
+            echo "❌ UI Docker build failed"
+            exit 1
+          }
           docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:latest .
-          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }}
+          
+          echo "Pushing UI Docker images..."
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }} || {
+            echo "❌ UI Docker push failed"
+            exit 1
+          }
           docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:latest
+          
+          echo "✅ UI Docker images built and pushed successfully"
       
       - name: Deploy UI to Cloud Run
         run: |
+          echo "Deploying UI to Cloud Run..."
           gcloud run deploy web-frontend \
             --image=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/saas-factory-web/ui:${{ github.sha }} \
             --region=us-central1 \
@@ -68,7 +86,30 @@ jobs:
             --cpu=1 \
             --memory=512Mi \
             --max-instances=5 \
-            --min-instances=0
+            --min-instances=0 || {
+            echo "❌ UI deployment failed"
+            exit 1
+          }
           
           echo "🚀 UI deployed successfully!"
-          echo "Frontend URL: $(gcloud run services describe web-frontend --region=us-central1 --format='value(status.url)')" 
+          echo "Frontend URL: $(gcloud run services describe web-frontend --region=us-central1 --format='value(status.url)')"
+          
+      - name: Health check deployment
+        run: |
+          echo "Performing health check on deployed service..."
+          SERVICE_URL=$(gcloud run services describe web-frontend --region=us-central1 --format='value(status.url)')
+          
+          # Wait for service to be ready
+          for i in {1..30}; do
+            if curl -f -s "$SERVICE_URL" > /dev/null; then
+              echo "✅ Service is responding to health checks"
+              break
+            fi
+            echo "Waiting for service to be ready... (attempt $i/30)"
+            sleep 10
+          done
+          
+          if [ $i -eq 30 ]; then
+            echo "❌ Service health check failed after 30 attempts"
+            exit 1
+          fi 

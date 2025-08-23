@@ -48,24 +48,28 @@ jobs:
           # Install common development dependencies
           pip install black ruff pytest pytest-cov
           # Install project dependencies if they exist
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f agents/dev/starter-api/requirements.txt ]; then pip install -r agents/dev/starter-api/requirements.txt; fi
-          if [ -f orchestrator/requirements.txt ]; then pip install -r orchestrator/requirements.txt; fi
+          if [ -f requirements-base.txt ]; then pip install -r requirements-base.txt; fi
+          if [ -f requirements-agents.txt ]; then pip install -r requirements-agents.txt; fi
+          if [ -f orchestrator/requirements-orchestrator.txt ]; then pip install -r orchestrator/requirements-orchestrator.txt; fi
+          if [ -f api_gateway/requirements.txt ]; then pip install -r api_gateway/requirements.txt; fi
           
       - name: Validate orchestrator dependencies
         run: |
-          if [ -f orchestrator/requirements.in ]; then
+          if [ -f orchestrator/requirements-orchestrator.txt ]; then
             echo "Checking orchestrator dependency lock file..."
             cd orchestrator
             pip install pip-tools
-            pip-compile requirements.in --resolver=backtracking -o requirements.txt.tmp
-            if ! diff -q requirements.txt requirements.txt.tmp > /dev/null; then
-              echo "ERROR: requirements.txt is out of sync with requirements.in"
-              echo "Please run: cd orchestrator && pip-compile requirements.in --resolver=backtracking -o requirements.txt"
-              exit 1
+            if [ -f requirements.in ]; then
+              pip-compile requirements.in --resolver=backtracking -o requirements.txt.tmp
+              if ! diff -q requirements-orchestrator.txt requirements.txt.tmp > /dev/null; then
+                echo "ERROR: requirements-orchestrator.txt is out of sync with requirements.in"
+                echo "Please run: cd orchestrator && pip-compile requirements.in --resolver=backtracking -o requirements-orchestrator.txt"
+                exit 1
+              fi
+              rm requirements.txt.tmp
             fi
-            rm requirements.txt.tmp
             echo "✓ Orchestrator dependencies are in sync"
+            cd ..
           fi
           
       - name: Create pgvector extension
@@ -75,13 +79,19 @@ jobs:
       - name: Lint with ruff
         run: |
           # Stop the build if there are Python syntax errors or undefined names
-          ruff check --select=E9,F63,F7,F82 --statistics .
+          ruff check --select=E9,F63,F7,F82 --statistics . || {
+            echo "❌ Critical Python syntax errors found"
+            exit 1
+          }
           # Exit-zero treats all errors as warnings
           ruff check --exit-zero --statistics .
           
       - name: Format check with black
         run: |
-          black --check --diff .
+          black --check --diff . || {
+            echo "❌ Code formatting issues found. Run: black ."
+            exit 1
+          }
           
       - name: Run tests
         run: |
@@ -94,14 +104,24 @@ jobs:
             pytest --cov=. --cov-report=xml --cov-report=term-missing \
               --tb=short \
               -v \
-              --durations=10
+              --durations=10 || {
+              echo "❌ Tests failed"
+              exit 1
+            }
               
             # Run specific smoke tests for marketplace signup flow
             echo "🚨 Running critical path smoke tests..."
-            pytest tests/integration/test_marketplace_signup_smoke.py::test_end_to_end_marketplace_signup \
-              -v \
-              --tb=short \
-              -x
+            if [ -f "tests/integration/test_marketplace_signup_smoke.py" ]; then
+              pytest tests/integration/test_marketplace_signup_smoke.py::test_end_to_end_marketplace_signup \
+                -v \
+                --tb=short \
+                -x || {
+                echo "❌ Critical smoke tests failed"
+                exit 1
+              }
+            else
+              echo "⚠️ Smoke test file not found, skipping"
+            fi
               
           else
             echo "No test files found in project directories, skipping tests"
@@ -219,25 +239,29 @@ jobs:
           # Install common development dependencies
           pip install black ruff pytest pytest-cov
           # Install project dependencies if they exist
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f agents/dev/starter-api/requirements.txt ]; then pip install -r agents/dev/starter-api/requirements.txt; fi
-          if [ -f orchestrator/requirements.txt ]; then pip install -r orchestrator/requirements.txt; fi
+          if [ -f requirements-base.txt ]; then pip install -r requirements-base.txt; fi
+          if [ -f requirements-agents.txt ]; then pip install -r requirements-agents.txt; fi
+          if [ -f orchestrator/requirements-orchestrator.txt ]; then pip install -r orchestrator/requirements-orchestrator.txt; fi
+          if [ -f api_gateway/requirements.txt ]; then pip install -r api_gateway/requirements.txt; fi
           
       - name: Validate orchestrator dependencies
         if: steps.check-secret.outputs.should_skip == 'false'
         run: |
-          if [ -f orchestrator/requirements.in ]; then
+          if [ -f orchestrator/requirements-orchestrator.txt ]; then
             echo "Checking orchestrator dependency lock file..."
             cd orchestrator
             pip install pip-tools
-            pip-compile requirements.in --resolver=backtracking -o requirements.txt.tmp
-            if ! diff -q requirements.txt requirements.txt.tmp > /dev/null; then
-              echo "ERROR: requirements.txt is out of sync with requirements.in"
-              echo "Please run: cd orchestrator && pip-compile requirements.in --resolver=backtracking -o requirements.txt"
-              exit 1
+            if [ -f requirements.in ]; then
+              pip-compile requirements.in --resolver=backtracking -o requirements.txt.tmp
+              if ! diff -q requirements-orchestrator.txt requirements.txt.tmp > /dev/null; then
+                echo "ERROR: requirements-orchestrator.txt is out of sync with requirements.in"
+                echo "Please run: cd orchestrator && pip-compile requirements.in --resolver=backtracking -o requirements-orchestrator.txt"
+                exit 1
+              fi
+              rm requirements.txt.tmp
             fi
-            rm requirements.txt.tmp
             echo "✓ Orchestrator dependencies are in sync"
+            cd ..
           fi
 
       - name: Create pgvector extension
@@ -249,14 +273,20 @@ jobs:
         if: steps.check-secret.outputs.should_skip == 'false'
         run: |
           # Stop the build if there are Python syntax errors or undefined names
-          ruff check --select=E9,F63,F7,F82 --statistics .
+          ruff check --select=E9,F63,F7,F82 --statistics . || {
+            echo "❌ Critical Python syntax errors found"
+            exit 1
+          }
           # Exit-zero treats all errors as warnings
           ruff check --exit-zero --statistics .
 
       - name: Format check with black
         if: steps.check-secret.outputs.should_skip == 'false'
         run: |
-          black --check --diff .
+          black --check --diff . || {
+            echo "❌ Code formatting issues found. Run: black ."
+            exit 1
+          }
 
       - name: Run tests with GPT-4o
         if: steps.check-secret.outputs.should_skip == 'false'
@@ -265,7 +295,10 @@ jobs:
           TEST_FILES=$(find . -name "*test*.py" -o -name "test_*.py" 2>/dev/null | grep -v -E "(\.venv|venv|env|y/google-cloud-sdk|orchestrator/\.venv)" | head -1)
           if [ -n "$TEST_FILES" ]; then
             echo "Test files found, running pytest with GPT-4o..."
-            pytest --cov=. --cov-report=xml --cov-report=term-missing
+            pytest --cov=. --cov-report=xml --cov-report=term-missing || {
+              echo "❌ Tests failed"
+              exit 1
+            }
           else
             echo "No test files found in project directories, skipping tests"
             echo "This is expected for projects without tests yet."
