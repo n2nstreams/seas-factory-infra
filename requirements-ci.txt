@@ -1,95 +1,33 @@
-# CI Requirements - Unified dependency file for CI/CD workflows
-# This file resolves all version conflicts between different requirements files
+# CI Requirements - Essential dependencies for CI/CD workflows
+# This file contains only the core dependencies needed for CI to function
 
-# Core dependencies from requirements-base.txt
+# Core web framework (single version)
 fastapi==0.115.14
 uvicorn[standard]==0.34.0
 pydantic==2.11.1
-pydantic-settings==2.7.0
 starlette==0.46.2
 
-# HTTP Client & WebSocket
+# HTTP and database
 httpx==0.28.1
-websockets==13.0
-requests==2.32.0
-
-# Database & ORM
-sqlalchemy==2.0.36
-psycopg2-binary==2.9.9
 asyncpg==0.29.0
-redis==5.2.0
+psycopg2-binary==2.9.9
 
-# Google Cloud Platform
-google-cloud-logging==3.12.1
-google-cloud-pubsub==2.31.1
-google-cloud-storage==2.19.0
-google-cloud-aiplatform==1.101.0
-google-cloud-secret-manager==2.24.0
-google-cloud-monitoring==2.27.2
-google-cloud-error-reporting==1.10.0
-google-cloud-deploy==2.7.1
-google-auth==2.40.3
-google-cloud-bigquery==3.35.1
-google-cloud-resource-manager==1.14.2
-google-cloud-speech==2.33.0
-google-cloud-trace==1.16.2
-
-# AI & ML
-openai==1.93.0
-google-genai==1.24.0
-
-# Development & Testing
+# Testing and development tools
 pytest==8.3.4
 pytest-asyncio==0.24.0
 pytest-cov==6.1.0
-python-dotenv==1.0.1
-
-# Security & Authentication
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-cryptography==45.0.5
-bcrypt==4.1.2
-PyJWT==2.8.0
-
-# Utilities
-python-json-logger==2.0.7
-pyyaml==6.0.2
-python-multipart==0.0.17
-email-validator==2.2.0
-jinja2==3.1.6
-click==8.2.1
-aiofiles==24.1.0
-
-# Background Tasks
-celery==5.4.0
-
-# External Services
-stripe==12.3.0
-sendgrid==6.11.0
-
-# Configuration format
-python-decouple==3.8
-
-# Orchestrator-specific dependencies
-flask==3.1.1
-google-adk==1.5.0
-autogen-agentchat==0.7.2
-langgraph==0.5.1
-langgraph-sdk==0.2.0
-langsmith==0.4.4
-mcp==1.10.1
-numpy==1.26.4
-diskcache==5.6.3
-docker==7.1.0
-flaml==2.3.5
-graphviz==0.21
-
-# OpenTelemetry for monitoring
-opentelemetry-api==1.34.1
-opentelemetry-sdk==1.34.1
-opentelemetry-exporter-gcp-trace==1.9.0
-
-# CI-specific tools
 black==24.1.1
 ruff==0.2.1
-pip-tools==7.3.0
+
+# Basic utilities
+python-dotenv==1.0.1
+jinja2==3.1.6
+pyyaml==6.0.2
+
+# Authentication
+PyJWT==2.8.0
+bcrypt==4.1.2
+
+# Google Cloud (minimal set)
+google-auth==2.40.3
+google-cloud-logging==3.12.1
