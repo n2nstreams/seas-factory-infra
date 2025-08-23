@@ -191,13 +191,13 @@ export default function Signup() {
     const oauthConfigs = {
       github: {
         clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id',
-        redirectUri: `${window.location.origin}/auth/callback/github`,
+        redirectUri: `http://localhost:8000/auth/github`,
         scope: 'user:email',
         authUrl: 'https://github.com/login/oauth/authorize'
       },
       google: {
         clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your_google_client_id',
-        redirectUri: `${window.location.origin}/auth/callback/google`,
+        redirectUri: `http://localhost:8000/auth/google`,
         scope: 'openid email profile',
         authUrl: 'https://accounts.google.com/oauth2/v2/auth'
       }
@@ -562,7 +562,6 @@ export default function Signup() {
                         errors.agreeToTerms ? 'border-red-500 text-red-500' : 'border-stone-300 text-green-800'
                       }`}
                       aria-describedby="terms-description"
-                      aria-invalid={Boolean(errors.agreeToTerms)}
                     />
                     <label htmlFor="agreeToTerms" className="text-sm text-body cursor-pointer leading-relaxed">
                       I agree to the{" "}

@@ -197,7 +197,7 @@ class Settings(BaseSettings):
     # Tolerate extra env vars from various environments
     model_config = SettingsConfigDict(
         extra='ignore',
-        env_file='.env',
+        env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'),
         env_nested_delimiter='__',
         case_sensitive=False,
     )

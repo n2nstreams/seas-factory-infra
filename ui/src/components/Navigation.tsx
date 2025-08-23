@@ -157,27 +157,34 @@ export default function Navigation({ currentPage, user, onSignOut }: NavigationP
                     </div>
 
                     <div className="py-2">
-                                        <Link
-                    to="/dashboard"
-                    className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                  >
-                    <Activity className="w-4 h-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                                          <Link
-                      to="/billing"
-                      className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      <span>Billing</span>
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Settings</span>
-                    </Link>
+                      <Link
+                        to="/dashboard"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                      >
+                        <Activity className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                      <Link
+                        to="/profile"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Profile</span>
+                      </Link>
+                      <Link
+                        to="/billing"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>Billing</span>
+                      </Link>
+                      <Link
+                        to="/settings"
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-body hover:bg-stone-100/50 hover:text-heading transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </Link>
                     </div>
 
                     <div className="border-t border-stone-200/50 pt-2">

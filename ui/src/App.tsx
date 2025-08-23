@@ -14,6 +14,7 @@ import FAQPage from './pages/FAQ';
 import Marketplace from './pages/Marketplace';
 import Billing from './pages/Billing';
 import Settings from './pages/Settings';
+import Profile from './pages/Profile';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DPA from '@/pages/DPA';
@@ -123,7 +124,7 @@ function AppContent() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/auth/success" element={<OAuthSuccess />} />
+          <Route path="/auth/callback/:provider" element={<OAuthSuccess />} />
           <Route path="/auth/error" element={<OAuthError />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/marketplace" element={<Marketplace />} />
@@ -135,6 +136,11 @@ function AppContent() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } />
           <Route path="/billing" element={

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useAuth } from '@/App';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export default function OAuthSuccess() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
+  const { provider } = useParams();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -134,7 +135,7 @@ export default function OAuthSuccess() {
         <CardContent className="p-8 text-center">
           <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Authentication Successful!
+            {provider ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} Authentication Successful!` : 'Authentication Successful!'}
           </h2>
           <p className="text-gray-600 mb-6">
             Welcome to SaaS Factory! Redirecting you to your dashboard...

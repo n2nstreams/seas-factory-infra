@@ -20,6 +20,11 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from config.settings import get_settings
 from tenant_db import TenantDatabase, TenantContext
+from oauth_monitoring import (
+    record_oauth_start, record_oauth_success, record_oauth_error, 
+    record_oauth_callback, oauth_monitor
+)
+from dataclasses import asdict
 # from access_control import get_current_user_optional  # Not used in OAuth routes
 
 # Configure logging
@@ -32,6 +37,25 @@ tenant_db = TenantDatabase()
 
 # OAuth configuration
 settings = get_settings()
+
+# OAuth monitoring endpoints
+@router.get("/monitoring/metrics")
+async def get_oauth_metrics():
+    """Get OAuth performance metrics"""
+    return oauth_monitor.get_overall_metrics()
+
+@router.get("/monitoring/events")
+async def get_oauth_events(limit: int = 50):
+    """Get recent OAuth events"""
+    return oauth_monitor.get_recent_events(limit)
+
+@router.get("/monitoring/provider/{provider}")
+async def get_provider_metrics(provider: str):
+    """Get metrics for a specific OAuth provider"""
+    metrics = oauth_monitor.get_provider_metrics(provider)
+    if not metrics:
+        raise HTTPException(status_code=404, detail=f"Provider {provider} not found")
+    return asdict(metrics)
 
 # Google OAuth endpoints
 GOOGLE_AUTH_URL = "https://accounts.google.com/oauth2/v2/auth"
@@ -50,13 +74,18 @@ class OAuthCallbackRequest(BaseModel):
 
 
 @router.get("/google")
-async def google_oauth_start():
+async def google_oauth_start(request: Request):
     """Start Google OAuth flow"""
     if not settings.security.google_oauth_enabled:
         raise HTTPException(status_code=400, detail="Google OAuth is not enabled")
     
     if not settings.security.google_client_id:
         raise HTTPException(status_code=500, detail="Google OAuth client ID not configured")
+    
+    # Record OAuth start
+    record_oauth_start('google', 
+                      ip_address=request.client.host if request.client else None,
+                      user_agent=request.headers.get('user-agent'))
     
     # Build OAuth authorization URL
     params = {
@@ -76,6 +105,7 @@ async def google_oauth_start():
 
 @router.get("/callback/google")
 async def google_oauth_callback(
+    request: Request,
     code: str = Query(...),
     state: Optional[str] = Query(None),
     error: Optional[str] = Query(None)
@@ -136,25 +166,34 @@ async def google_oauth_callback(
             token = create_jwt_token(user)
             
             # Redirect to frontend with token
-            frontend_url = f"{settings.services.api_gateway_url.replace('api', 'app')}/auth/success?token={token}"
+            frontend_url = f"http://localhost:5173/auth/callback/google?token={token}"
             return RedirectResponse(url=frontend_url)
             
     except httpx.HTTPStatusError as e:
-        logger.error(f"Google OAuth HTTP error: {e.response.status_code} - {e.response.text}")
+        error_msg = f"Google OAuth HTTP error: {e.response.status_code} - {e.response.text}"
+        logger.error(error_msg)
+        record_oauth_error('google', error_msg)
         raise HTTPException(status_code=400, detail="Failed to complete OAuth flow")
     except Exception as e:
-        logger.error(f"Google OAuth error: {str(e)}")
+        error_msg = f"Google OAuth error: {str(e)}"
+        logger.error(error_msg)
+        record_oauth_error('google', error_msg)
         raise HTTPException(status_code=500, detail="Internal OAuth error")
 
 
 @router.get("/github")
-async def github_oauth_start():
+async def github_oauth_start(request: Request):
     """Start GitHub OAuth flow"""
     if not settings.security.github_oauth_enabled:
         raise HTTPException(status_code=400, detail="GitHub OAuth is not enabled")
     
     if not settings.security.github_client_id:
         raise HTTPException(status_code=500, detail="GitHub OAuth client ID not configured")
+    
+    # Record OAuth start
+    record_oauth_start('github', 
+                      ip_address=request.client.host if request.client else None,
+                      user_agent=request.headers.get('user-agent'))
     
     # Build OAuth authorization URL
     params = {
@@ -172,6 +211,7 @@ async def github_oauth_start():
 
 @router.get("/callback/github")
 async def github_oauth_callback(
+    request: Request,
     code: str = Query(...),
     state: Optional[str] = Query(None),
     error: Optional[str] = Query(None)
@@ -184,6 +224,7 @@ async def github_oauth_callback(
     if not code:
         raise HTTPException(status_code=400, detail="Authorization code not provided")
     
+    start_time = datetime.utcnow()
     try:
         # Exchange code for access token
         token_data = {
@@ -245,15 +286,25 @@ async def github_oauth_callback(
             # Generate JWT token
             token = create_jwt_token(user)
             
+            # Record successful OAuth
+            response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            record_oauth_success('github', primary_email, response_time,
+                               ip_address=request.client.host if request.client else None,
+                               user_agent=request.headers.get('user-agent'))
+            
             # Redirect to frontend with token
-            frontend_url = f"{settings.services.api_gateway_url.replace('api', 'app')}/auth/success?token={token}"
+            frontend_url = f"http://localhost:5173/auth/callback/github?token={token}"
             return RedirectResponse(url=frontend_url)
             
     except httpx.HTTPStatusError as e:
-        logger.error(f"GitHub OAuth HTTP error: {e.response.status_code} - {e.response.text}")
+        error_msg = f"GitHub OAuth HTTP error: {e.response.status_code} - {e.response.text}"
+        logger.error(error_msg)
+        record_oauth_error('github', error_msg)
         raise HTTPException(status_code=400, detail="Failed to complete OAuth flow")
     except Exception as e:
-        logger.error(f"GitHub OAuth error: {str(e)}")
+        error_msg = f"GitHub OAuth error: {str(e)}"
+        logger.error(error_msg)
+        record_oauth_error('github', error_msg)
         raise HTTPException(status_code=500, detail="Internal OAuth error")
 
 
