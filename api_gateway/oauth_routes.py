@@ -15,9 +15,12 @@ import jwt
 from urllib.parse import urlencode
 from pydantic import BaseModel
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from config.settings import get_settings
-from shared.tenant_db import TenantDatabase, TenantContext
-from shared.access_control import get_current_user_optional
+from tenant_db import TenantDatabase, TenantContext
+# from access_control import get_current_user_optional  # Not used in OAuth routes
 
 # Configure logging
 logger = logging.getLogger(__name__)
