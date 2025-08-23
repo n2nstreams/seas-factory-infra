@@ -54,10 +54,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-base.txt
-          if [ -f requirements-agents.txt ]; then pip install -r requirements-agents.txt; fi
-          if [ -f orchestrator/requirements-orchestrator.txt ]; then pip install -r orchestrator/requirements-orchestrator.txt; fi
-          if [ -f api_gateway/requirements.txt ]; then pip install -r api_gateway/requirements.txt; fi
+          # Install unified CI requirements to avoid conflicts
+          if [ -f requirements-ci.txt ]; then
+            echo "Installing unified CI requirements..."
+            pip install -r requirements-ci.txt
+          else
+            echo "Installing individual requirements files..."
+            pip install -r requirements-base.txt
+            if [ -f requirements-agents.txt ]; then pip install -r requirements-agents.txt; fi
+            if [ -f orchestrator/requirements-orchestrator.txt ]; then pip install -r orchestrator/requirements-orchestrator.txt; fi
+            if [ -f api_gateway/requirements.txt ]; then pip install -r api_gateway/requirements.txt; fi
+          fi
           
       - name: Wait for Postgres
         run: |
@@ -91,7 +98,7 @@ jobs:
           
       - name: Lint with ruff
         run: |
-          pip install ruff
+          # Ruff should already be installed from requirements-ci.txt
           ruff check --select=E9,F63,F7,F82 --statistics . || true
           ruff check --exit-zero --statistics .
           

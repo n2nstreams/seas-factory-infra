@@ -24,7 +24,7 @@ opentelemetry-api==1.34.1
 opentelemetry-sdk==1.34.1
 opentelemetry-exporter-gcp-trace==1.9.0
 
-# Additional Google Cloud services
+# Additional Google Cloud services - Updated to match base versions
 google-cloud-bigquery==3.35.1
 google-cloud-resource-manager==1.14.2
 google-cloud-speech==2.33.0
