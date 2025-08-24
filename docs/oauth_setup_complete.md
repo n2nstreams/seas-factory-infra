@@ -28,7 +28,7 @@ This guide provides step-by-step instructions for setting up Google and GitHub O
 2. **Name**: SaaS Factory OAuth Client
 3. **Authorized redirect URIs**:
    - Development: `http://localhost:8000/auth/callback/google`
-   - Production: `https://api-backend-xyz.run.app/auth/callback/google`
+   - Production: `https://api.forge95.com/auth/callback/google`
 4. Click **Create**
 
 ### Step 3: Save Google OAuth Credentials
@@ -45,11 +45,11 @@ This guide provides step-by-step instructions for setting up Google and GitHub O
    - **Application name**: SaaS Factory
    - **Homepage URL**: 
      - Development: `http://localhost:3000`
-     - Production: `https://app.saasfactory.com`
+     - Production: `https://www.forge95.com`
    - **Application description**: OAuth authentication for SaaS Factory platform
    - **Authorization callback URL**:
      - Development: `http://localhost:8000/auth/callback/github`
-     - Production: `https://api-backend-xyz.run.app/auth/callback/github`
+     - Production: `https://api.forge95.com/auth/callback/github`
 
 ### Step 2: Save GitHub OAuth Credentials
 - **Client ID**: Copy the generated client ID
@@ -133,10 +133,10 @@ GITHUB_REDIRECT_URI=/auth/callback/github
 4. **Deploy**: Deploy updated configuration to production
 
 ### Production URLs
-- **API Gateway**: `https://api-backend-xyz.run.app`
-- **Frontend**: `https://app.saasfactory.com`
-- **Google Callback**: `https://api-backend-xyz.run.app/auth/callback/google`
-- **GitHub Callback**: `https://api-backend-xyz.run.app/auth/callback/github`
+- **API Gateway**: `https://api.forge95.com`
+- **Frontend**: `https://www.forge95.com`
+- **Google Callback**: `https://api.forge95.com/auth/callback/google`
+- **GitHub Callback**: `https://api.forge95.com/auth/callback/github`
 
 ## Security Considerations
 

@@ -74,9 +74,9 @@ class EmailService:
     
     def __init__(self):
         self.api_key = os.getenv("SENDGRID_API_KEY")
-        self.from_email = os.getenv("FROM_EMAIL", "noreply@saasfactory.com")
+        self.from_email = os.getenv("FROM_EMAIL", "noreply@forge95.com")
         self.from_name = os.getenv("FROM_NAME", "SaaS Factory")
-        self.reply_to_email = os.getenv("REPLY_TO_EMAIL", "support@saasfactory.com")
+        self.reply_to_email = os.getenv("REPLY_TO_EMAIL", "support@forge95.com")
         
         if not self.api_key:
             logger.warning("SENDGRID_API_KEY not configured, email sending will be disabled")
@@ -484,7 +484,7 @@ class EmailService:
                 
                 <div class="message">
                     <strong>Questions about your billing?</strong><br>
-                    Our support team is here to help. Reply to this email or contact us at support@saasfactory.com.
+                    Our support team is here to help. Reply to this email or contact us at support@forge95.com.
                 </div>
             </div>
             
@@ -554,7 +554,7 @@ Your {{ plan_name }} subscription is now active and you have full access to all 
 Access your dashboard: {{ dashboard_url }}
 {% if invoice_url %}Download invoice: {{ invoice_url }}{% endif %}
 
-Questions about your billing? Our support team is here to help. Reply to this email or contact us at support@saasfactory.com.
+Questions about your billing? Our support team is here to help. Reply to this email or contact us at support@forge95.com.
 
 Best regards,
 The SaaS Factory Team
@@ -641,7 +641,7 @@ The SaaS Factory Team
                 "billing_period": data.billing_period,
                 "invoice_url": data.invoice_url,
                 "next_billing_date": data.next_billing_date,
-                "dashboard_url": os.getenv("DASHBOARD_URL", "https://app.saasfactory.com/dashboard")
+                "dashboard_url": os.getenv("DASHBOARD_URL", "https://www.forge95.com/dashboard")
             }
             
             html_content = html_template.render(**template_data)

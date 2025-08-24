@@ -165,7 +165,7 @@ services:
       - PORT=8000
       - DEBUG=true
       - LOG_LEVEL=INFO
-      - CORS_ORIGINS=["http://localhost:3000", "https://dev.saasfactory.com"]
+      - CORS_ORIGINS=["http://localhost:3000", "https://dev.forge95.com"]
       - MAX_CONNECTIONS=100
       - MAX_HISTORY_SIZE=1000
       - PING_INTERVAL=30

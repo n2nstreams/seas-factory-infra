@@ -27,10 +27,10 @@ The SaaS Factory platform supports OAuth authentication with both Google and Git
 - **Application type**: Web application
 - **Name**: SaaS Factory Production
 - **Authorized JavaScript origins**:
-  - `https://app.saasfactory.com`
-  - `https://saasfactory.com`
+  - `https://www.forge95.com`
+  - `https://forge95.com`
 - **Authorized redirect URIs**:
-  - `https://api.saasfactory.com/auth/callback/google`
+  - `https://api.forge95.com/auth/callback/google`
 
 ### 1.3 Get Credentials
 
@@ -49,9 +49,9 @@ After creation, you'll receive:
 ### 2.2 Configure OAuth App
 
 - **Application name**: SaaS Factory Production
-- **Homepage URL**: `https://app.saasfactory.com`
+- **Homepage URL**: `https://www.forge95.com`
 - **Application description**: OAuth authentication for SaaS Factory platform
-- **Authorization callback URL**: `https://api.saasfactory.com/auth/callback/github`
+- **Authorization callback URL**: `https://api.forge95.com/auth/callback/github`
 
 ### 2.3 Get Credentials
 
@@ -78,8 +78,8 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 GITHUB_REDIRECT_URI=/auth/callback/github
 
 # Service URLs
-FRONTEND_URL=https://app.saasfactory.com
-API_GATEWAY_URL=https://api.saasfactory.com
+FRONTEND_URL=https://www.forge95.com
+API_GATEWAY_URL=https://api.forge95.com
 ```
 
 ### 3.2 Secret Management
@@ -102,13 +102,13 @@ gcloud secrets add-iam-policy-binding google-oauth-client-secret \
 ### 4.1 Frontend Domain
 
 Ensure your frontend is accessible at:
-- `https://app.saasfactory.com` (main application)
-- `https://saasfactory.com` (landing page)
+- `https://www.forge95.com` (main application)
+- `https://forge95.com` (landing page)
 
 ### 4.2 Backend API Domain
 
 Ensure your API gateway is accessible at:
-- `https://api.saasfactory.com`
+- `https://api.forge95.com`
 
 ### 4.3 SSL/TLS Configuration
 

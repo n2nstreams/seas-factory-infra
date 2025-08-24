@@ -111,7 +111,7 @@ export default function OAuthSuccess() {
 
   const handleContactSupport = () => {
     // You can implement this to open a support form or redirect to support
-    window.open('mailto:support@saasfactory.com?subject=OAuth%20Authentication%20Issue', '_blank');
+            window.open('mailto:support@forge95.com?subject=OAuth%20Authentication%20Issue', '_blank');
   };
 
   if (status === 'loading') {

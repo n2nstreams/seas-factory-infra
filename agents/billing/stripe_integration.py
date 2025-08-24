@@ -643,8 +643,8 @@ class StripeIntegration:
                     welcome_data = WelcomeEmailData(
                         user_name=customer.name or customer.email.split('@')[0],
                         user_email=customer.email,
-                        login_url=os.getenv("LOGIN_URL", "https://app.saasfactory.com/login"),
-                        dashboard_url=os.getenv("DASHBOARD_URL", "https://app.saasfactory.com/dashboard"),
+                                    login_url=os.getenv("LOGIN_URL", "https://www.forge95.com/login"),
+            dashboard_url=os.getenv("DASHBOARD_URL", "https://www.forge95.com/dashboard"),
                         plan_name=subscription.tier.value.title(),
                         trial_days=14
                     )

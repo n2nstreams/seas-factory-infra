@@ -170,7 +170,7 @@ class NotificationConfig(BaseSettings):
     model_config = SettingsConfigDict(extra='ignore')
     # Email
     sendgrid_api_key: Optional[SecretStr] = Field(None, json_schema_extra={"env": "SENDGRID_API_KEY"})
-    alert_email: str = Field(default="alerts@saasfactory.com", json_schema_extra={"env": "ALERT_EMAIL"})
+    alert_email: str = Field(default="alerts@forge95.com", json_schema_extra={"env": "ALERT_EMAIL"})
 
     # Slack
     slack_webhook_url: Optional[SecretStr] = Field(None, json_schema_extra={"env": "SLACK_WEBHOOK_URL"})
@@ -319,7 +319,7 @@ def get_environment_config() -> Dict[str, Any]:
         return {
             'debug': False,
             'log_level': LogLevel.INFO,
-            'cors_origins': ['https://saasfactory.com'],
+            'cors_origins': ['https://forge95.com'],
             'rate_limit_enabled': True,
             'redis_enabled': True,
         }
@@ -327,7 +327,7 @@ def get_environment_config() -> Dict[str, Any]:
         return {
             'debug': False,
             'log_level': LogLevel.INFO,
-            'cors_origins': ['https://staging.saasfactory.com'],
+            'cors_origins': ['https://staging.forge95.com'],
             'rate_limit_enabled': True,
             'redis_enabled': True,
         }

@@ -27,7 +27,7 @@ app = FastAPI(
 # --- Configuration ---
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-FROM_EMAIL = "noreply@saasfactory.com"
+FROM_EMAIL = "noreply@forge95.com"
 
 # Initialize OpenAI client
 openai_client = openai.AsyncOpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None

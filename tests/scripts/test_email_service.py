@@ -56,8 +56,8 @@ async def test_email_service():
         welcome_data = WelcomeEmailData(
             user_name="Test",
             user_email=test_email,
-            login_url="https://app.saasfactory.com/login",
-            dashboard_url="https://app.saasfactory.com/dashboard",
+                    login_url="https://www.forge95.com/login",
+        dashboard_url="https://www.forge95.com/dashboard",
             plan_name="Pro",
             trial_days=14,
         )

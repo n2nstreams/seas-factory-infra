@@ -221,8 +221,8 @@ async def register_user(user_data: UserRegistrationRequest, request: Request):
                 welcome_data = WelcomeEmailData(
                     user_name=user_data.firstName,
                     user_email=user_data.email,
-                    login_url=os.getenv("LOGIN_URL", "https://app.saasfactory.com/login"),
-                    dashboard_url=os.getenv("DASHBOARD_URL", "https://app.saasfactory.com/dashboard"),
+                                login_url=os.getenv("LOGIN_URL", "https://www.forge95.com/login"),
+            dashboard_url=os.getenv("DASHBOARD_URL", "https://www.forge95.com/dashboard"),
                     plan_name=plan.title(),
                     trial_days=14
                 )
