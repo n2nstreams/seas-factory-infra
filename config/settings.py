@@ -108,6 +108,9 @@ class SecurityConfig(BaseSettings):
     google_client_id: Optional[str] = Field(None, json_schema_extra={"env": "GOOGLE_CLIENT_ID"})
     google_client_secret: Optional[SecretStr] = Field(None, json_schema_extra={"env": "GOOGLE_CLIENT_SECRET"})
     google_redirect_uri: str = Field(default="/auth/callback/google", json_schema_extra={"env": "GOOGLE_REDIRECT_URI"})
+    google_scopes: List[str] = Field(default=["openid", "email", "profile"], json_schema_extra={"env": "GOOGLE_SCOPES"})
+    google_prompt: str = Field(default="consent", json_schema_extra={"env": "GOOGLE_PROMPT"})
+    google_access_type: str = Field(default="offline", json_schema_extra={"env": "GOOGLE_ACCESS_TYPE"})
     
     # GitHub OAuth
     github_oauth_enabled: bool = Field(default=False, json_schema_extra={"env": "GITHUB_OAUTH_ENABLED"})
@@ -142,6 +145,7 @@ class ServiceConfig(BaseSettings):
     # Core services
     orchestrator_url: str = Field(default="http://localhost:8080", json_schema_extra={"env": "ORCHESTRATOR_URL"})
     api_gateway_url: str = Field(default="http://localhost:8000", json_schema_extra={"env": "API_GATEWAY_URL"})
+    frontend_url: str = Field(default="http://localhost:5173", json_schema_extra={"env": "FRONTEND_URL"})
 
     # Agent services
     techstack_agent_url: str = Field(default="http://localhost:8081", json_schema_extra={"env": "TECHSTACK_AGENT_URL"})

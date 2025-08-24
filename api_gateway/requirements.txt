@@ -22,5 +22,8 @@ jinja2==3.1.6
 # WebSocket
 websockets==13.0
 
+# Cache and State Management
+redis[hiredis]==5.0.1
+
 # General utilities
 python-dotenv==1.0.1
