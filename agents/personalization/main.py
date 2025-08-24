@@ -1,15 +1,14 @@
 import base64
 import json
-import os
 import logging
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import execute_values
 from pgvector.psycopg2 import register_vector
 from sentence_transformers import SentenceTransformer
 from google.cloud import pubsub_v1
-from config.settings import get_settings, Settings
+from config.settings import get_settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

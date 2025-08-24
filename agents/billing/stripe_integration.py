@@ -7,9 +7,10 @@ Real implementation of Stripe payment processing for SaaS Factory
 import os
 import logging
 import stripe
+import uuid
 from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
-from pydantic import BaseModel, Field, field_validator
+from datetime import datetime
+from pydantic import BaseModel, Field
 from enum import Enum
 import json
 from agents.shared.tenant_db import TenantDatabase, TenantContext

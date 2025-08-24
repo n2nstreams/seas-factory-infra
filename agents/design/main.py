@@ -2,18 +2,16 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
-import json
 import asyncio
 from typing import List, Dict, Any, Optional
 import os
 import logging
 from contextlib import asynccontextmanager
-import base64
 import sys
 
 # Add shared modules to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from tenant_db import TenantContext, get_tenant_context_from_headers
 from access_control import require_subscription, AccessLevel, TenantSubscription
 
 # Configure logging

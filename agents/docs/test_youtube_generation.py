@@ -87,13 +87,13 @@ Ready to transform your ideas? Get started today!"""
                 raise e
         
         # Test 2: Show available templates
-        print(f"\n📚 Available Templates:")
+        print("\n📚 Available Templates:")
         print("-" * 30)
         for template_name in agent.doc_patterns.keys():
             print(f"  • {template_name}")
         
         # Test 3: Show project context
-        print(f"\n🏗️  Project Context:")
+        print("\n🏗️  Project Context:")
         print("-" * 30)
         for key, value in agent.project_context.items():
             if isinstance(value, dict):
@@ -113,7 +113,7 @@ Ready to transform your ideas? Get started today!"""
 
 async def main():
     """Run all tests"""
-    print(f"🚀 Starting Night 73 Direct Testing")
+    print("🚀 Starting Night 73 Direct Testing")
     print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
     
@@ -136,9 +136,9 @@ async def main():
         print("  • Start service: python3 main.py")
         print("  • Test endpoint: POST /generate/youtube-script")
         
-        print(f"\n🎯 Night 73 Status: ✅ COMPLETED")
-        print(f"📊 Implementation Quality: EXCELLENT")
-        print(f"🚀 Ready for: Synthesia video generation")
+        print("\n🎯 Night 73 Status: ✅ COMPLETED")
+        print("📊 Implementation Quality: EXCELLENT")
+        print("🚀 Ready for: Synthesia video generation")
         
     else:
         print("❌ Night 73 Testing - ISSUES FOUND")

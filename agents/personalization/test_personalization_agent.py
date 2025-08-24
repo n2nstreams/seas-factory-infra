@@ -11,7 +11,7 @@ os.environ['DB_PASSWORD'] = 'test'
 os.environ['OPENAI_API_KEY'] = 'test'
 
 
-from agents.personalization.main import app, settings
+from agents.personalization.main import app
 
 client = TestClient(app)
 

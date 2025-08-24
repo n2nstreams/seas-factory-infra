@@ -13,16 +13,13 @@ This module provides:
 
 import os
 import logging
-import base64
-from typing import Dict, Any, Optional, List
-from datetime import datetime
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
 
 import sendgrid
-from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, FileContent, FileName, FileType, Disposition
+from sendgrid.helpers.mail import Mail, Email, To, Content
 from jinja2 import Environment, DictLoader
-import json
 
 logger = logging.getLogger(__name__)
 

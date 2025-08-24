@@ -16,7 +16,7 @@ import json
 import uuid
 from typing import Optional, Dict, Any, List, Set
 from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
 
 logger = logging.getLogger(__name__)

@@ -159,7 +159,7 @@ class Night69Demo:
         logger.info(f"Duration: {result.get('duration_seconds', 0):.1f} seconds")
         
         # Performance metrics
-        logger.info(f"\n📊 Performance Metrics:")
+        logger.info("\n📊 Performance Metrics:")
         logger.info(f"  Total Requests: {result['total_requests']:,}")
         logger.info(f"  Failed Requests: {result['failed_requests']:,}")
         logger.info(f"  Error Rate: {result['error_rate']:.1%}")
@@ -169,7 +169,7 @@ class Night69Demo:
         logger.info(f"  Data Received: {result['data_received_mb']:.2f} MB")
         
         # Threshold results
-        logger.info(f"\n🎯 Threshold Results:")
+        logger.info("\n🎯 Threshold Results:")
         thresholds = result.get('thresholds_passed', {})
         for threshold, passed in thresholds.items():
             status_icon = "✅" if passed else "❌"
@@ -186,7 +186,7 @@ class Night69Demo:
             for anomaly_id in anomalies:
                 logger.info(f"  - {anomaly_id}")
         else:
-            logger.info(f"\n✅ No anomalies detected")
+            logger.info("\n✅ No anomalies detected")
         
         # Store results for summary
         if test_name in self.demo_results:
@@ -326,7 +326,7 @@ class Night69Demo:
                 if results:
                     self.analyze_results(test_name, results)
             
-            logger.info(f"Waiting before next test...")
+            logger.info("Waiting before next test...")
             time.sleep(10)
         
         # 5. Quick stress test demo
@@ -393,7 +393,7 @@ class Night69Demo:
                 logger.info(f"  Avg Response: {test_result['avg_response_time']:.2f}ms")
                 logger.info(f"  Thresholds: {'PASS' if test_result['overall_passed'] else 'FAIL'}")
         
-        logger.info(f"\n✨ Night 69 Demo Completed Successfully!")
+        logger.info("\n✨ Night 69 Demo Completed Successfully!")
         logger.info("Key Features Demonstrated:")
         logger.info("  ✅ Multiple load test types (spike, load, stress)")
         logger.info("  ✅ Real-time monitoring and progress tracking")

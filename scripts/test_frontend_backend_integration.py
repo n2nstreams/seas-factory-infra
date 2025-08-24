@@ -148,7 +148,7 @@ Examples:
     # Set environment variable
     os.environ['TEST_API_URL'] = args.api_url
     
-    print(f"🎯 Testing Frontend-Backend Integration")
+    print("🎯 Testing Frontend-Backend Integration")
     print(f"🔗 API URL: {args.api_url}")
     print(f"⚡ Mode: {'Quick' if args.quick else 'Full'}")
     print("=" * 60)

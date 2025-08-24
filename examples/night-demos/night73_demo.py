@@ -5,8 +5,6 @@ Demo of TL;DR video script generation using the enhanced DocAgent
 """
 
 import asyncio
-import requests
-import json
 from datetime import datetime
 from typing import Dict, Any
 
@@ -48,7 +46,7 @@ class Night73Demo:
             self.demo_scripts.append(result)
             print(f"✅ Generated {result['word_count']} word script")
             print(f"📝 Title: {result['title']}")
-            print(f"⏱️  Duration: 3 minutes")
+            print("⏱️  Duration: 3 minutes")
             print("\nScript Preview:")
             print("-" * 30)
             print(result['content'][:500] + "..." if len(result['content']) > 500 else result['content'])
@@ -71,7 +69,7 @@ class Night73Demo:
             self.demo_scripts.append(result)
             print(f"✅ Generated {result['word_count']} word script")
             print(f"📝 Title: {result['title']}")
-            print(f"⏱️  Duration: 7 minutes")
+            print("⏱️  Duration: 7 minutes")
             print("\nScript Preview:")
             print("-" * 30)
             print(result['content'][:500] + "..." if len(result['content']) > 500 else result['content'])
@@ -94,7 +92,7 @@ class Night73Demo:
             self.demo_scripts.append(result)
             print(f"✅ Generated {result['word_count']} word script")
             print(f"📝 Title: {result['title']}")
-            print(f"⏱️  Duration: 5 minutes")
+            print("⏱️  Duration: 5 minutes")
             print("\nScript Preview:")
             print("-" * 30)
             print(result['content'][:500] + "..." if len(result['content']) > 500 else result['content'])

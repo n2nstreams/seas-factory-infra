@@ -6,12 +6,9 @@ Comprehensive tests for ZAP penetration testing functionality.
 
 import pytest
 import asyncio
-import json
-import uuid
 from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
 
 # Import the components to test
 from agents.qa.zap_penetration_agent import (

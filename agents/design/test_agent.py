@@ -4,7 +4,6 @@ Test script for DesignAgent
 """
 import asyncio
 import httpx
-import json
 from main import DesignAgent, DesignRequest
 
 async def test_agent_direct():
@@ -25,7 +24,7 @@ async def test_agent_direct():
     
     try:
         recommendation = await agent.generate_design(request)
-        print(f"✅ Direct test successful!")
+        print("✅ Direct test successful!")
         print(f"Project Type: {recommendation.project_type}")
         print(f"Generated Wireframes: {len(recommendation.wireframes)}")
         print(f"Figma Project URL: {recommendation.figma_project_url}")
@@ -81,7 +80,7 @@ async def test_agent_http():
             
             if generate_response.status_code == 200:
                 recommendation = generate_response.json()
-                print(f"✅ Design generation endpoint works!")
+                print("✅ Design generation endpoint works!")
                 print(f"Generated {len(recommendation['wireframes'])} wireframes")
                 print(f"Style theme: {recommendation['style_guide']['theme']}")
                 print(f"Figma URL: {recommendation['figma_project_url']}")
@@ -154,7 +153,7 @@ async def main():
     # Run glassmorphism theme test
     theme_success = await test_glassmorphism_theme()
     
-    print(f"\n📊 Test Results:")
+    print("\n📊 Test Results:")
     print(f"Direct API: {'✅ PASS' if direct_success else '❌ FAIL'}")
     print(f"HTTP API: {'✅ PASS' if http_success else '❌ FAIL'}")
     print(f"Glassmorphism Theme: {'✅ PASS' if theme_success else '❌ FAIL'}")

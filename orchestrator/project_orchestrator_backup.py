@@ -8,7 +8,7 @@ import os
 import json
 import logging
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from abc import ABC, abstractmethod
 from google.cloud import pubsub_v1
 from dataclasses import dataclass

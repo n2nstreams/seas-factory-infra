@@ -5,10 +5,9 @@ Eliminates multiple logging.basicConfig() calls and provides proper file handle 
 
 import logging
 import logging.handlers
-import os
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 from datetime import datetime
 
 # Global logger instances to prevent recreation

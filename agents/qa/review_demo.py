@@ -6,10 +6,9 @@ and providing feedback loops to DevAgent
 """
 
 import asyncio
-import json
 from review_agent import (
     ReviewAgent, CodeReviewRequest, GeneratedCodeFile, 
-    TenantContext, CodeReviewResult
+    TenantContext
 )
 
 async def demo_basic_code_review():
@@ -143,7 +142,7 @@ def test_calculator_edge_cases():
         print("🔧 Starting code review with pytest execution...")
         result = await review_agent.review_generated_code(review_request, tenant_context)
         
-        print(f"✅ Code review completed!")
+        print("✅ Code review completed!")
         print(f"📊 Review ID: {result.review_id}")
         print(f"📈 Review Status: {result.review_status}")
         print(f"⏱️  Duration: {result.review_duration:.2f} seconds")
@@ -152,7 +151,7 @@ def test_calculator_edge_cases():
         # Display test results
         if result.cloud_build_result and result.cloud_build_result.pytest_results:
             pytest_results = result.cloud_build_result.pytest_results
-            print(f"\n🧪 Test Results:")
+            print("\n🧪 Test Results:")
             print(f"  Total tests: {pytest_results.total_tests}")
             print(f"  Passed: {pytest_results.passed}")
             print(f"  Failed: {pytest_results.failed}")
@@ -322,7 +321,7 @@ async def demo_metrics_and_reporting():
     print(f"  Average Duration: {metrics['average_review_duration']}s")
     print(f"  Retry Rate: {metrics['retry_rate']:.1%}")
     
-    print(f"\n🔍 Most Common Issues:")
+    print("\n🔍 Most Common Issues:")
     for issue in metrics['most_common_issues']:
         print(f"    - {issue}")
     

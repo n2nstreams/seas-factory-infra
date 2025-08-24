@@ -5,7 +5,6 @@ Handles Cloud Build API calls and build monitoring
 """
 
 import asyncio
-import json
 import os
 import tempfile
 import zipfile

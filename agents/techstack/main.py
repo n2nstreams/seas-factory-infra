@@ -2,8 +2,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
-import json
-import asyncio
 from typing import List, Dict, Any, Optional
 import os
 import logging
@@ -240,7 +238,7 @@ class TechStackAgent:
         
         # Generate reasoning
         reasoning = f"Based on analysis of {len(all_libs)} libraries for {request.project_type} project. "
-        reasoning += f"Top recommendations prioritize community support, maintenance activity, and ecosystem maturity. "
+        reasoning += "Top recommendations prioritize community support, maintenance activity, and ecosystem maturity. "
         reasoning += f"Overall stack score: {overall_score:.1f}/10"
         
         return TechStackRecommendation(

@@ -4,23 +4,16 @@ UIDevAgent - Night 39 Implementation
 Scaffolds React pages from Figma JSON via CLI html-to-react
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, ValidationError
-import httpx
+from pydantic import BaseModel, Field
 import json
-import asyncio
 import os
 import tempfile
-import shutil
 import subprocess
-import uuid
 from typing import List, Dict, Any, Optional, Literal, Union
-from datetime import datetime
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
-import yaml
 import re
 
 # Import shared components
@@ -28,8 +21,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
 from github_integration import (
-    create_github_integration, GitHubFile, PullRequestConfig,
-    generate_branch_name, generate_pr_title, generate_pr_body
+    create_github_integration
 )
 
 # Configure logging
@@ -284,7 +276,7 @@ class UIDevAgent:
         
         # Position
         if node.x is not None and node.y is not None:
-            styles.append(f"position: absolute;")
+            styles.append("position: absolute;")
             styles.append(f"left: {node.x}px;")
             styles.append(f"top: {node.y}px;")
         

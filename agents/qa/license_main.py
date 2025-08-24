@@ -8,11 +8,10 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-import asyncio
 import logging
 import os
 import sys
-from typing import Dict, List, Any, Optional
+from typing import Optional
 
 # Import shared components
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
@@ -21,7 +20,7 @@ from tenant_db import TenantDatabase, get_tenant_context_from_headers
 # Import the License Scan Agent
 from license_scan_agent import (
     LicenseScanAgent, LicenseScanRequest, LicenseScanResult, 
-    LicensePolicy, ORTResult, ScanStatus
+    LicensePolicy
 )
 
 # Configure logging

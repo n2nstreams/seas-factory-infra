@@ -1,10 +1,10 @@
 import os
 import logging
 import sys
-from fastapi import FastAPI, Request, HTTPException, Depends, Header
+from fastapi import FastAPI, Request, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from stripe_integration import get_stripe_integration, SubscriptionTier
-from shared.tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from shared.tenant_db import TenantDatabase
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 
@@ -12,7 +12,7 @@ from typing import Optional, Dict, Any
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from access_control import (
     get_subscription_status, refresh_subscription_cache, 
-    subscription_verifier, AccessLevel, TenantSubscription
+    subscription_verifier, AccessLevel
 )
 
 logging.basicConfig(level=logging.INFO)

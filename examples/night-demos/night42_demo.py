@@ -5,10 +5,8 @@ Demonstrates the enhanced dashboard functionality for monitoring code generation
 """
 
 import asyncio
-import json
-import time
 from datetime import datetime, timezone
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 print("🚀 Night 42 Demo: Dashboard Enhancement")
 print("=" * 60)

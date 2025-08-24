@@ -5,11 +5,9 @@ Provides HTTP endpoints for the orchestrator functionality
 """
 
 import os
-import json
 import logging
 from flask import Flask, request, jsonify
 from project_orchestrator import ProjectOrchestrator
-from typing import Dict, Any
 
 # Configure logging
 logging.basicConfig(

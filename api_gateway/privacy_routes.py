@@ -10,18 +10,15 @@ This module provides:
 - Privacy settings management
 """
 
-import os
 import logging
-import sys
 import uuid
-from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header, Request
+from fastapi import APIRouter, HTTPException, Header, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
-from privacy_service import PrivacyService, ConsentRequest, DataExportRequest, get_privacy_service
+from privacy_service import ConsentRequest, DataExportRequest, get_privacy_service
 
 logger = logging.getLogger(__name__)
 

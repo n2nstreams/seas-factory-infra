@@ -255,7 +255,7 @@ async def main():
             print("=" * 70)
             report = await demo.test.run_complete_test()
             
-            print(f"\n📋 Test Report:")
+            print("\n📋 Test Report:")
             print(f"   Status: {report['test_status']}")
             print(f"   Duration: {report.get('test_duration_seconds', 'N/A')}")
             print(f"   WebSocket Events: {report['websocket_events']}")

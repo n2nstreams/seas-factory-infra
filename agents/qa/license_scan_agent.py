@@ -4,34 +4,24 @@ License Scan Agent - Night 64 Implementation
 OSS Review Toolkit (ORT) integration - fail pipeline on GPL licenses
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, ValidationError
-import httpx
+from fastapi import HTTPException
+from pydantic import BaseModel, Field
 import json
-import asyncio
 import os
 import tempfile
 import shutil
 import subprocess
 import uuid
-from typing import List, Dict, Any, Optional, Literal, Union
+from typing import List, Dict, Any, Optional, Literal
 from datetime import datetime
 import logging
-from contextlib import asynccontextmanager
-from pathlib import Path
 import yaml
-import re
 from enum import Enum
 
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
-from github_integration import (
-    create_github_integration, ReviewComment, 
-    generate_pr_title, generate_pr_body
-)
+from tenant_db import TenantDatabase, TenantContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

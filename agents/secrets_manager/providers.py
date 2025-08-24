@@ -6,9 +6,8 @@ Supports GCP Secret Manager, AWS Secrets Manager, and Azure Key Vault
 import abc
 import logging
 from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
+from datetime import datetime
 from google.cloud import secretmanager
-import json
 
 logger = logging.getLogger(__name__)
 

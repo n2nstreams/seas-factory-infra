@@ -13,18 +13,15 @@ import asyncio
 import json
 import logging
 import os
-import subprocess
-import tempfile
-import time
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Any, AsyncGenerator, Tuple
+from typing import Dict, List, Optional, Any, AsyncGenerator
 import uuid
 
 # FastAPI imports
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -1710,6 +1707,7 @@ async def get_active_alerts(
 @app.post("/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(
     alert_id: str,
+    request: Request,
     tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
     aiops_agent: AIOpsAgent = Depends(get_aiops_agent)
 ):
@@ -1737,6 +1735,7 @@ async def acknowledge_alert(
 @app.post("/alerts/{alert_id}/resolve")
 async def resolve_alert(
     alert_id: str,
+    request: Request,
     resolution_note: str = "",
     tenant_context: TenantContext = Depends(get_tenant_context_from_headers),
     aiops_agent: AIOpsAgent = Depends(get_aiops_agent)

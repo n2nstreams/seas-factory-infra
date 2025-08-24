@@ -4,7 +4,6 @@ Demo script for DevAgent - Shows how to use the DevAgent for code generation
 """
 
 import asyncio
-import json
 from main import DevAgent, ModuleSpec, CodeGenerationRequest, TenantContext
 
 async def demo_python_service_generation():
@@ -100,7 +99,7 @@ async def demo_python_service_generation():
         print("🔧 Generating code...")
         result = await dev_agent.generate_code(request, tenant_context)
         
-        print(f"✅ Code generation completed!")
+        print("✅ Code generation completed!")
         print(f"📁 Generated {result.total_files} files")
         print(f"📝 Total lines of code: {result.total_lines}")
         print(f"🎯 Estimated complexity: {result.estimated_complexity}")
@@ -195,7 +194,7 @@ async def demo_react_component_generation():
         print("🔧 Generating React component...")
         result = await dev_agent.generate_code(request, tenant_context)
         
-        print(f"✅ Component generation completed!")
+        print("✅ Component generation completed!")
         print(f"📁 Generated {result.total_files} files")
         
         # Display generated files
@@ -283,7 +282,7 @@ async def demo_api_endpoint_generation():
         print("🔧 Generating API endpoints...")
         result = await dev_agent.generate_code(request, tenant_context)
         
-        print(f"✅ API generation completed!")
+        print("✅ API generation completed!")
         print(f"📁 Generated {result.total_files} files")
         
         # Display generated files
@@ -292,7 +291,7 @@ async def demo_api_endpoint_generation():
             print(f"  - {file.filename} ({file.file_type}, {file.language})")
         
         # Show reasoning
-        print(f"\n🤔 Generation Reasoning:")
+        print("\n🤔 Generation Reasoning:")
         print(result.reasoning)
         
     except Exception as e:

@@ -11,29 +11,24 @@ This service provides:
 - Automated incident detection and notifications
 """
 
-import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Dict, List, Optional, Any
+from typing import List, Optional
 
 # FastAPI imports
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query, Request
+from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from fastapi.responses import HTMLResponse
 
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
 
 # Import Status Page Agent
 from status_page_agent import (
     StatusPageAgent, StatusPageRequest, StatusPageResponse,
-    IncidentCreateRequest, IncidentUpdateRequest,
-    ServiceStatus, IncidentSeverity, IncidentStatus
+    IncidentCreateRequest, IncidentUpdateRequest
 )
 
 # Configure logging

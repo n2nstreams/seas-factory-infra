@@ -10,17 +10,14 @@ This module provides:
 - Marketplace statistics
 """
 
-import os
 import logging
-import json
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Dict, Any, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header, Query
-from pydantic import BaseModel, Field
-import asyncpg
+from fastapi import APIRouter, HTTPException, Header, Query
+from pydantic import BaseModel
 
-from tenant_db import TenantDatabase, TenantContext
+from tenant_db import TenantDatabase
 
 logger = logging.getLogger(__name__)
 

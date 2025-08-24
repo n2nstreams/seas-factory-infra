@@ -17,9 +17,9 @@ from contextlib import asynccontextmanager
 from typing import Dict, List, Optional, Any
 
 # FastAPI imports
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 # Import shared components
 import sys
@@ -28,17 +28,14 @@ from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_hea
 
 # Import AIOps agent and rollback controller
 from aiops_agent import (
-    AIOpsAgent, LogStreamConfig, AnomalyDetectionRequest, AlertConfigUpdate,
-    LogAnalyticsQuery, AlertSeverity, AnomalyType, GOOGLE_CLOUD_AVAILABLE,
-    LoadTestRequest, LoadTestStatusResponse, LoadTestResult
+    AIOpsAgent, LogStreamConfig, AnomalyDetectionRequest, AlertSeverity, GOOGLE_CLOUD_AVAILABLE,
+    LoadTestRequest, LoadTestTargetRequest, LoadTestStatusResponse
 )
 from rollback_controller import (
-    RollbackController, ErrorBudgetWebhookRequest, RollbackOperation,
-    RollbackStatus, RollbackTrigger
+    RollbackController, ErrorBudgetWebhookRequest
 )
 from database_failover_agent import (
-    DatabaseFailoverAgent, FailoverRequest, FailoverResponse,
-    DatabaseHealthResponse
+    DatabaseFailoverAgent, FailoverRequest, FailoverResponse
 )
 
 # Configure logging

@@ -6,10 +6,8 @@ Comprehensive testing of OAuth setup and configuration
 
 import requests
 import sys
-import json
-import time
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any
 
 # Add project root to path for imports
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -277,19 +275,19 @@ class OAuthTester:
         passed_tests = sum(1 for result in self.test_results if result['success'])
         failed_tests = total_tests - passed_tests
         
-        print(f"\n📊 Test Summary:")
+        print("\n📊 Test Summary:")
         print(f"  Total Tests: {total_tests}")
         print(f"  Passed: {passed_tests}")
         print(f"  Failed: {failed_tests}")
         print(f"  Success Rate: {(passed_tests/total_tests)*100:.1f}%")
         
         if failed_tests > 0:
-            print(f"\n❌ Failed Tests:")
+            print("\n❌ Failed Tests:")
             for result in self.test_results:
                 if not result['success']:
                     print(f"  - {result['test']}: {result['message']}")
         
-        print(f"\n✅ Passed Tests:")
+        print("\n✅ Passed Tests:")
         for result in self.test_results:
             if result['success']:
                 print(f"  - {result['test']}: {result['message']}")

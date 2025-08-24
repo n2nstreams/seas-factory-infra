@@ -5,15 +5,11 @@ Tests Figma JSON parsing, React scaffolding, and html-to-react integration
 """
 
 import pytest
-import asyncio
-import json
-import tempfile
 from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime
 
 from main import (
     UIDevAgent, FigmaNode, FigmaFrame, FigmaDocument,
-    UIScaffoldRequest, ReactComponent, ReactPage,
+    UIScaffoldRequest, ReactPage,
     TenantContext
 )
 

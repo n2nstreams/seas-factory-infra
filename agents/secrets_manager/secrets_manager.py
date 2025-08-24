@@ -3,7 +3,6 @@ SecretsManagerAgent - Core secret rotation and management logic
 Handles automatic rotation, scheduling, and multi-cloud secret management
 """
 
-import asyncio
 import logging
 import uuid
 from datetime import datetime, timedelta

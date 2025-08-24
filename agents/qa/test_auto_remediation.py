@@ -9,11 +9,8 @@ Comprehensive testing for auto-remediation functionality including:
 """
 
 import pytest
-import asyncio
-import json
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import patch
 from datetime import datetime
-from typing import Dict, Any
 
 # Import the modules to test
 from auto_remediation import (
@@ -458,7 +455,7 @@ class TestAutoRemediationEngine:
         
         # Test package upgrade rollback
         rollback_cmd = engine._generate_rollback_command(action)
-        assert f"npm install lodash@4.17.15" in rollback_cmd
+        assert "npm install lodash@4.17.15" in rollback_cmd
         
         # Test security patch rollback
         action.remediation_type = RemediationType.SECURITY_PATCH

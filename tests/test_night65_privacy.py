@@ -10,8 +10,6 @@ This module tests:
 """
 
 import pytest
-import json
-import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -130,7 +128,8 @@ class TestGDPRSignupFlow:
     
     def test_signup_validation_requires_gdpr_consent(self, monkeypatch):
         """Test that signup validation requires GDPR consent"""
-        import sys, os
+        import sys
+        import os
         sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
         # Provide stable alias for module import in tests
         import importlib

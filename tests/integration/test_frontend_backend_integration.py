@@ -14,11 +14,7 @@ These tests verify:
 import asyncio
 import pytest
 import uuid
-import json
 import httpx
-from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any
 
 # Import conftest with proper path handling
 import sys
@@ -36,7 +32,6 @@ except ImportError:
         return func
     
     def wait_for_condition(condition, timeout=30, interval=1):
-        import asyncio
         import time
         start_time = time.time()
         while time.time() - start_time < timeout:

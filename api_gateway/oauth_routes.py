@@ -4,7 +4,7 @@ OAuth Authentication Routes for SaaS Factory
 Handles Google and GitHub OAuth authentication flows
 """
 
-from fastapi import APIRouter, HTTPException, Request, Depends, Query
+from fastapi import APIRouter, HTTPException, Request, Query
 from fastapi.responses import RedirectResponse
 import httpx
 import logging
@@ -16,13 +16,12 @@ from urllib.parse import urlencode
 from pydantic import BaseModel
 
 import sys
-import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from config.settings import get_settings
 from tenant_db import TenantDatabase, TenantContext
 from oauth_monitoring import (
     record_oauth_start, record_oauth_success, record_oauth_error, 
-    record_oauth_callback, oauth_monitor
+    oauth_monitor
 )
 from dataclasses import asdict
 # from access_control import get_current_user_optional  # Not used in OAuth routes
@@ -33,9 +32,7 @@ import base64
 import time
 import json
 import re
-from typing import Optional, Dict, Any
 from collections import defaultdict
-from datetime import datetime, timedelta
 
 # Configure logging
 logger = logging.getLogger(__name__)

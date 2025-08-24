@@ -1,16 +1,14 @@
-import os
 import logging
 import re
 import ast
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional, Set
+from typing import List, Optional
 from dotenv import load_dotenv
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI
-from langchain.chains.summarize import load_summarize_chain
 import json
 import fnmatch
 

@@ -10,7 +10,6 @@ Implements comprehensive health monitoring including:
 
 import asyncio
 import logging
-import json
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
@@ -18,7 +17,6 @@ from enum import Enum
 from dataclasses import dataclass
 import httpx
 import psutil
-import subprocess
 
 logger = logging.getLogger(__name__)
 

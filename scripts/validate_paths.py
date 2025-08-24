@@ -92,7 +92,7 @@ def check_file_for_path_issues(file_path: Path) -> List[Tuple[str, int, str, str
                 if re.search(pattern, line, re.IGNORECASE):
                     issues.append((pattern, line_num, line.strip(), replacement, description))
                     
-    except (UnicodeDecodeError, PermissionError) as e:
+    except (UnicodeDecodeError, PermissionError):
         # Skip binary files or files we can't read
         pass
         

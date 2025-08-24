@@ -14,8 +14,8 @@ import json
 import logging
 import os
 import base64
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from datetime import datetime
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 import functions_framework
@@ -23,7 +23,7 @@ from google.cloud import logging as cloud_logging
 from google.cloud import monitoring_v3
 from google.cloud import billing_v1
 import sendgrid
-from sendgrid.helpers.mail import Mail, Email, To, Content
+from sendgrid.helpers.mail import Mail, Email, To
 
 # Initialize clients
 logging_client = cloud_logging.Client()

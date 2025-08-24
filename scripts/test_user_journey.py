@@ -6,9 +6,7 @@ Tests the complete user journey from signup to idea submission
 
 import asyncio
 import aiohttp
-import json
 import sys
-from typing import Dict, Any
 import logging
 
 # Configure logging

@@ -8,16 +8,15 @@ import pytest
 import asyncio
 import sys
 import os
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime
+from unittest.mock import patch
 
 # Add shared modules to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agents', 'shared'))
 
 from access_control import (
     SubscriptionVerifier, SubscriptionStatus, SubscriptionTier, 
-    AccessLevel, TenantSubscription, AccessControlError,
-    subscription_verifier, get_subscription_status
+    AccessLevel, TenantSubscription, get_subscription_status
 )
 
 
@@ -441,7 +440,7 @@ async def test_full_access_control_flow():
             assert not limits['projects_within_limit']
             assert not limits['build_hours_within_limit']
         else:
-            print(f"  ✓ Usage Limits: Within limits")
+            print("  ✓ Usage Limits: Within limits")
             assert limits['projects_within_limit']
             assert limits['build_hours_within_limit']
     

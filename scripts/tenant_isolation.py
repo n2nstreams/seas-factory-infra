@@ -20,8 +20,7 @@ import subprocess
 import urllib.request
 import urllib.error
 from datetime import datetime
-from typing import Dict, Any, Optional, List
-import uuid
+from typing import Dict, Any, Optional
 
 # Configure logging
 logging.basicConfig(
@@ -241,7 +240,7 @@ class TenantIsolationManager:
             )
             
             await conn.close()
-            logger.info(f"Updated tenant status to isolated")
+            logger.info("Updated tenant status to isolated")
             
         except Exception as e:
             logger.error(f"Error updating tenant status: {e}")
@@ -276,7 +275,7 @@ class TenantIsolationManager:
                 '--set-env-vars', f'DB_USER={self.source_db_config["user"]}',
                 '--set-env-vars', f'DB_PASSWORD={self.source_db_config["password"]}',
                 '--set-env-vars', f'TENANT_ID={tenant_slug}',
-                '--set-env-vars', f'ISOLATION_MODE=isolated',
+                '--set-env-vars', 'ISOLATION_MODE=isolated',
                 '--vpc-connector', f'projects/{self.project_id}/locations/{self.region}/connectors/vpc-connector',
                 '--vpc-egress', 'private-ranges-only',
                 '--quiet'
@@ -506,7 +505,7 @@ class TenantIsolationManager:
                 'cloud_run_deployed': deploy_cloud_run
             }
             
-            logger.info(f"Tenant isolation promotion completed successfully")
+            logger.info("Tenant isolation promotion completed successfully")
             return result
             
         except Exception as e:

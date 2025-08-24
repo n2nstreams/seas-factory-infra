@@ -4,12 +4,8 @@ Playwright Test Generator - Night 40 Implementation
 Automatically generates comprehensive Playwright tests for web applications
 """
 
-import json
-import os
-import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from pydantic import BaseModel, Field
-from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)

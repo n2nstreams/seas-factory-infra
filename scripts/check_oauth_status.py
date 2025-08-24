@@ -5,7 +5,6 @@ Quickly check OAuth configuration status
 """
 
 import requests
-import sys
 
 def check_oauth_status():
     """Check OAuth status from the API"""

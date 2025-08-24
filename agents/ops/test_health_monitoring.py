@@ -13,9 +13,7 @@ sys.path.append(os.path.dirname(__file__))
 
 from health_monitoring import (
     HealthMonitor, 
-    CheckType, 
-    HealthStatus,
-    AlertSeverity
+    CheckType
 )
 
 async def test_health_monitoring():

@@ -12,12 +12,11 @@ This module provides:
 
 import os
 import logging
-import sys
 import uuid
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header, Request
+from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel, EmailStr, field_validator
 import asyncpg
 import bcrypt
@@ -252,7 +251,7 @@ async def register_user(user_data: UserRegistrationRequest, request: Request):
             
     except HTTPException:
         raise
-    except asyncpg.exceptions.UniqueViolationError as e:
+    except asyncpg.exceptions.UniqueViolationError:
         logger.warning(f"User registration failed - email already exists: {user_data.email}")
         raise HTTPException(
             status_code=409,

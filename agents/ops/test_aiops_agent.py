@@ -10,28 +10,22 @@ This test suite validates:
 - Error handling
 """
 
-import asyncio
-import json
 import os
 import pytest
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import Mock, AsyncMock, patch
 
 # Test dependencies
-import httpx
 from fastapi.testclient import TestClient
 
 # Import components to test
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from tenant_db import TenantContext
 
 from aiops_agent import (
-    AIOpsAgent, LogEntry, LogBatch, Anomaly, Alert, 
-    AlertSeverity, AnomalyType, LogProcessingStatus,
-    LogStreamConfig, AnomalyDetectionRequest
+    AIOpsAgent, LogEntry, LogBatch, Anomaly, AlertSeverity, AnomalyType, LogProcessingStatus,
+    LogStreamConfig
 )
 from main import app
 
@@ -409,7 +403,7 @@ class TestAIOpsAgent:
         # Create anomalies with different services and severities
         anomalies = [
             Anomaly(
-                anomaly_id=f"anomaly-1",
+                anomaly_id="anomaly-1",
                 anomaly_type=AnomalyType.ERROR_SPIKE,
                 severity=AlertSeverity.HIGH,
                 service="service-a",
@@ -422,7 +416,7 @@ class TestAIOpsAgent:
                 recommended_actions=[]
             ),
             Anomaly(
-                anomaly_id=f"anomaly-2",
+                anomaly_id="anomaly-2",
                 anomaly_type=AnomalyType.LATENCY_INCREASE,
                 severity=AlertSeverity.MEDIUM,
                 service="service-b",
@@ -435,7 +429,7 @@ class TestAIOpsAgent:
                 recommended_actions=[]
             ),
             Anomaly(
-                anomaly_id=f"anomaly-3",
+                anomaly_id="anomaly-3",
                 anomaly_type=AnomalyType.UNUSUAL_PATTERN,
                 severity=AlertSeverity.HIGH,
                 service="service-a",

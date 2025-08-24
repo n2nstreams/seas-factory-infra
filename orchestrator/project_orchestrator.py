@@ -2,7 +2,7 @@ from google.adk.agents import Agent
 from google.adk.tools import transfer_to_agent
 from orchestrator.providers import get_llm_model
 from pydantic import BaseModel
-from typing import Any, Dict
+from typing import Any
 import httpx
 import os
 import json
@@ -124,10 +124,10 @@ def generate_wireframes(project_type: str, pages: str = "", style_preferences: s
             # Add style guide info
             style_guide = recommendation.get('style_guide', {})
             if style_guide:
-                summary += f"\nStyle Guide:\n"
+                summary += "\nStyle Guide:\n"
                 summary += f"  Theme: {style_guide.get('theme', 'N/A')}\n"
                 summary += f"  Primary Color: {style_guide.get('primary_color', 'N/A')}\n"
-                summary += f"  Design System: Glassmorphism with olive green accents\n"
+                summary += "  Design System: Glassmorphism with olive green accents\n"
             
             summary += f"\nReasoning: {recommendation['reasoning']}"
             summary += f"\nEstimated Dev Time: {recommendation.get('estimated_dev_time', 'N/A')}"
@@ -199,7 +199,7 @@ def scaffold_react_ui(project_id: str, figma_json: str, style_framework: str = "
                 summary += f"  ... and {len(result['dependencies']) - 5} more\n"
             
             # Setup instructions preview
-            summary += f"\nSetup Instructions:\n"
+            summary += "\nSetup Instructions:\n"
             for instruction in result['setup_instructions'][:3]:  # Show first 3
                 summary += f"  {instruction}\n"
             
@@ -295,7 +295,7 @@ def generate_playwright_tests(project_id: str, ui_scaffold_result: str = "", api
                 # Setup files info
                 setup_files = test_suite.get('setup_files', {})
                 if setup_files:
-                    summary += f"\nGenerated Files:\n"
+                    summary += "\nGenerated Files:\n"
                     for file_path, content in list(setup_files.items())[:5]:  # Show first 5
                         lines = len(content.splitlines()) if isinstance(content, str) else 0
                         summary += f"  - {file_path} ({lines} lines)\n"
@@ -305,16 +305,16 @@ def generate_playwright_tests(project_id: str, ui_scaffold_result: str = "", api
                 # Configuration info
                 config = test_suite.get('config', {})
                 if config:
-                    summary += f"\nConfiguration:\n"
+                    summary += "\nConfiguration:\n"
                     summary += f"  Browsers: {', '.join(config.get('browsers', []))}\n"
                     summary += f"  Timeout: {config.get('timeout', 60000)}ms\n"
                     summary += f"  Retries: {config.get('retries', 2)}\n"
                 
-                summary += f"\nNext Steps:\n"
-                summary += f"1. Install Playwright: npm install -D @playwright/test\n"
-                summary += f"2. Install browsers: npx playwright install\n"
-                summary += f"3. Place generated files in your project\n"
-                summary += f"4. Run tests: npx playwright test\n"
+                summary += "\nNext Steps:\n"
+                summary += "1. Install Playwright: npm install -D @playwright/test\n"
+                summary += "2. Install browsers: npx playwright install\n"
+                summary += "3. Place generated files in your project\n"
+                summary += "4. Run tests: npx playwright test\n"
                 
                 return summary
             else:
@@ -417,7 +417,7 @@ def orchestrate_full_workflow(project_type: str, module_name: str, description: 
             
             if dev_response.status_code == 200:
                 dev_result = dev_response.json()
-                workflow_summary.append(f"✅ Code generated successfully")
+                workflow_summary.append("✅ Code generated successfully")
                 
                 # Extract PR info if available
                 pr_info = dev_result.get("github_pr")

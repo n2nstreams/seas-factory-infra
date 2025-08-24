@@ -10,7 +10,7 @@ import json
 import logging
 import os
 import base64
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from google.cloud import run_v2
 from google.cloud import logging as cloud_logging

@@ -4,7 +4,7 @@ Comprehensive test suite for Terraform diff review functionality - Night 44
 
 import pytest
 import asyncio
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from datetime import datetime
 from devops_agent import (
     DevOpsAgent, DeploymentConfig, TerraformDiff, TerraformResource,

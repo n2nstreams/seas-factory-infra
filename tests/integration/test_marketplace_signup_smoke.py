@@ -15,12 +15,10 @@ These tests verify:
 import asyncio
 import pytest
 import uuid
-import json
 from datetime import datetime
 from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any
 
-from conftest import integration_test, wait_for_condition
+from conftest import integration_test
 
 
 class TestMarketplaceSignupFlow:

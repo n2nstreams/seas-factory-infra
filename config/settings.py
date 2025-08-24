@@ -264,7 +264,7 @@ class Settings(BaseSettings):
             'ui_dev_agent': self.services.ui_dev_agent_url,
             'qa_agent': self.services.qa_agent_url,
         }
-        return service_map.get(service_name, f"http://localhost:8080")
+        return service_map.get(service_name, "http://localhost:8080")
 
 
 # Global settings instance

@@ -6,8 +6,6 @@ Demonstrates scaffolding React pages from Figma JSON via CLI html-to-react
 
 import asyncio
 import json
-import os
-import tempfile
 from datetime import datetime
 from typing import Dict, List, Any
 

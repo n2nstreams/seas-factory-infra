@@ -7,7 +7,6 @@ This demo showcases the CopyWriter agent's ability to generate
 compelling marketing copy for SaaS landing pages.
 """
 
-import asyncio
 import json
 import requests
 import time
@@ -71,7 +70,7 @@ def check_agent_health() -> bool:
             return False
     except requests.exceptions.RequestException as e:
         print(f"❌ Cannot connect to marketing agent: {e}")
-        print(f"💡 Make sure the agent is running: cd agents/marketing && python3 main.py")
+        print("💡 Make sure the agent is running: cd agents/marketing && python3 main.py")
         return False
 
 def get_copy_templates() -> Dict[str, Any]:
@@ -149,7 +148,7 @@ def display_generated_copy(copy_data: Dict[str, Any]):
     
     metadata = copy_data.get('metadata', {})
     if metadata:
-        print(f"\n📊 Metadata:")
+        print("\n📊 Metadata:")
         for key, value in metadata.items():
             print(f"  • {key}: {value}")
 

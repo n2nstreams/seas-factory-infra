@@ -11,21 +11,19 @@ This agent implements:
 """
 
 import asyncio
-import json
 import logging
 import os
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Any, AsyncGenerator
+from typing import Dict, List, Optional, Any
 import uuid
 
 # FastAPI imports
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi import HTTPException
+from pydantic import BaseModel
 
 # Google Cloud imports
 try:
@@ -42,7 +40,7 @@ except ImportError:
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from tenant_db import TenantDatabase, TenantContext
+from tenant_db import TenantDatabase
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

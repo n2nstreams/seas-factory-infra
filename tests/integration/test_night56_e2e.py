@@ -16,7 +16,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 import requests
-import websockets
 from dataclasses import dataclass
 
 # Add paths for imports
@@ -70,7 +69,7 @@ class Night56EndToEndTest:
         self.test_pipeline = None
         self.websocket_events = []
         
-        print(f"🧪 Night 56 E2E Test Initialized")
+        print("🧪 Night 56 E2E Test Initialized")
         print(f"   API Base URL: {self.base_url}")
         print(f"   Frontend URL: {self.frontend_url}")
         print(f"   WebSocket URL: {self.websocket_url}")
@@ -128,7 +127,7 @@ class Night56EndToEndTest:
                 self.test_user.user_id = user_data["id"]
                 self.test_user.tenant_id = user_data["tenant_id"]
                 
-                print(f"   ✅ User registered successfully")
+                print("   ✅ User registered successfully")
                 print(f"      User ID: {self.test_user.user_id}")
                 print(f"      Tenant ID: {self.test_user.tenant_id}")
                 print(f"      Plan: {user_data.get('plan', 'starter')}")
@@ -163,7 +162,7 @@ class Night56EndToEndTest:
             
             if response.status_code == 200:
                 login_result = response.json()
-                print(f"   ✅ Login successful")
+                print("   ✅ Login successful")
                 print(f"      Message: {login_result.get('message')}")
                 return True
             else:
@@ -188,7 +187,7 @@ class Night56EndToEndTest:
                 "tenant_id": self.test_user.tenant_id
             }
             
-            print(f"   👤 Creating Stripe customer...")
+            print("   👤 Creating Stripe customer...")
             
             response = requests.post(
                 f"{self.base_url}/api/billing/create-customer",
@@ -216,7 +215,7 @@ class Night56EndToEndTest:
                 }
             }
             
-            print(f"   💰 Creating checkout session for Pro plan...")
+            print("   💰 Creating checkout session for Pro plan...")
             
             response = requests.post(
                 f"{self.base_url}/api/billing/create-checkout-session",
@@ -226,18 +225,18 @@ class Night56EndToEndTest:
             
             if response.status_code == 200:
                 checkout_result = response.json()
-                print(f"   ✅ Checkout session created")
+                print("   ✅ Checkout session created")
                 print(f"      Session ID: {checkout_result['id']}")
                 print(f"      Checkout URL: {checkout_result['url']}")
                 
                 # In a real test, we would redirect to Stripe and complete payment
                 # For this demo, we'll simulate a successful payment webhook
-                print(f"   💡 In production: User would complete payment at Stripe")
-                print(f"   🔄 Simulating successful payment webhook...")
+                print("   💡 In production: User would complete payment at Stripe")
+                print("   🔄 Simulating successful payment webhook...")
                 
                 # Simulate webhook processing
                 await asyncio.sleep(2)
-                print(f"   ✅ Payment processed successfully (simulated)")
+                print("   ✅ Payment processed successfully (simulated)")
                 return True
             else:
                 print(f"   ❌ Checkout session creation failed: {response.status_code}")
@@ -288,7 +287,7 @@ class Night56EndToEndTest:
                 idea_result = response.json()
                 self.test_project.idea_id = idea_result.get("idea_id")
                 
-                print(f"   ✅ Idea submitted successfully")
+                print("   ✅ Idea submitted successfully")
                 print(f"      Idea ID: {self.test_project.idea_id}")
                 print(f"      Status: {idea_result.get('status', 'pending')}")
                 return True
@@ -322,7 +321,7 @@ class Night56EndToEndTest:
                 }
             }
             
-            print(f"   🚀 Triggering factory orchestration...")
+            print("   🚀 Triggering factory orchestration...")
             print(f"      Stage: {orchestration_data['stage']}")
             print(f"      Project: {self.test_project.project_name}")
             
@@ -340,7 +339,7 @@ class Night56EndToEndTest:
                 orchestration_result = response.json()
                 self.test_project.project_id = orchestration_result.get("request_id")
                 
-                print(f"   ✅ Factory orchestration triggered")
+                print("   ✅ Factory orchestration triggered")
                 print(f"      Status: {orchestration_result.get('status')}")
                 print(f"      Message: {orchestration_result.get('message')}")
                 print(f"      Request ID: {self.test_project.project_id}")
@@ -391,7 +390,7 @@ class Night56EndToEndTest:
                 ("deployment", "Deploying to production environment", 100.0)
             ]
             
-            print(f"   📈 Monitoring factory pipeline progress...")
+            print("   📈 Monitoring factory pipeline progress...")
             
             for i, (stage, description, progress) in enumerate(stages):
                 print(f"\n   🔄 Stage {i+1}/6: {stage.replace('_', ' ').title()}")
@@ -427,7 +426,7 @@ class Night56EndToEndTest:
                 
                 if progress == 100.0:
                     self.test_pipeline.completed_at = datetime.now(timezone.utc)
-                    print(f"\n   🎉 Factory pipeline completed successfully!")
+                    print("\n   🎉 Factory pipeline completed successfully!")
                     print(f"      Total Duration: {(self.test_pipeline.completed_at - self.test_pipeline.started_at).total_seconds():.1f}s")
                     break
             
@@ -443,48 +442,48 @@ class Night56EndToEndTest:
         print("-" * 40)
         
         try:
-            print(f"   🔍 Validating end-to-end test results...")
+            print("   🔍 Validating end-to-end test results...")
             
             # Validate user creation
             if not self.test_user or not self.test_user.user_id:
-                print(f"   ❌ User creation validation failed")
+                print("   ❌ User creation validation failed")
                 return False
             
-            print(f"   ✅ User created and authenticated")
+            print("   ✅ User created and authenticated")
             print(f"      User ID: {self.test_user.user_id}")
             print(f"      Email: {self.test_user.email}")
             
             # Validate payment processing
             if not self.test_user.stripe_customer_id:
-                print(f"   ❌ Payment processing validation failed")
+                print("   ❌ Payment processing validation failed")
                 return False
             
-            print(f"   ✅ Payment processing successful")
+            print("   ✅ Payment processing successful")
             print(f"      Stripe Customer ID: {self.test_user.stripe_customer_id}")
             
             # Validate idea submission
             if not self.test_project or not self.test_project.idea_id:
-                print(f"   ❌ Idea submission validation failed")
+                print("   ❌ Idea submission validation failed")
                 return False
             
-            print(f"   ✅ Idea submitted successfully")
+            print("   ✅ Idea submitted successfully")
             print(f"      Idea ID: {self.test_project.idea_id}")
             print(f"      Project: {self.test_project.project_name}")
             
             # Validate factory orchestration
             if not self.test_project.project_id:
-                print(f"   ❌ Factory orchestration validation failed")
+                print("   ❌ Factory orchestration validation failed")
                 return False
             
-            print(f"   ✅ Factory orchestration triggered")
+            print("   ✅ Factory orchestration triggered")
             print(f"      Request ID: {self.test_project.project_id}")
             
             # Validate pipeline completion
             if not self.test_pipeline or self.test_pipeline.progress < 100.0:
-                print(f"   ❌ Pipeline completion validation failed")
+                print("   ❌ Pipeline completion validation failed")
                 return False
             
-            print(f"   ✅ Factory pipeline completed")
+            print("   ✅ Factory pipeline completed")
             print(f"      Final Progress: {self.test_pipeline.progress:.1f}%")
             print(f"      Stages Completed: {len([s for s in self.test_pipeline.stages.values() if s == 'completed'])}/6")
             
@@ -536,7 +535,7 @@ class Night56EndToEndTest:
             "test_status": "PASSED" if self.test_pipeline and self.test_pipeline.progress == 100.0 else "FAILED"
         }
         
-        print(f"   📊 Test Report Summary:")
+        print("   📊 Test Report Summary:")
         print(f"      Status: {report['test_status']}")
         print(f"      Duration: {duration:.1f}s" if duration else "      Duration: N/A")
         print(f"      User Created: {'✅' if report['user_data']['user_id'] else '❌'}")

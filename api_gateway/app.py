@@ -4,17 +4,14 @@ API Gateway for SaaS Factory
 Routes requests to appropriate agent services and handles cross-cutting concerns.
 """
 
-from fastapi import FastAPI, HTTPException, Request, Header, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, Header, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import asyncio
 import logging
 import json
-import os
 from typing import Optional, Dict, Any
 import httpx
 from datetime import datetime
-from google.cloud import bigquery
 
 # Import admin routes
 from admin_routes import admin_router

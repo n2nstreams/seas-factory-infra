@@ -7,17 +7,14 @@ Automatically generates test cases, performs quality checks, and monitors test c
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import Dict, List, Any, Optional
-import json
 import os
-import requests
 import asyncio
 import asyncpg
 from datetime import datetime
-import uuid
 import logging
 
 # Import Playwright generator
-from playwright_generator import PlaywrightGenerator, PlaywrightTestSuite, PlaywrightTestCase, UIComponent
+from playwright_generator import PlaywrightGenerator, PlaywrightTestSuite, UIComponent
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -260,7 +257,7 @@ async def test_tenant_api_access_control():
                 description="Test tenant promotion to isolated infrastructure",
                 test_type="integration",
                 module="tenant_isolation",
-                code=f"""
+                code="""
 import pytest
 from scripts.tenant_isolation import TenantIsolationManager
 

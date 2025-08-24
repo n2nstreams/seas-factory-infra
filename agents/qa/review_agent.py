@@ -4,12 +4,10 @@ ReviewAgent - Night 37 Implementation
 Runs Pytest in Cloud Build and loops back to DevAgent on failure
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 import httpx
-import json
-import asyncio
 import os
 import tempfile
 import shutil
@@ -20,15 +18,13 @@ from datetime import datetime
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-import yaml
 
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
 from github_integration import (
-    create_github_integration, ReviewComment, 
-    generate_pr_title, generate_pr_body
+    create_github_integration, ReviewComment
 )
 
 # Configure logging

@@ -5,14 +5,11 @@ OSS Review Toolkit (ORT) integration - fail pipeline on GPL licenses
 """
 
 import pytest
-import asyncio
 import tempfile
 import shutil
 import os
-import json
 from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime
-from typing import Dict, Any
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))

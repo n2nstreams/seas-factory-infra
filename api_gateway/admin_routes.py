@@ -10,8 +10,7 @@ This module provides admin-specific API endpoints for:
 """
 
 import logging
-import json
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Depends, Request, Header
@@ -21,11 +20,9 @@ from pydantic import BaseModel, Field
 # Import from the shared modules
 from tenant_db import TenantDatabase, TenantContext
 from access_control import (
-    require_subscription, AccessLevel, get_tenant_subscription, 
-    subscription_verifier, AccessControlError, TenantSubscription
+    AccessLevel, subscription_verifier, AccessControlError
 )
 
-from fastapi import APIRouter, Depends, HTTPException, Request
 from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
@@ -517,7 +514,7 @@ async def get_experiment_analytics(request: Request, experiment_key: str, admin_
     if not bq_client:
         raise HTTPException(status_code=500, detail="BigQuery client not configured.")
 
-    query = f"""
+    query = """
         SELECT
             variation_id,
             COUNT(DISTINCT user_id) as users,

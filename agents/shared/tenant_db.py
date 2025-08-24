@@ -13,7 +13,7 @@ from datetime import datetime
 import json
 
 # Use improved logging utilities
-from .logging_utils import get_tenant_logger, log_tenant_operation, get_logging_metrics
+from .logging_utils import get_tenant_logger, log_tenant_operation
 
 # Get logger instance
 logger = get_tenant_logger(__name__)

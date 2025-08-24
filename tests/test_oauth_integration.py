@@ -5,14 +5,11 @@ Tests both Google and GitHub OAuth flows
 """
 
 import pytest
-import asyncio
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
-from fastapi import HTTPException
 
 from api_gateway.app import app
 from api_gateway.oauth_routes import create_or_get_oauth_user, create_jwt_token
-from shared.tenant_db import TenantDatabase, TenantContext
 
 
 class TestOAuthIntegration:

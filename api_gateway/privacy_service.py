@@ -14,12 +14,10 @@ import os
 import logging
 import sys
 import uuid
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Any, List, Optional
 
-import asyncpg
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 # Add shared modules to path
 sys.path.append(os.path.dirname(__file__))

@@ -10,10 +10,8 @@ Shared GitHub API integration for auto-commit workflow:
 import os
 import asyncio
 import base64
-import json
-from typing import Dict, List, Any, Optional, Union
-from datetime import datetime, timedelta
-from pathlib import Path
+from typing import Dict, List, Any, Optional
+from datetime import datetime
 import logging
 
 try:

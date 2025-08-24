@@ -6,11 +6,9 @@ Handles WebSocket connections, broadcasting, and client management
 import asyncio
 import json
 import logging
-import time
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Any, Set
 from datetime import datetime, timezone
-import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
 
 logger = logging.getLogger(__name__)

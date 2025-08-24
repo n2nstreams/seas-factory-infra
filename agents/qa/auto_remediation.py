@@ -11,7 +11,6 @@ Implements automatic vulnerability remediation logic including:
 import os
 import asyncio
 import logging
-import json
 import tempfile
 import subprocess
 from pathlib import Path
@@ -559,7 +558,7 @@ class AutoRemediationEngine:
             successful = [r for r in results if r.success]
             failed = [r for r in results if not r.success]
             
-            body += f"## 📊 Summary\n"
+            body += "## 📊 Summary\n"
             body += f"- **Total Actions:** {len(actions)}\n"
             body += f"- **Successful:** {len(successful)}\n"
             body += f"- **Failed:** {len(failed)}\n"
@@ -649,7 +648,7 @@ class AutoRemediationEngine:
                 
         except Exception as e:
             logger.error(f"Error generating rollback command: {e}")
-            return f"# Error generating rollback command"
+            return "# Error generating rollback command"
     
     def get_remediation_summary(self) -> Dict[str, Any]:
         """Get summary of remediation activities"""

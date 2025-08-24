@@ -5,8 +5,6 @@ Tests the QA agent functionality and API endpoints.
 """
 
 import requests
-import json
-import time
 import asyncio
 import sys
 import os
@@ -14,7 +12,7 @@ import os
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from main import QAAgent, TestGenerationRequest, TestCaseModel, QualityMetrics
+from main import QAAgent, TestCaseModel, QualityMetrics
 
 def test_qa_agent_initialization():
     """Test QA agent initialization"""
@@ -114,7 +112,7 @@ def test_quality_metrics_analysis():
         assert metrics.test_count >= 0
         assert metrics.passing_tests >= 0
         
-        print(f"✅ Quality metrics analysis completed")
+        print("✅ Quality metrics analysis completed")
         print(f"   Coverage: {metrics.coverage_percentage}%")
         print(f"   Test Count: {metrics.test_count}")
         print(f"   Passing: {metrics.passing_tests}")

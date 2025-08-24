@@ -4,14 +4,10 @@ Test suite for enhanced FAQ generation system
 Tests both documentation and code comment extraction
 """
 
-import asyncio
-import json
 import tempfile
-import os
 import re
-import ast
 from pathlib import Path
-from typing import List, Dict
+from typing import List
 
 # Simplified versions of our classes for testing without full dependencies
 class CodeComment:
@@ -350,7 +346,7 @@ def main():
         # Show categories and sources
         categories = set(item.category for item in faq_items)
         sources = set(item.source for item in faq_items)
-        print(f"\n📊 Generated FAQ Statistics:")
+        print("\n📊 Generated FAQ Statistics:")
         print(f"   Categories: {', '.join(sorted(categories))}")
         print(f"   Sources: {', '.join(sorted(sources))}")
         

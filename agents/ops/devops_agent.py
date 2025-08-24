@@ -13,31 +13,25 @@ This agent will handle:
 import logging
 import os
 import re
-import subprocess
-import tempfile
 import json
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 import asyncio
-from pathlib import Path
 
 # Third-party imports
 import openai
-import httpx
-from pydantic import BaseModel, Field
 
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from github_integration import (
-    create_github_integration, ReviewComment, 
-    GitHubIntegration, PullRequestInfo
+    create_github_integration, ReviewComment
 )
 
 # Import health monitoring
-from health_monitoring import HealthMonitor, CheckType, HealthStatus
+from health_monitoring import HealthMonitor, CheckType
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -566,7 +560,7 @@ Format your response clearly with sections and bullet points.
         else:
             comment += "- ✅ No security issues identified\n"
         
-        comment += f"""
+        comment += """
 ### 📋 Best Practices
 """
         
@@ -576,7 +570,7 @@ Format your response clearly with sections and bullet points.
         else:
             comment += "- ✅ Best practices followed\n"
         
-        comment += f"""
+        comment += """
 ### 💰 Cost Implications
 """
         
@@ -586,7 +580,7 @@ Format your response clearly with sections and bullet points.
         else:
             comment += "- ✅ No significant cost implications identified\n"
         
-        comment += f"""
+        comment += """
 ### 📝 Recommendations
 """
         
@@ -833,7 +827,7 @@ Format your response clearly with sections and bullet points.
             await self.health_monitor.add_health_check(
                 service_name,
                 CheckType.HTTP_ENDPOINT,
-                {"url": f"http://localhost:8080/health", "timeout": 10}
+                {"url": "http://localhost:8080/health", "timeout": 10}
             )
             
             # Wait for health check results
@@ -942,7 +936,7 @@ Format your response clearly with sections and bullet points.
             await self.health_monitor.add_health_check(
                 service_name,
                 CheckType.HTTP_ENDPOINT,
-                {"url": f"http://localhost:8080/health", "timeout": 10}
+                {"url": "http://localhost:8080/health", "timeout": 10}
             )
             
             # Wait for health check to complete
@@ -1084,7 +1078,7 @@ Format your response clearly with sections and bullet points.
                 service_name,
                 CheckType.HTTP_ENDPOINT,
                 {
-                    "url": f"http://localhost:8080/health",
+                    "url": "http://localhost:8080/health",
                     "timeout": 10,
                     "expected_status": 200
                 }

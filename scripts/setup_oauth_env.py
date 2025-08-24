@@ -6,9 +6,8 @@ Helps configure OAuth environment variables for development and production
 
 import os
 import sys
-import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent

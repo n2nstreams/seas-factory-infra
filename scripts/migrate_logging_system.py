@@ -8,7 +8,7 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 class LoggingMigrationScript:
     """Script to migrate logging system from old to new architecture"""
@@ -212,11 +212,11 @@ class LoggingMigrationScript:
                 success = self.migrate_file(file_path, analysis)
                 if success:
                     self.migration_stats['files_migrated'] += 1
-                    print(f"    ✅ Migration successful")
+                    print("    ✅ Migration successful")
                 else:
-                    print(f"    ⚠️  No changes needed")
+                    print("    ⚠️  No changes needed")
             else:
-                print(f"    📋 Would migrate (dry run)")
+                print("    📋 Would migrate (dry run)")
                 
             self.migration_stats['files_processed'] += 1
             
@@ -229,14 +229,14 @@ class LoggingMigrationScript:
         print(f"Files skipped: {self.migration_stats['files_skipped']}")
         
         if self.migration_stats['errors']:
-            print(f"\n❌ Errors encountered:")
+            print("\n❌ Errors encountered:")
             for error in self.migration_stats['errors']:
                 print(f"  - {error}")
                 
         if dry_run:
-            print(f"\n📋 This was a dry run. Run without --dry-run to perform actual migration.")
+            print("\n📋 This was a dry run. Run without --dry-run to perform actual migration.")
         else:
-            print(f"\n🎉 Migration completed successfully!")
+            print("\n🎉 Migration completed successfully!")
             
         return self.migration_stats
         

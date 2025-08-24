@@ -8,8 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 # Service configurations
 SERVICES = {
@@ -88,8 +87,8 @@ def update_service_requirements(service_name: str, config: Dict) -> bool:
     rel_path = os.path.relpath(requirements_file, service_path)
     
     with open(req_file, 'w') as f:
-        f.write(f"# SaaS Factory - Unified Dependencies\n")
-        f.write(f"# This file uses unified dependency management\n")
+        f.write("# SaaS Factory - Unified Dependencies\n")
+        f.write("# This file uses unified dependency management\n")
         f.write(f"# See {requirements_file} for actual dependencies\n\n")
         f.write(f"-r {rel_path}\n")
     
@@ -131,7 +130,7 @@ def test_pip_compatibility() -> bool:
             print("✅ Base requirements are compatible")
             return True
         else:
-            print(f"❌ Base requirements compatibility issues:")
+            print("❌ Base requirements compatibility issues:")
             print(result.stderr)
             return False
             
@@ -168,7 +167,7 @@ def main():
         if update_service_requirements(service_name, config):
             success_count += 1
     
-    print(f"\n📊 Update Summary:")
+    print("\n📊 Update Summary:")
     print(f"✅ Successfully updated: {success_count}/{total_services} services")
     
     if success_count == total_services:

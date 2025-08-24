@@ -10,11 +10,11 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from typing import Dict, Any, AsyncGenerator, Generator
+from typing import Dict, Any
 from unittest.mock import Mock, AsyncMock, patch
 import asyncpg
 import httpx
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Set test environment
 os.environ["ENVIRONMENT"] = "test"
@@ -33,8 +33,6 @@ from config.settings import get_settings
 from agents.shared.tenant_db import TenantDatabase, TenantContext
 # Prevent hard dependency on real Stripe keys during collection
 os.environ.setdefault("STRIPE_API_KEY", "test-key")
-from agents.billing.stripe_integration import StripeIntegration
-from agents.notifications.slack_integration import SlackIntegration
 
 
 # Test configuration

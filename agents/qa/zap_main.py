@@ -8,7 +8,6 @@ Night 78: Final security scan & penetration test script (OWASP ZAP).
 """
 
 import os
-import asyncio
 import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional

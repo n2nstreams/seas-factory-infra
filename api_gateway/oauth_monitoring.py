@@ -6,12 +6,10 @@ Tracks OAuth performance, error rates, and provides insights for production depl
 
 import asyncio
 import logging
-import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
-from collections import defaultdict, deque
-import json
+from collections import deque
 
 logger = logging.getLogger(__name__)
 

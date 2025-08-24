@@ -8,7 +8,6 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import json
-import asyncio
 import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -18,7 +17,7 @@ import uuid
 
 # Import the SecurityAgent
 from security_agent import (
-    SecurityAgent, SecurityScanRequest, SecurityScanResult, SecurityScanType,
+    SecurityScanRequest, SecurityScanResult, SecurityScanType,
     VulnerabilitySeverity, SnykReport, security_agent
 )
 
@@ -28,7 +27,7 @@ from auto_remediation import AutoRemediationEngine
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from tenant_db import TenantContext, get_tenant_context_from_headers
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

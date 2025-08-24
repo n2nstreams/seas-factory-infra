@@ -9,7 +9,6 @@ import sys
 import tempfile
 import shutil
 from pathlib import Path
-from datetime import datetime
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent
@@ -52,8 +51,7 @@ def test_tenant_logging():
         from agents.shared.logging_utils import (
             get_tenant_logger, 
             log_tenant_operation, 
-            get_logging_metrics,
-            safe_logging_context
+            get_logging_metrics
         )
         
         # Test tenant logger

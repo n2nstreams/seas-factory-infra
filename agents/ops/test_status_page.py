@@ -4,11 +4,9 @@ Test Status Page Agent - Night 79
 Unit tests for status page functionality and incident management
 """
 
-import asyncio
-import json
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import patch
 
 # Import the status page components
 from status_page_agent import (
@@ -16,8 +14,6 @@ from status_page_agent import (
     ServiceStatus,
     IncidentSeverity,
     IncidentStatus,
-    ServiceComponent,
-    Incident,
     StatusPageRequest,
     IncidentCreateRequest,
     IncidentUpdateRequest

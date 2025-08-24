@@ -4,33 +4,23 @@ SecurityAgent - Night 41 Implementation
 Security scan step: Snyk CLI in pipeline; SecurityAgent parses report.
 """
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 import httpx
 import json
-import asyncio
 import os
-import tempfile
-import shutil
 import subprocess
 import uuid
-from typing import List, Dict, Any, Optional, Literal, Union
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
-from contextlib import asynccontextmanager
-from pathlib import Path
-import yaml
-import re
 from enum import Enum
 
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from tenant_db import TenantDatabase, TenantContext, get_tenant_context_from_headers
+from tenant_db import TenantDatabase, TenantContext
 from github_integration import (
-    create_github_integration, ReviewComment, 
-    generate_pr_title, generate_pr_body
+    create_github_integration
 )
 
 # Configure logging
@@ -410,7 +400,7 @@ class SecurityAgent:
                 vulnerability_id=vulnerability.id,
                 recommendation_type="ignore",
                 title=f"Consider ignoring {vulnerability.package_name} vulnerability",
-                description=f"Low/Medium severity vulnerability may be acceptable risk",
+                description="Low/Medium severity vulnerability may be acceptable risk",
                 impact="Accepts risk",
                 effort="low",
                 priority=1,

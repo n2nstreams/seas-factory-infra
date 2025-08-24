@@ -10,16 +10,12 @@ This module provides:
 """
 
 import asyncio
-import json
 import pytest
 import time
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
-import uuid
+from unittest.mock import patch
 
 # Test frameworks
-import httpx
 from fastapi.testclient import TestClient
 
 # Import modules to test

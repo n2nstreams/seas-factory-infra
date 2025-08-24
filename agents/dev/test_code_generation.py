@@ -12,8 +12,7 @@ sys.path.append(os.path.dirname(__file__))
 
 from code_generation import (
     CodeGenerator, 
-    CodeGenerationRequest,
-    GeneratedCode
+    CodeGenerationRequest
 )
 
 def test_code_generation():

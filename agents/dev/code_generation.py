@@ -10,9 +10,7 @@ Implements comprehensive code generation including:
 """
 
 import logging
-import json
-import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -170,7 +168,7 @@ class CodeGenerator:
         
         # Add return statement if needed
         if return_type != "None":
-            code_lines.append(f"        return result")
+            code_lines.append("        return result")
         
         # Build complete method
         method_code = f"    def {method_name}({param_str}) -> {return_type}:"
@@ -213,7 +211,7 @@ class CodeGenerator:
         
         # Add return statement if needed
         if return_type != "None":
-            code_lines.append(f"    return result")
+            code_lines.append("    return result")
         
         # Build complete function
         func_code = f"def {func_name}({param_str}) -> {return_type}:"
@@ -492,12 +490,12 @@ class CodeGenerator:
         code_lines = []
         
         # Add context creation
-        code_lines.append(f"import React, {{ createContext, useContext, ReactNode }} from 'react';")
+        code_lines.append("import React, { createContext, useContext, ReactNode } from 'react';")
         code_lines.append("")
         
         # Add type definition
         code_lines.append(f"interface {context_name}Value {{")
-        code_lines.append(f"  // Define context value properties")
+        code_lines.append("  // Define context value properties")
         code_lines.append("}")
         code_lines.append("")
         
@@ -524,7 +522,7 @@ class CodeGenerator:
         # Add hook
         code_lines.append(f"export const use{context_name} = (): {context_name}Value => {{")
         code_lines.append(f"  const context = useContext({context_name});")
-        code_lines.append(f"  if (context === undefined) {{")
+        code_lines.append("  if (context === undefined) {")
         code_lines.append(f"    throw new Error(`use{context_name} must be used within a {provider_name}`);")
         code_lines.append("  }")
         code_lines.append("  return context;")

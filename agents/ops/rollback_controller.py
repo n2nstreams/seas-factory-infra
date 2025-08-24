@@ -10,7 +10,6 @@ This module:
 """
 
 import asyncio
-import json
 import logging
 import os
 import time
@@ -32,7 +31,7 @@ except ImportError:
     logging.warning("Google Cloud libraries not available")
 
 # FastAPI imports
-from fastapi import HTTPException, Request, Depends
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
 
 # Configure logging
@@ -161,7 +160,7 @@ class RollbackController:
             Dict: Response indicating action taken
         """
         self.metrics["webhook_alerts_received"] += 1
-        self.logger.info(f"Received error budget alert webhook")
+        self.logger.info("Received error budget alert webhook")
         
         try:
             # Verify webhook token

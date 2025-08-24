@@ -7,8 +7,6 @@ import os
 import json
 import logging
 import time
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request, Response
 from google.cloud import firestore
 import uvicorn

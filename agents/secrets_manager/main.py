@@ -11,13 +11,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 # Add shared modules to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
-from secrets_manager import SecretsManagerAgent, SecretRotationResult
+from secrets_manager import SecretsManagerAgent
 from tenant_db import TenantContext, get_tenant_context_from_headers
 
 logging.basicConfig(level=logging.INFO)

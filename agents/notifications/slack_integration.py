@@ -5,12 +5,11 @@ Real implementation of Slack notifications for SaaS Factory
 """
 
 import os
-import json
 import logging
 import httpx
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from enum import Enum
 
 # Configure logging

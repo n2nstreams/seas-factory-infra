@@ -12,14 +12,12 @@ This module provides:
 
 import os
 import logging
-import sys
 import json
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header, BackgroundTasks, Request
+from fastapi import APIRouter, HTTPException, Header, BackgroundTasks, Request
 from pydantic import BaseModel, Field
-import asyncpg
 import httpx
 
 from tenant_db import TenantDatabase, TenantContext

@@ -1,11 +1,11 @@
 import os
 import logging
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from typing import List, Dict, Optional, Literal
+from typing import List, Dict, Optional
 import openai
 from enum import Enum
 import json

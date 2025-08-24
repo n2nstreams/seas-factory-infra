@@ -5,16 +5,12 @@ Tests for the full project creation flow and core business logic
 """
 
 import asyncio
-import pytest
 from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timedelta
-import uuid
-import json
 
 from conftest import (
-    integration_test, slow_test, wait_for_condition,
-    TEST_CONFIG
+    integration_test, slow_test
 )
+from agents.shared.tenant_db import TenantDatabase
 
 
 @integration_test

@@ -1,5 +1,4 @@
 import os
-from typing import Any
 
 # Provider selection based on environment variable
 PROVIDER = os.getenv("MODEL_PROVIDER", "gemini").lower()

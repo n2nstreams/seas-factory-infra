@@ -5,7 +5,7 @@ Accepts "ping" envelopes and replies with "pong-from-langgraph".
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Any, Dict
+from typing import Any
 import logging
 
 # Configure logging

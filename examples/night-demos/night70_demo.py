@@ -12,9 +12,7 @@ This demo shows:
 
 import asyncio
 import json
-import time
-from datetime import datetime, timedelta
-from typing import Dict, Any
+from datetime import datetime
 
 # Demo imports
 import sys
@@ -240,7 +238,7 @@ async def demo_failover_execution():
     # Simulate the failover process
     result = await simulator.simulate_failover(target_replica)
     
-    print(f"\n📊 Failover Results:")
+    print("\n📊 Failover Results:")
     print(f"   Operation ID: {result['operation_id']}")
     print(f"   Status: {result['status']}")
     print(f"   Total Downtime: {result['downtime_seconds']} seconds")
@@ -272,9 +270,9 @@ async def demo_validation():
         status_icon = "✅" if success else "❌"
         print(f" {status_icon} {message}")
     
-    print(f"\n🎉 All validation tests passed!")
-    print(f"   Failover completed successfully")
-    print(f"   System is fully operational")
+    print("\n🎉 All validation tests passed!")
+    print("   Failover completed successfully")
+    print("   System is fully operational")
     
     await asyncio.sleep(2)
 
@@ -341,8 +339,8 @@ async def demo_recovery_options():
         print(f"     Pros: {', '.join(option['pros'])}")
         print(f"     Cons: {', '.join(option['cons'])}")
     
-    print(f"\n💡 Recommendation: Continue with new primary for now")
-    print(f"   Schedule original primary restoration during next maintenance window")
+    print("\n💡 Recommendation: Continue with new primary for now")
+    print("   Schedule original primary restoration during next maintenance window")
     
     await asyncio.sleep(2)
 
@@ -399,22 +397,22 @@ async def demo_summary():
     for achievement in achievements:
         print(f"  {achievement}")
     
-    print(f"\n📊 System Capabilities:")
-    print(f"  • RTO (Recovery Time Objective): < 5 minutes")
-    print(f"  • RPO (Recovery Point Objective): < 30 seconds") 
-    print(f"  • Availability Target: 99.95%")
-    print(f"  • Zero data loss failover")
-    print(f"  • Cross-region disaster recovery")
+    print("\n📊 System Capabilities:")
+    print("  • RTO (Recovery Time Objective): < 5 minutes")
+    print("  • RPO (Recovery Point Objective): < 30 seconds") 
+    print("  • Availability Target: 99.95%")
+    print("  • Zero data loss failover")
+    print("  • Cross-region disaster recovery")
     
-    print(f"\n🚀 Ready for Production:")
-    print(f"  The database failover system is now fully operational and ready")
-    print(f"  to handle production database failures with minimal downtime.")
+    print("\n🚀 Ready for Production:")
+    print("  The database failover system is now fully operational and ready")
+    print("  to handle production database failures with minimal downtime.")
     
-    print(f"\n🔗 Next Steps:")
-    print(f"  • Schedule monthly failover drills")
-    print(f"  • Set up monitoring dashboards")
-    print(f"  • Train operations team on procedures")
-    print(f"  • Implement automated alerting")
+    print("\n🔗 Next Steps:")
+    print("  • Schedule monthly failover drills")
+    print("  • Set up monitoring dashboards")
+    print("  • Train operations team on procedures")
+    print("  • Implement automated alerting")
     
     print("\n" + "="*80)
     print("Thank you for watching the Night 70 demonstration!")

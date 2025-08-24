@@ -4,7 +4,6 @@ Test script for TechStackAgent
 """
 import asyncio
 import httpx
-import json
 from main import TechStackAgent, TechStackRequest
 
 async def test_agent_direct():
@@ -23,7 +22,7 @@ async def test_agent_direct():
     
     try:
         recommendation = await agent.generate_recommendation(request)
-        print(f"✅ Direct test successful!")
+        print("✅ Direct test successful!")
         print(f"Project Type: {recommendation.project_type}")
         print(f"Overall Score: {recommendation.overall_score}/10")
         print(f"Frontend recommendations: {len(recommendation.frontend)}")
@@ -70,7 +69,7 @@ async def test_agent_http():
             
             if recommend_response.status_code == 200:
                 recommendation = recommend_response.json()
-                print(f"✅ Recommendation endpoint works!")
+                print("✅ Recommendation endpoint works!")
                 print(f"Overall Score: {recommendation['overall_score']}/10")
                 print(f"Backend options: {len(recommendation['backend'])}")
                 return True
@@ -94,7 +93,7 @@ async def main():
     # Run HTTP test (only if server is running)
     http_success = await test_agent_http()
     
-    print(f"\n📊 Test Results:")
+    print("\n📊 Test Results:")
     print(f"Direct API: {'✅ PASS' if direct_success else '❌ FAIL'}")
     print(f"HTTP API: {'✅ PASS' if http_success else '❌ FAIL'}")
     

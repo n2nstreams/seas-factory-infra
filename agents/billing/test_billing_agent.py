@@ -5,8 +5,6 @@ Tests the billing agent endpoints without requiring database
 """
 
 import asyncio
-import json
-import os
 from stripe_integration import StripeIntegration
 
 async def test_stripe_integration():

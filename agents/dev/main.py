@@ -1,20 +1,14 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 import openai
 import json
-import asyncio
 from typing import List, Dict, Any, Optional, Literal
 import os
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
-import uuid
 import ast
-import subprocess
-import tempfile
-import shutil
-from pathlib import Path
 
 # Import shared components
 import sys

@@ -5,10 +5,8 @@ Demonstrates comprehensive Playwright test generation for web applications
 """
 
 import asyncio
-import json
-import os
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 # Mock implementations for demo purposes
 class MockTenantDatabase:
@@ -820,7 +818,7 @@ async def demo_ui_component_integration():
     test_suite = await qa_agent.generate_playwright_tests(test_request)
     
     print(f"📊 Generated {len(test_suite['test_cases'])} tests for UI components")
-    print(f"🎯 Focused on glassmorphism and olive theme testing")
+    print("🎯 Focused on glassmorphism and olive theme testing")
     
     # Show specific features
     features_tested = [
@@ -894,7 +892,7 @@ async def demo_api_testing():
         sample_lines = api_tests[0]['code'].splitlines()[:10]
         for line in sample_lines:
             print(f"  {line}")
-        print(f"  ... (full test implementation)")
+        print("  ... (full test implementation)")
     
     print("\n✅ API testing with Playwright completed!")
 

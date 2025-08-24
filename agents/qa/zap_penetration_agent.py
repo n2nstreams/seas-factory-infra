@@ -8,15 +8,12 @@ Night 78: Final security scan & penetration test script (OWASP ZAP).
 """
 
 import os
-import json
 import uuid
 import time
 import asyncio
 import subprocess
-import tempfile
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
-from pathlib import Path
+from datetime import datetime
+from typing import Dict, List, Any, Optional
 import logging
 
 from pydantic import BaseModel, Field, field_validator

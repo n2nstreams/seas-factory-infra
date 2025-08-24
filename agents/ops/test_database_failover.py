@@ -4,12 +4,9 @@ Tests database failover scenarios, replica promotion, and validation logic
 """
 
 import asyncio
-import json
 import pytest
-import time
 from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Dict, List, Any
+from unittest.mock import Mock, patch
 
 # Test imports
 import sys
@@ -18,8 +15,8 @@ sys.path.append(os.path.dirname(__file__))
 
 from database_failover_agent import (
     DatabaseFailoverAgent, DatabaseInstance, DatabaseHealth, FailoverDecision,
-    FailoverOperation, FailoverRequest, FailoverResponse, DatabaseState,
-    FailoverTrigger, FailoverStatus, ReplicaHealth
+    FailoverOperation, FailoverRequest, DatabaseState,
+    FailoverTrigger, FailoverStatus
 )
 
 
