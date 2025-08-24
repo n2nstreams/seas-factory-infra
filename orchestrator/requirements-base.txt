@@ -6,7 +6,7 @@
 fastapi==0.115.14
 uvicorn[standard]==0.34.0
 pydantic==2.10.5
-pydantic-settings==2.7.0
+pydantic-settings==2.10.1
 starlette==0.42.0
 
 # HTTP Client & WebSocket
