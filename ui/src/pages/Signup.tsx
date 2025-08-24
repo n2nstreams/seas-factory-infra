@@ -55,6 +55,12 @@ export default function Signup() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
+    
+    // Prevent checkbox from being unchecked during submission
+    if (type === 'checkbox' && name === 'agreeToTerms' && isSubmitting) {
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -187,17 +193,17 @@ export default function Signup() {
   const handleSocialLogin = (provider: string) => {
     console.log(`Initiating ${provider} OAuth flow for signup`);
     
-    // OAuth configuration - use environment variables or defaults
-    const oauthConfigs = {
-      github: {
-        clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id',
-        redirectUri: `http://localhost:8000/auth/github`,
-        scope: 'user:email',
-        authUrl: 'https://github.com/login/oauth/authorize'
-      },
-      google: {
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your_google_client_id',
-        redirectUri: `http://localhost:8000/auth/google`,
+          // OAuth configuration - use environment variables or defaults
+      const oauthConfigs = {
+        github: {
+          clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'Ov23liagpTNOZSHGv2Ym',
+          redirectUri: `http://localhost:8000/auth/github`,
+          scope: 'user:email',
+          authUrl: 'https://github.com/login/oauth/authorize'
+        },
+        google: {
+          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || '60641742068-5oi9ipvfkjf0l80sm0cmqvhogul6udk9.apps.googleusercontent.com',
+          redirectUri: `http://localhost:8000/auth/google`,
         scope: 'openid email profile',
         authUrl: 'https://accounts.google.com/oauth2/v2/auth'
       }

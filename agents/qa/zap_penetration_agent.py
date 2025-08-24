@@ -19,7 +19,7 @@ from typing import Dict, List, Any, Optional, Union
 from pathlib import Path
 import logging
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from fastapi import HTTPException
 
 # Import existing SecurityAgent components
@@ -44,13 +44,15 @@ class ZAPScanRequest(BaseModel):
     authentication: Optional[Dict[str, Any]] = Field(default=None, description="Authentication config")
     custom_rules: List[Dict[str, Any]] = Field(default=[], description="Custom ZAP rules")
     
-    @validator('scan_type')
+    @field_validator('scan_type')
+    @classmethod
     def validate_scan_type(cls, v):
         if v not in ['quick', 'baseline', 'full']:
             raise ValueError('scan_type must be one of: quick, baseline, full')
         return v
     
-    @validator('target_url')
+    @field_validator('target_url')
+    @classmethod
     def validate_target_url(cls, v):
         if not v.startswith(('http://', 'https://')):
             raise ValueError('target_url must be a valid HTTP/HTTPS URL')

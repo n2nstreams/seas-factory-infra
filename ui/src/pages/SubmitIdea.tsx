@@ -3,9 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Lightbulb, Clock, Target, Rocket, Code2 } from 'lucide-react';
 import IdeaSubmissionForm from "@/components/IdeaSubmissionForm";
 import { useAuth } from '@/App';
+import { useLocation } from 'react-router-dom';
 
 export default function SubmitIdea() {
   const { user } = useAuth();
+  const location = useLocation();
+  const ideaFromHome = location.state?.idea;
   return (
     <div className="min-h-screen bg-homepage relative overflow-hidden">
       {/* Glassmorphism Background Elements */}
@@ -128,7 +131,7 @@ export default function SubmitIdea() {
         </div>
 
         {/* Main Form */}
-        <IdeaSubmissionForm />
+        <IdeaSubmissionForm initialIdea={ideaFromHome} />
 
         {/* Support Links */}
         <div className="mt-12 text-center">

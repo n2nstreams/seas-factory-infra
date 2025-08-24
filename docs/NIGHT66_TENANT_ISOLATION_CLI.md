@@ -233,7 +233,7 @@ gcloud compute networks vpc-access connectors list --region=$CLOUD_RUN_REGION
 gcloud container images list --repository=$CONTAINER_IMAGE
 
 # Build and push if needed
-cd api-gateway && docker build -t $CONTAINER_IMAGE .
+cd api_gateway && docker build -t $CONTAINER_IMAGE .
 docker push $CONTAINER_IMAGE
 ```
 

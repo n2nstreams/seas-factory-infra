@@ -257,7 +257,7 @@ saas-factory/
 │   └── shared/            # Shared utilities & components
 ├── ui/                    # Primary React app (dashboard & marketplace)
 ├── dashboard/             # Legacy demo app (deprecated; will be merged into `ui/`)
-├── api-gateway/           # FastAPI gateway with routing
+├── api_gateway/           # FastAPI gateway with routing
 ├── orchestrator/          # Vertex AI orchestration layer
 ├── infra/                 # Terraform infrastructure modules
 ├── docs/                  # Documentation & guides

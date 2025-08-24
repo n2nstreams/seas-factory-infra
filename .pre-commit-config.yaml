@@ -1,4 +1,16 @@
 repos:
+  # Path consistency validation
+  - repo: local
+    hooks:
+      - id: validate-paths
+        name: Validate Path Consistency
+        entry: python3 scripts/validate_paths.py
+        language: system
+        types: [python, markdown, yaml, yml, terraform, shell]
+        pass_filenames: false
+        always_run: true
+        description: "Ensures consistent path naming across the codebase"
+        
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:

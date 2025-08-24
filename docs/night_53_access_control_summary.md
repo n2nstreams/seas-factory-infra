@@ -84,7 +84,7 @@ async def advanced_function():
 - `/health`, `/templates`, `/languages`, `/styles`
 
 ### 4. **Subscription Management API**
-*Files: `agents/billing/main.py`, `api-gateway/app.py`*
+*Files: `agents/billing/main.py`, `api_gateway/app.py`*
 
 **New Endpoints:**
 ```bash
@@ -228,7 +228,7 @@ else:
 - Respects existing Row Level Security policies
 
 ### **API Gateway Compatibility:**  
-- Extends existing proxy pattern in `api-gateway/app.py`
+- Extends existing proxy pattern in `api_gateway/app.py`
 - Maintains consistent URL structure (`/api/subscription/*`)
 - Preserves tenant header forwarding
 

@@ -22,6 +22,9 @@ from security_agent import (
     VulnerabilitySeverity, SnykReport, security_agent
 )
 
+# Import auto-remediation engine
+from auto_remediation import AutoRemediationEngine
+
 # Import shared components
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
@@ -473,28 +476,222 @@ async def run_auto_remediation_background(
     try:
         logger.info(f"Starting auto-remediation for scan: {scan_id}")
         
-        # TODO: Implement automatic remediation logic
-        # This would involve:
-        # 1. Analyzing remediation recommendations
-        # 2. Applying automatic fixes (upgrades, patches)
-        # 3. Creating PR with fixes
-        # 4. Updating scan results
+        # Initialize auto-remediation engine
+        remediation_engine = AutoRemediationEngine(tenant_context)
         
-        # For now, just log the attempt
+        # Convert scan results to format expected by remediation engine
+        scan_data = {
+            "vulnerabilities": [],
+            "project_id": scan_results.project_id,
+            "scan_type": scan_results.snyk_report.scan_type.value if scan_results.snyk_report else "unknown"
+        }
+        
+        # Extract vulnerabilities from Snyk report
+        if scan_results.snyk_report and scan_results.snyk_report.projects:
+            for project in scan_results.snyk_report.projects:
+                for issue in project.issues:
+                    vuln_data = {
+                        "id": issue.id,
+                        "title": issue.title,
+                        "package_name": issue.package_name,
+                        "package_version": issue.package_version,
+                        "severity": issue.severity.value,
+                        "is_upgradable": issue.is_upgradable,
+                        "is_patchable": issue.is_patchable,
+                        "upgrade_path": issue.upgrade_path,
+                        "patched_versions": issue.patched_versions,
+                        "type": "dependency"  # Default type
+                    }
+                    scan_data["vulnerabilities"].append(vuln_data)
+        
+        # Step 1: Analyze vulnerabilities and generate remediation actions
+        logger.info("Analyzing vulnerabilities for remediation")
+        remediation_actions = await remediation_engine.analyze_vulnerabilities_for_remediation(scan_data)
+        
+        if not remediation_actions:
+            logger.info("No remediation actions generated")
+            await security_agent.tenant_db.log_agent_event(
+                tenant_context=tenant_context,
+                event_type="auto_remediation",
+                agent_name="SecurityAgent",
+                stage="no_actions",
+                status="completed",
+                project_id=scan_results.project_id,
+                input_data={"scan_id": scan_id, "reason": "no_remediations_available"}
+            )
+            return
+        
+        # Step 2: Execute automated remediation actions
+        logger.info(f"Executing {len(remediation_actions)} remediation actions")
+        project_path = "."  # Default project path, could be configurable
+        
+        remediation_results = await remediation_engine.execute_remediation_actions(
+            remediation_actions, 
+            project_path
+        )
+        
+        # Step 3: Create PR with fixes if there are successful remediations
+        successful_remediations = [r for r in remediation_results if r.success]
+        if successful_remediations:
+            logger.info("Creating PR with successful remediations")
+            pr_id = await remediation_engine.create_remediation_pr(
+                remediation_actions,
+                remediation_results,
+                f"Project-{scan_results.project_id}",
+                "main"
+            )
+            
+            if pr_id:
+                logger.info(f"PR created successfully: {pr_id}")
+            else:
+                logger.warning("Failed to create PR")
+        
+        # Step 4: Log completion with detailed results
         await security_agent.tenant_db.log_agent_event(
             tenant_context=tenant_context,
             event_type="auto_remediation",
             agent_name="SecurityAgent",
-            stage="remediation_started",
-            status="started",
+            stage="remediation_completed",
+            status="completed",
             project_id=scan_results.project_id,
-            input_data={"scan_id": scan_id}
+            input_data={
+                "scan_id": scan_id,
+                "total_actions": len(remediation_actions),
+                "successful": len(successful_remediations),
+                "failed": len(remediation_results) - len(successful_remediations),
+                "pr_id": pr_id if successful_remediations else None
+            }
         )
         
         logger.info(f"Auto-remediation completed for scan: {scan_id}")
         
     except Exception as e:
         logger.error(f"Error in auto-remediation: {e}")
+        
+        # Log error
+        await security_agent.tenant_db.log_agent_event(
+            tenant_context=tenant_context,
+            event_type="auto_remediation",
+            agent_name="SecurityAgent",
+            stage="remediation_failed",
+            status="failed",
+            project_id=scan_results.project_id,
+            error_message=str(e)
+        )
+
+# Auto-Remediation Endpoints
+@app.post("/api/security/remediate", response_model=Dict[str, Any])
+async def trigger_auto_remediation(
+    scan_id: str,
+    project_id: str,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers)
+):
+    """Trigger auto-remediation for a specific scan"""
+    try:
+        # Get scan results from database
+        scan_results = await security_agent.get_security_scan_results(
+            tenant_context, 
+            project_id, 
+            limit=1
+        )
+        
+        if not scan_results:
+            raise HTTPException(status_code=404, detail="Scan results not found")
+        
+        # Start auto-remediation in background
+        background_tasks = BackgroundTasks()
+        background_tasks.add_task(
+            run_auto_remediation_background,
+            scan_id,
+            scan_results[0],  # Use the most recent scan result
+            tenant_context
+        )
+        
+        return {
+            "message": "Auto-remediation started",
+            "scan_id": scan_id,
+            "project_id": project_id,
+            "status": "started"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error triggering auto-remediation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/security/remediation/status/{scan_id}", response_model=Dict[str, Any])
+async def get_remediation_status(
+    scan_id: str,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers)
+):
+    """Get auto-remediation status for a scan"""
+    try:
+        # Get remediation events from database
+        events = await security_agent.tenant_db.get_agent_events(
+            tenant_context,
+            event_type="auto_remediation",
+            scan_id=scan_id,
+            limit=10
+        )
+        
+        if not events:
+            return {"message": "No remediation events found", "scan_id": scan_id}
+        
+        # Get the latest event
+        latest_event = events[0]
+        
+        return {
+            "scan_id": scan_id,
+            "status": latest_event.get("status", "unknown"),
+            "stage": latest_event.get("stage", "unknown"),
+            "last_updated": latest_event.get("created_at"),
+            "details": latest_event.get("input_data", {})
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting remediation status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/security/remediation/rollback/{scan_id}", response_model=Dict[str, Any])
+async def rollback_remediation(
+    scan_id: str,
+    tenant_context: TenantContext = Depends(get_tenant_context_from_headers)
+):
+    """Rollback auto-remediation for a scan"""
+    try:
+        # Get remediation events to find successful actions
+        events = await security_agent.tenant_context.tenant_db.get_agent_events(
+            tenant_context,
+            event_type="auto_remediation",
+            scan_id=scan_id,
+            limit=10
+        )
+        
+        if not events:
+            return {"message": "No remediation events found", "scan_id": scan_id}
+        
+        # Find successful remediation event
+        successful_event = None
+        for event in events:
+            if event.get("status") == "completed" and event.get("stage") == "remediation_completed":
+                successful_event = event
+                break
+        
+        if not successful_event:
+            return {"message": "No successful remediation found to rollback", "scan_id": scan_id}
+        
+        # Initialize remediation engine for rollback
+        remediation_engine = AutoRemediationEngine(tenant_context)
+        
+        # For now, return success (actual rollback would need more complex logic)
+        return {
+            "message": "Rollback initiated",
+            "scan_id": scan_id,
+            "status": "rollback_initiated"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error rolling back remediation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

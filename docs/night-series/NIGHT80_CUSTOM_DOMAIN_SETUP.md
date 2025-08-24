@@ -124,7 +124,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 Update CORS origins in your API Gateway:
 
 ```python
-# api-gateway/app.py
+# api_gateway/app.py
 CORS_ORIGINS = [
     'https://www.forge95.com',
     'https://forge95.com',
@@ -156,7 +156,7 @@ gcloud compute ssl-certificates describe api-ssl-cert --global
 ### 502/503 Errors
 1. Check Cloud Run service health:
    ```bash
-   gcloud run services describe api-gateway --region=us-central1
+   gcloud run services describe api_gateway --region=us-central1
    ```
 2. Verify load balancer backend health:
    ```bash

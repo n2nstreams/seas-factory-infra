@@ -29,7 +29,7 @@ class ConfigManager:
         self.services = [
             "orchestrator",
             "agents",
-            "api-gateway",
+            "api_gateway",
             "dashboard",
             "event-relay",
             "ui"

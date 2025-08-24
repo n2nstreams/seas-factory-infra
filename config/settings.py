@@ -278,10 +278,19 @@ def get_settings() -> Settings:
 
 def configure_logging():
     """Configure logging based on settings"""
-    logging.basicConfig(
-        level=getattr(logging, settings.log_level.value),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    try:
+        from config.logging_config import configure_logging as configure_centralized_logging
+        configure_centralized_logging(
+            level=settings.log_level.value,
+            log_to_file=True,
+            log_to_console=True
+        )
+    except ImportError:
+        # Fallback to basic config if centralized logging is not available
+        logging.basicConfig(
+            level=getattr(logging, settings.log_level.value),
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
 
 
 def validate_required_settings():

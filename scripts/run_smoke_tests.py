@@ -92,7 +92,7 @@ def run_api_health_check():
     
     try:
         # Check API routes can be imported
-        sys.path.insert(0, 'api-gateway')
+        sys.path.insert(0, 'api_gateway')
         
         try:
             from user_routes import router

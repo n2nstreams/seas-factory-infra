@@ -35,7 +35,7 @@ Successfully implemented a comprehensive FAQ generation system that automaticall
   - Responsive accordion layout with badges
 
 ### 4. GitHub Webhook Integration
-- **File**: `api-gateway/factory_routes.py`
+- **File**: `api_gateway/factory_routes.py`
 - **Features**:
   - Automatic FAQ regeneration on code pushes
   - Webhook endpoint `/faq/webhook/github`

@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from fastapi import APIRouter, HTTPException, Header, BackgroundTasks
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import httpx
 import os
 
@@ -46,24 +46,21 @@ class IdeaSubmissionRequest(BaseModel):
     keyFeatures: Optional[str] = None  # Frontend might send this
     priorityLevel: Optional[str] = None  # Frontend sends this instead of priority
 
-    class Config:
+    model_config = {
         # Allow both snake_case and camelCase field names
-        allow_population_by_field_name = True
-        fields = {
-            'key_features': 'keyFeatures',
-            'budget_range': 'budgetRange',
-            'target_audience': 'targetAudience',
-            'business_model': 'businessModel',
-            'priority_level': 'priorityLevel'
-        }
+        'populate_by_name': True,
+        'alias_generator': lambda x: x.replace('_', '').lower() if x.startswith('key_') else x
+    }
     
-    @validator('title')
+    @field_validator('title')
+    @classmethod
     def title_must_not_be_empty(cls, v):
         if not v or not v.strip():
             raise ValueError('Title is required')
         return v.strip()
     
-    @validator('description')
+    @field_validator('description')
+    @classmethod
     def description_must_not_be_empty(cls, v):
         if not v or not v.strip():
             raise ValueError('Description is required')

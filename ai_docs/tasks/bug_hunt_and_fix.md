@@ -48,7 +48,7 @@ The codebase has several critical issues that need immediate attention:
 2. **Runtime Logging Errors:** I/O operations on closed files in the tenant database system causing logging failures and potential data corruption
 3. **Code Quality Issues:** Multiple TODO items and incomplete implementations across development agents
 4. **Deprecation Warnings:** Pydantic V2 deprecation warnings that will become errors in V3
-5. **Path Resolution Problems:** Tests expecting files in `api-gateway/` but files are actually in `api_gateway/`
+5. **Path Resolution Problems:** Tests expecting files in `api_gateway/` but files are actually in `api_gateway/`
 
 ### Success Criteria
 - [ ] All failing tests are fixed and passing
@@ -106,7 +106,7 @@ The codebase has several critical issues that need immediate attention:
 - [x] **Tenant Isolation Check:** Verified bugs don't affect tenant boundaries
 
 ### Root Cause Identification
-- **Primary Cause:** Test path resolution mismatch between expected `api-gateway/` and actual `api_gateway/` directory structure
+- **Primary Cause:** Test path resolution mismatch between expected `api_gateway/` and actual `api_gateway/` directory structure
 - **Contributing Factors:** Incomplete TODO implementations, deprecated Pydantic usage, logging I/O errors
 - **Trigger Conditions:** Running tests from wrong directory, file operations on closed handles
 
@@ -341,7 +341,7 @@ The codebase has several critical issues that need immediate attention:
 
 ### Issue 1: Test Path Resolution Failure
 **File:** `tests/integration/test_marketplace_signup_smoke_simple.py`
-**Problem:** Tests looking for files in `api-gateway/` but files are in `api_gateway/`
+**Problem:** Tests looking for files in `api_gateway/` but files are in `api_gateway/`
 **Fix:** Update test path assumptions to match actual directory structure
 
 ### Issue 2: Logging I/O Errors

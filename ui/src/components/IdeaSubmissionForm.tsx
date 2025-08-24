@@ -30,9 +30,10 @@ interface IdeaFormData {
 
 interface IdeaSubmissionFormProps {
   onSubmit?: (formData: IdeaFormData) => Promise<void>;
+  initialIdea?: string;
 }
 
-export default function IdeaSubmissionForm({ onSubmit }: IdeaSubmissionFormProps) {
+export default function IdeaSubmissionForm({ onSubmit, initialIdea }: IdeaSubmissionFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -44,11 +45,36 @@ export default function IdeaSubmissionForm({ onSubmit }: IdeaSubmissionFormProps
       const saved = localStorage.getItem('idea-form-draft');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...DEFAULT_FORM_DATA, ...parsed };
+        const loadedData = { ...DEFAULT_FORM_DATA, ...parsed };
+        
+        // If we have an initial idea from homepage, use it
+        if (initialIdea && !loadedData.description) {
+          loadedData.description = initialIdea;
+          // Also try to set a project name based on the idea
+          if (!loadedData.projectName) {
+            loadedData.projectName = initialIdea.length > 50 
+              ? initialIdea.substring(0, 50) + '...' 
+              : initialIdea;
+          }
+        }
+        
+        return loadedData;
       }
     } catch (error) {
       console.warn('Failed to load form data:', error);
     }
+    
+    // If no saved data but we have an initial idea, use it
+    if (initialIdea) {
+      return {
+        ...DEFAULT_FORM_DATA,
+        description: initialIdea,
+        projectName: initialIdea.length > 50 
+          ? initialIdea.substring(0, 50) + '...' 
+          : initialIdea
+      };
+    }
+    
     return { ...DEFAULT_FORM_DATA };
   };
 
@@ -505,6 +531,15 @@ export default function IdeaSubmissionForm({ onSubmit }: IdeaSubmissionFormProps
                 <h4 className="font-medium text-red-800">Submission Error</h4>
                 <p className="text-red-700 text-sm">{submitError}</p>
               </div>
+            </div>
+          )}
+
+          {/* Step Validation Message */}
+          {!validateStep(currentStep) && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-amber-800 text-sm">
+                <strong>Please complete this step:</strong> {getStepValidationMessage(currentStep)}
+              </p>
             </div>
           )}
 

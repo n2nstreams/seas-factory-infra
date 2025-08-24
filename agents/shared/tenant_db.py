@@ -9,11 +9,14 @@ import asyncio
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 import asyncpg
-import logging
 from datetime import datetime
 import json
 
-logger = logging.getLogger(__name__)
+# Use improved logging utilities
+from .logging_utils import get_tenant_logger, log_tenant_operation, get_logging_metrics
+
+# Get logger instance
+logger = get_tenant_logger(__name__)
 
 class TenantContext:
     """Manages tenant context for database operations"""
@@ -35,6 +38,7 @@ class TenantDatabase:
         self.db_password = os.getenv("DB_PASSWORD", "localpass")
         self._pool = None
         
+    @log_tenant_operation("init_pool")
     async def init_pool(self):
         """Initialize connection pool"""
         if self._pool is None:
@@ -49,34 +53,21 @@ class TenantDatabase:
                     max_size=10,
                     command_timeout=60
                 )
-                try:
-                    logger.info("Database connection pool initialized")
-                except Exception as log_error:
-                    # Silently handle logging errors to prevent crashes
-                    print(f"[INFO] Database connection pool initialized (logging failed: {log_error})")
+                logger.info("Database connection pool initialized")
             except Exception as e:
-                try:
-                    logger.error(f"Failed to initialize database connection pool: {e}")
-                except Exception as log_error:
-                    print(f"[ERROR] Failed to initialize database connection pool: {e} (logging failed: {log_error})")
+                logger.error(f"Failed to initialize database connection pool: {e}")
                 raise
     
+    @log_tenant_operation("close_pool")
     async def close_pool(self):
         """Close connection pool"""
         if self._pool:
             try:
                 await self._pool.close()
                 self._pool = None
-                try:
-                    logger.info("Database connection pool closed")
-                except Exception as log_error:
-                    # Silently handle logging errors to prevent crashes
-                    print(f"[INFO] Database connection pool closed (logging failed: {log_error})")
+                logger.info("Database connection pool closed")
             except Exception as e:
-                try:
-                    logger.error(f"Error closing database connection pool: {e}")
-                except Exception as log_error:
-                    print(f"[ERROR] Error closing database connection pool: {e} (logging failed: {log_error})")
+                logger.error(f"Error closing database connection pool: {e}")
                 raise
     
     @asynccontextmanager

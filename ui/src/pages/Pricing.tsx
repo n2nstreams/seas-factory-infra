@@ -52,7 +52,20 @@ export default function Pricing() {
 
   const getDisplayPrice = (tier: any) => {
     if (typeof tier.monthly === 'string') return tier.monthly;
-    return billingPeriod === 'yearly' ? tier.yearly : tier.monthly;
+    if (billingPeriod === 'yearly' && typeof tier.yearly === 'number') {
+      return tier.yearly;
+    }
+    return tier.monthly;
+  };
+
+  const getYearlySavings = (tier: any) => {
+    if (typeof tier.monthly === 'number' && typeof tier.yearly === 'number' && tier.monthly > 0) {
+      const monthlyTotal = tier.monthly * 12;
+      const savings = monthlyTotal - tier.yearly;
+      const savingsPercent = Math.round((savings / monthlyTotal) * 100);
+      return { savings, savingsPercent };
+    }
+    return null;
   };
 
   return (
@@ -147,9 +160,16 @@ export default function Pricing() {
                       )}
                     </div>
                     {billingPeriod === 'yearly' && typeof tier.monthly === 'number' && tier.monthly > 0 && typeof tier.yearly === 'number' && (
-                      <p className="text-xs text-muted">
-                        ${Math.round(tier.yearly / 12)}/month billed annually
-                      </p>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted">
+                          ${Math.round(tier.yearly / 12)}/month billed annually
+                        </p>
+                        {getYearlySavings(tier) && (
+                          <p className="text-xs text-green-800 font-medium">
+                            Save ${getYearlySavings(tier)?.savings}/year ({getYearlySavings(tier)?.savingsPercent}% off)
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </CardHeader>

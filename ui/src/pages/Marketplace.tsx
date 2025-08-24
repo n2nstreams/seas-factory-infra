@@ -20,6 +20,7 @@ import {
   X
 } from 'lucide-react';
 import { marketplaceApi, tenantUtils } from '@/lib/api';
+import sampleProducts from '../data/sample_marketplace_products.json';
 
 interface SaaSProduct {
   id: string;
@@ -93,8 +94,9 @@ export default function Marketplace() {
       setProducts(productsData);
     } catch (error) {
       console.error('Error loading products:', error);
-      // Fallback to empty array
-      setProducts([]);
+      // Fallback to sample products when API fails
+      console.log('Using sample products as fallback');
+      setProducts(sampleProducts);
     } finally {
       setIsLoading(false);
     }

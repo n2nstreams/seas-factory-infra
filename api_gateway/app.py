@@ -26,9 +26,14 @@ from marketplace_routes import router as marketplace_router
 from oauth_routes import router as oauth_router
 from websocket_manager import get_websocket_manager
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Configure logging using centralized configuration
+try:
+    from config.logging_config import get_logger
+    logger = get_logger(__name__)
+except ImportError:
+    # Fallback to basic logging if centralized config is not available
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="SaaS Factory API Gateway",
@@ -73,7 +78,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "service": "api-gateway",
+        "service": "api_gateway",
         "version": "1.0.0"
     }
 

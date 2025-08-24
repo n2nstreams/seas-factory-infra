@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 from fastapi import APIRouter, HTTPException, Depends, Header, Request
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator
 import asyncpg
 import bcrypt
 
@@ -42,19 +42,22 @@ class UserRegistrationRequest(BaseModel):
     agreeToTerms: bool = False
     tenant_id: Optional[str] = None
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         return v
     
-    @validator('confirmPassword')
-    def passwords_match(cls, v, values, **kwargs):
-        if 'password' in values and v != values['password']:
+    @field_validator('confirmPassword')
+    @classmethod
+    def passwords_match(cls, v, info):
+        if info.data and 'password' in info.data and v != info.data['password']:
             raise ValueError('Passwords do not match')
         return v
     
-    @validator('agreeToTerms')
+    @field_validator('agreeToTerms')
+    @classmethod
     def must_agree_to_terms(cls, v):
         if not v:
             raise ValueError('You must agree to the terms of service')

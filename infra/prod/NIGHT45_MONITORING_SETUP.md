@@ -68,7 +68,7 @@ export TF_VAR_slack_webhook_token="xoxb-your-actual-slack-bot-token"
 | Service | URL | Uptime Check | Status |
 |---------|-----|--------------|--------|
 | **Orchestrator** | `project-orchestrator-4riidj3biq-uc.a.run.app` | ✅ Active | Monitoring |
-| **API Gateway** | `api-gateway-4riidj3biq-uc.a.run.app` | ✅ Active | Monitoring |
+| **API Gateway** | `api_gateway-4riidj3biq-uc.a.run.app` | ✅ Active | Monitoring |
 | **Frontend** | `web-frontend-4riidj3biq-uc.a.run.app` | ✅ Active | Monitoring |
 | **Event Relay** | `event-relay-4riidj3biq-uc.a.run.app` | ✅ Active | Monitoring |
 
@@ -108,7 +108,7 @@ export TF_VAR_slack_webhook_token="xoxb-your-actual-slack-bot-token"
 curl -f "https://project-orchestrator-4riidj3biq-uc.a.run.app/health"
 
 # Test gateway  
-curl -f "https://api-gateway-4riidj3biq-uc.a.run.app/health"
+curl -f "https://api_gateway-4riidj3biq-uc.a.run.app/health"
 
 # Test frontend
 curl -f "https://web-frontend-4riidj3biq-uc.a.run.app/"

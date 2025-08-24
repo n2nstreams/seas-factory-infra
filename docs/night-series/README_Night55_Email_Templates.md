@@ -19,7 +19,7 @@ Night 55 successfully implements **SendGrid email integration with beautiful gla
 - ✅ **Glassmorphism Theme**: Natural olive green colors (#6B7B4F) consistent with the UI design
 
 ### 3. **User Registration Integration**
-- ✅ Complete user registration endpoint in `api-gateway/user_routes.py`
+- ✅ Complete user registration endpoint in `api_gateway/user_routes.py`
 - ✅ Password hashing with bcrypt
 - ✅ Automatic tenant creation/assignment
 - ✅ Welcome email sending on successful registration

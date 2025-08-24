@@ -1,0 +1,75 @@
+# Pre-commit hooks configuration for SaaS Factory
+# This file configures automated checks that run before each commit
+
+repos:
+  # Path consistency validation
+  - repo: local
+    hooks:
+      - id: validate-paths
+        name: Validate Path Consistency
+        entry: python3 scripts/validate_paths.py
+        language: system
+        types: [python, markdown, yaml, yml, terraform, shell]
+        pass_filenames: false
+        always_run: true
+        description: "Ensures consistent path naming across the codebase"
+        
+  # Python code quality
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        types: [python]
+        args: [--check]
+        
+  # Python linting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types: [python]
+        
+  # YAML validation
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args: [--strict]
+        types: [yaml]
+        
+  # Terraform formatting
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.87.0
+    hooks:
+      - id: terraform_fmt
+        args: [--args=-no-color, --args=-diff]
+        types: [terraform]
+        
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+        types: [markdown]
+        
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-toml
+      - id: debug-statements
+      - id: detect-private-key
+      - id: requirements-txt-fixer

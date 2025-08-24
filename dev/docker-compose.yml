@@ -43,9 +43,9 @@ services:
       retries: 5
 
   # Development API Gateway
-  api-gateway:
+  api_gateway:
     build:
-      context: ../api-gateway
+      context: ../api_gateway
       dockerfile: Dockerfile
     container_name: saas_factory_api_gateway
     ports:

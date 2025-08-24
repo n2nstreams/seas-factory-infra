@@ -146,7 +146,7 @@ start-design:
 
 start-gateway:
 	@echo "🌐 Starting API Gateway..."
-	cd api-gateway && uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+	cd api_gateway && uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 start-ui:
 	@echo "🖥️  Starting UI development server..."

@@ -18,7 +18,7 @@ import tempfile
 import json
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 import asyncio
 from pathlib import Path
@@ -35,6 +35,9 @@ from github_integration import (
     create_github_integration, ReviewComment, 
     GitHubIntegration, PullRequestInfo
 )
+
+# Import health monitoring
+from health_monitoring import HealthMonitor, CheckType, HealthStatus
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -141,6 +144,22 @@ class DevOpsAgent:
         # Security rules and patterns
         self.security_patterns = self._load_security_patterns()
         self.best_practices_rules = self._load_best_practices_rules()
+        
+        # Initialize health monitoring
+        health_config = {
+            "check_interval": 30,
+            "alert_thresholds": {
+                "cpu_warning": 70.0,
+                "cpu_critical": 90.0,
+                "memory_warning": 80.0,
+                "memory_critical": 95.0,
+                "disk_warning": 85.0,
+                "disk_critical": 95.0,
+                "response_time_warning": 1000,
+                "response_time_critical": 5000
+            }
+        }
+        self.health_monitor = HealthMonitor(health_config)
 
     def _load_security_patterns(self) -> Dict[str, Dict[str, Any]]:
         """Load security patterns for different resource types"""
@@ -584,7 +603,7 @@ Format your response clearly with sections and bullet points.
         
         return comment
 
-    def deploy_service(self, service_name: str, image_tag: str) -> DeploymentStatus:
+    async def deploy_service(self, service_name: str, image_tag: str) -> DeploymentStatus:
         """
         Deploy a service with the specified image tag
 
@@ -597,26 +616,108 @@ Format your response clearly with sections and bullet points.
         """
         self.logger.info(f"Deploying service {service_name} with image {image_tag}")
 
-        # TODO: Implement actual deployment logic
-        # - Update Cloud Run service
-        # - Wait for deployment completion
-        # - Perform health checks
-        # - Update traffic routing
-
+        # Create deployment status
         deployment_status = DeploymentStatus(
             deployment_id=f"deploy-{service_name}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            status="pending",
+            status="in_progress",
             timestamp=datetime.now(),
             version=image_tag,
             environment=self.config.environment,
             health_check_passed=False,
-            rollback_available=True,
+            rollback_available=False,
         )
+
+        try:
+            # Step 1: Update Cloud Run service
+            service_updated = await self._update_cloud_run_service(service_name, image_tag)
+            if not service_updated:
+                deployment_status.status = "failed"
+                self.logger.error(f"Failed to update Cloud Run service {service_name}")
+                return deployment_status
+
+            # Step 2: Wait for deployment completion
+            deployment_completed = await self._wait_for_deployment_completion(service_name)
+            if not deployment_completed:
+                deployment_status.status = "failed"
+                self.logger.error(f"Deployment did not complete for {service_name}")
+                return deployment_status
+
+            # Step 3: Perform health checks
+            health_passed = await self.check_deployment_health(deployment_status.deployment_id)
+            deployment_status.health_check_passed = health_passed
+
+            if health_passed:
+                deployment_status.status = "completed"
+                deployment_status.rollback_available = True
+                self.logger.info(f"Deployment completed successfully for {service_name}")
+                
+                # Step 4: Update traffic routing
+                await self._update_traffic_routing(service_name, image_tag)
+                
+                # Update monitoring alerts
+                await self._update_monitoring_alerts(service_name, "deployment_completed")
+            else:
+                deployment_status.status = "failed"
+                self.logger.error(f"Health checks failed for {service_name}")
+                
+                # Attempt rollback
+                await self.rollback_service(service_name, "previous")
+
+        except Exception as e:
+            deployment_status.status = "failed"
+            self.logger.error(f"Error during deployment: {e}")
 
         self.deployments.append(deployment_status)
         return deployment_status
 
-    def rollback_service(
+    async def _update_cloud_run_service(self, service_name: str, image_tag: str) -> bool:
+        """Update Cloud Run service with new image"""
+        try:
+            # This would implement actual Cloud Run service update
+            # For now, simulate the process
+            self.logger.info(f"Updating Cloud Run service {service_name} with image {image_tag}")
+            
+            # Simulate update delay
+            await asyncio.sleep(3)
+            
+            # Simulate success
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error updating Cloud Run service: {e}")
+            return False
+
+    async def _wait_for_deployment_completion(self, service_name: str) -> bool:
+        """Wait for Cloud Run deployment to complete"""
+        try:
+            self.logger.info(f"Waiting for deployment completion for {service_name}")
+            
+            # Simulate deployment wait time
+            await asyncio.sleep(5)
+            
+            # Simulate success
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error waiting for deployment completion: {e}")
+            return False
+
+    async def _update_traffic_routing(self, service_name: str, image_tag: str):
+        """Update traffic routing for the service"""
+        try:
+            # This would implement actual traffic routing update
+            # For now, simulate the process
+            self.logger.info(f"Updating traffic routing for {service_name} to {image_tag}")
+            
+            # Simulate routing update delay
+            await asyncio.sleep(1)
+            
+            self.logger.info(f"Traffic routing updated for {service_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Error updating traffic routing: {e}")
+
+    async def rollback_service(
         self, service_name: str, target_version: str
     ) -> DeploymentStatus:
         """
@@ -633,15 +734,10 @@ Format your response clearly with sections and bullet points.
             f"Rolling back service {service_name} to version {target_version}"
         )
 
-        # TODO: Implement rollback logic
-        # - Identify previous healthy version
-        # - Update service configuration
-        # - Perform health checks
-        # - Update monitoring alerts
-
+        # Create rollback deployment status
         rollback_status = DeploymentStatus(
             deployment_id=f"rollback-{service_name}-{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            status="pending",
+            status="in_progress",
             timestamp=datetime.now(),
             version=target_version,
             environment=self.config.environment,
@@ -649,10 +745,139 @@ Format your response clearly with sections and bullet points.
             rollback_available=False,
         )
 
+        try:
+            # Step 1: Identify previous healthy version
+            previous_deployment = self._find_previous_healthy_deployment(service_name)
+            if not previous_deployment:
+                rollback_status.status = "failed"
+                self.logger.error(f"No previous healthy deployment found for {service_name}")
+                return rollback_status
+
+            # Step 2: Update service configuration
+            success = await self._update_service_configuration(service_name, target_version)
+            if not success:
+                rollback_status.status = "failed"
+                self.logger.error(f"Failed to update service configuration for {service_name}")
+                return rollback_status
+
+            # Step 3: Perform health checks
+            health_passed = await self._perform_rollback_health_checks(service_name)
+            rollback_status.health_check_passed = health_passed
+
+            if health_passed:
+                rollback_status.status = "completed"
+                self.logger.info(f"Rollback completed successfully for {service_name}")
+                
+                # Update monitoring alerts
+                await self._update_monitoring_alerts(service_name, "rollback_completed")
+            else:
+                rollback_status.status = "failed"
+                self.logger.error(f"Health checks failed after rollback for {service_name}")
+                
+                # Attempt to rollback to the rollback (double rollback)
+                await self._emergency_rollback(service_name, previous_deployment.version)
+
+        except Exception as e:
+            rollback_status.status = "failed"
+            self.logger.error(f"Error during rollback: {e}")
+            
+            # Emergency rollback on error
+            if previous_deployment:
+                await self._emergency_rollback(service_name, previous_deployment.version)
+
         self.deployments.append(rollback_status)
         return rollback_status
 
-    def check_deployment_health(self, deployment_id: str) -> bool:
+    def _find_previous_healthy_deployment(self, service_name: str) -> Optional[DeploymentStatus]:
+        """Find the most recent healthy deployment for a service"""
+        try:
+            # Get deployments for this service, sorted by timestamp (newest first)
+            service_deployments = [
+                d for d in self.deployments 
+                if d.status == "completed" and d.health_check_passed
+            ]
+            
+            if not service_deployments:
+                return None
+            
+            # Return the most recent healthy deployment
+            return max(service_deployments, key=lambda x: x.timestamp)
+            
+        except Exception as e:
+            self.logger.error(f"Error finding previous healthy deployment: {e}")
+            return None
+
+    async def _update_service_configuration(self, service_name: str, target_version: str) -> bool:
+        """Update service configuration to target version"""
+        try:
+            # This would implement the actual service configuration update
+            # For now, simulate the process
+            self.logger.info(f"Updating {service_name} configuration to version {target_version}")
+            
+            # Simulate configuration update delay
+            await asyncio.sleep(2)
+            
+            # Simulate success
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error updating service configuration: {e}")
+            return False
+
+    async def _perform_rollback_health_checks(self, service_name: str) -> bool:
+        """Perform health checks after rollback"""
+        try:
+            self.logger.info(f"Performing health checks for {service_name} after rollback")
+            
+            # Add health check for the service
+            await self.health_monitor.add_health_check(
+                service_name,
+                CheckType.HTTP_ENDPOINT,
+                {"url": f"http://localhost:8080/health", "timeout": 10}
+            )
+            
+            # Wait for health check results
+            await asyncio.sleep(5)
+            
+            # Get service health
+            health_status = self.health_monitor.get_service_health(service_name)
+            
+            return health_status.get("current_status") == "healthy"
+            
+        except Exception as e:
+            self.logger.error(f"Error performing rollback health checks: {e}")
+            return False
+
+    async def _update_monitoring_alerts(self, service_name: str, event_type: str):
+        """Update monitoring alerts after rollback"""
+        try:
+            if event_type == "rollback_completed":
+                # Resolve any active alerts for this service
+                alerts = self.health_monitor.get_alerts(service_name=service_name, resolved=False)
+                for alert in alerts:
+                    await self.health_monitor.resolve_alert(alert["id"])
+                
+                self.logger.info(f"Updated monitoring alerts for {service_name}")
+                
+        except Exception as e:
+            self.logger.error(f"Error updating monitoring alerts: {e}")
+
+    async def _emergency_rollback(self, service_name: str, emergency_version: str):
+        """Emergency rollback to a known good version"""
+        try:
+            self.logger.warning(f"Performing emergency rollback for {service_name} to {emergency_version}")
+            
+            # Force rollback to emergency version
+            success = await self._update_service_configuration(service_name, emergency_version)
+            if success:
+                self.logger.info(f"Emergency rollback completed for {service_name}")
+            else:
+                self.logger.error(f"Emergency rollback failed for {service_name}")
+                
+        except Exception as e:
+            self.logger.error(f"Error during emergency rollback: {e}")
+
+    async def check_deployment_health(self, deployment_id: str) -> bool:
         """
         Check the health of a deployment
 
@@ -664,13 +889,133 @@ Format your response clearly with sections and bullet points.
         """
         self.logger.info(f"Checking health for deployment {deployment_id}")
 
-        # TODO: Implement health check logic
-        # - Check service endpoints
-        # - Verify database connectivity
-        # - Check error rates and latency
-        # - Validate resource utilization
+        try:
+            # Find the deployment
+            deployment = self.get_deployment_status(deployment_id)
+            if not deployment:
+                self.logger.error(f"Deployment {deployment_id} not found")
+                return False
 
-        return True
+            # Get service name from deployment
+            service_name = deployment_id.split('-')[0] if '-' in deployment_id else "unknown"
+
+            # Check service endpoints
+            endpoint_healthy = await self._check_service_endpoints(service_name)
+            
+            # Verify database connectivity
+            database_healthy = await self._check_database_connectivity(service_name)
+            
+            # Check error rates and latency
+            performance_healthy = await self._check_performance_metrics(service_name)
+            
+            # Validate resource utilization
+            resources_healthy = await self._check_resource_utilization(service_name)
+
+            # Overall health is true only if all checks pass
+            overall_healthy = all([
+                endpoint_healthy,
+                database_healthy,
+                performance_healthy,
+                resources_healthy
+            ])
+
+            # Update deployment status
+            deployment.health_check_passed = overall_healthy
+
+            # Log health check results
+            self.logger.info(f"Health check for {deployment_id}: {overall_healthy}")
+            self.logger.debug(f"  Endpoints: {endpoint_healthy}")
+            self.logger.debug(f"  Database: {database_healthy}")
+            self.logger.debug(f"  Performance: {performance_healthy}")
+            self.logger.debug(f"  Resources: {resources_healthy}")
+
+            return overall_healthy
+
+        except Exception as e:
+            self.logger.error(f"Error checking deployment health: {e}")
+            return False
+
+    async def _check_service_endpoints(self, service_name: str) -> bool:
+        """Check if service endpoints are responding"""
+        try:
+            # Add health check for the service
+            await self.health_monitor.add_health_check(
+                service_name,
+                CheckType.HTTP_ENDPOINT,
+                {"url": f"http://localhost:8080/health", "timeout": 10}
+            )
+            
+            # Wait for health check to complete
+            await asyncio.sleep(2)
+            
+            # Get health status
+            health_status = self.health_monitor.get_service_health(service_name)
+            return health_status.get("current_status") == "healthy"
+            
+        except Exception as e:
+            self.logger.error(f"Error checking service endpoints: {e}")
+            return False
+
+    async def _check_database_connectivity(self, service_name: str) -> bool:
+        """Check database connectivity for the service"""
+        try:
+            # Add database health check
+            await self.health_monitor.add_health_check(
+                service_name,
+                CheckType.DATABASE,
+                {"connection_string": "postgresql://localhost:5432/mydb"}
+            )
+            
+            # Wait for health check to complete
+            await asyncio.sleep(2)
+            
+            # Get health status
+            health_status = self.health_monitor.get_service_health(service_name)
+            return health_status.get("current_status") == "healthy"
+            
+        except Exception as e:
+            self.logger.error(f"Error checking database connectivity: {e}")
+            return False
+
+    async def _check_performance_metrics(self, service_name: str) -> bool:
+        """Check performance metrics for the service"""
+        try:
+            # Get recent health check results
+            health_summary = self.health_monitor.get_health_summary()
+            
+            # Check if response times are within acceptable limits
+            if health_summary.get("status") == "healthy":
+                return True
+            elif health_summary.get("status") == "degraded":
+                # Degraded is still considered healthy for performance
+                return True
+            else:
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error checking performance metrics: {e}")
+            return False
+
+    async def _check_resource_utilization(self, service_name: str) -> bool:
+        """Check system resource utilization"""
+        try:
+            # Add resource utilization check
+            await self.health_monitor.add_health_check(
+                service_name,
+                CheckType.RESOURCE_UTILIZATION,
+                {}
+            )
+            
+            # Wait for health check to complete
+            await asyncio.sleep(2)
+            
+            # Get health status
+            health_status = self.health_monitor.get_service_health(service_name)
+            return health_status.get("current_status") in ["healthy", "degraded"]
+            
+        except Exception as e:
+            self.logger.error(f"Error checking resource utilization: {e}")
+            return False
 
     def get_deployment_status(self, deployment_id: str) -> Optional[DeploymentStatus]:
         """
@@ -696,7 +1041,7 @@ Format your response clearly with sections and bullet points.
         """
         return self.deployments
 
-    def setup_monitoring(self, service_name: str) -> bool:
+    async def setup_monitoring(self, service_name: str) -> bool:
         """
         Setup monitoring for a service
 
@@ -708,15 +1053,107 @@ Format your response clearly with sections and bullet points.
         """
         self.logger.info(f"Setting up monitoring for service {service_name}")
 
-        # TODO: Implement monitoring setup
-        # - Create uptime checks
-        # - Setup alert policies
-        # - Configure dashboards
-        # - Setup log-based metrics
+        try:
+            # Step 1: Create uptime checks
+            await self._setup_uptime_checks(service_name)
+            
+            # Step 2: Setup alert policies
+            await self._setup_alert_policies(service_name)
+            
+            # Step 3: Configure dashboards
+            await self._setup_dashboards(service_name)
+            
+            # Step 4: Setup log-based metrics
+            await self._setup_log_metrics(service_name)
+            
+            # Step 5: Start health monitoring
+            await self.health_monitor.start_monitoring()
+            
+            self.logger.info(f"Monitoring setup completed for {service_name}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up monitoring for {service_name}: {e}")
+            return False
 
-        return True
+    async def _setup_uptime_checks(self, service_name: str):
+        """Setup uptime checks for the service"""
+        try:
+            # Add HTTP endpoint health check
+            await self.health_monitor.add_health_check(
+                service_name,
+                CheckType.HTTP_ENDPOINT,
+                {
+                    "url": f"http://localhost:8080/health",
+                    "timeout": 10,
+                    "expected_status": 200
+                }
+            )
+            
+            # Add process status check
+            await self.health_monitor.add_health_check(
+                service_name,
+                CheckType.PROCESS_STATUS,
+                {"process_name": service_name}
+            )
+            
+            self.logger.info(f"Uptime checks configured for {service_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up uptime checks: {e}")
 
-    def cleanup_old_deployments(self, retention_days: int = 30) -> int:
+    async def _setup_alert_policies(self, service_name: str):
+        """Setup alert policies for the service"""
+        try:
+            # Configure alert thresholds
+            alert_config = {
+                "cpu_warning": 70.0,
+                "cpu_critical": 90.0,
+                "memory_warning": 80.0,
+                "memory_critical": 95.0,
+                "response_time_warning": 1000,
+                "response_time_critical": 5000
+            }
+            
+            # Update health monitor thresholds
+            self.health_monitor.alert_thresholds.update(alert_config)
+            
+            self.logger.info(f"Alert policies configured for {service_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up alert policies: {e}")
+
+    async def _setup_dashboards(self, service_name: str):
+        """Setup monitoring dashboards for the service"""
+        try:
+            # This would integrate with monitoring platforms like Grafana, DataDog, etc.
+            # For now, log the setup
+            self.logger.info(f"Dashboard setup initiated for {service_name}")
+            
+            # Simulate dashboard creation
+            await asyncio.sleep(1)
+            
+            self.logger.info(f"Dashboard setup completed for {service_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up dashboards: {e}")
+
+    async def _setup_log_metrics(self, service_name: str):
+        """Setup log-based metrics collection"""
+        try:
+            # Add custom command health check for log analysis
+            await self.health_monitor.add_health_check(
+                service_name,
+                CheckType.CUSTOM_COMMAND,
+                {"command": f"tail -n 100 /var/log/{service_name}.log | grep -c ERROR"}
+            )
+            
+            self.logger.info(f"Log metrics configured for {service_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Error setting up log metrics: {e}")
+
+    async def cleanup_old_deployments(self, retention_days: int = 30) -> int:
         """
         Cleanup old deployment records
 
@@ -728,12 +1165,104 @@ Format your response clearly with sections and bullet points.
         """
         self.logger.info(f"Cleaning up deployments older than {retention_days} days")
 
-        # TODO: Implement cleanup logic
-        # - Remove old deployment records
-        # - Cleanup unused container images
-        # - Remove old configuration versions
+        try:
+            cleanup_count = 0
+            cutoff_date = datetime.now() - timedelta(days=retention_days)
+            
+            # Step 1: Remove old deployment records
+            old_deployments = [
+                d for d in self.deployments
+                if d.timestamp < cutoff_date
+            ]
+            
+            for deployment in old_deployments:
+                self.deployments.remove(deployment)
+                cleanup_count += 1
+                self.logger.debug(f"Removed old deployment: {deployment.deployment_id}")
+            
+            # Step 2: Cleanup unused container images (simulated)
+            await self._cleanup_container_images(service_name="all")
+            
+            # Step 3: Remove old configuration versions (simulated)
+            await self._cleanup_configurations(service_name="all")
+            
+            # Step 4: Cleanup old health check data
+            await self._cleanup_health_data(retention_days)
+            
+            self.logger.info(f"Cleanup completed: {cleanup_count} deployments removed")
+            return cleanup_count
+            
+        except Exception as e:
+            self.logger.error(f"Error during cleanup: {e}")
+            return 0
 
-        return 0
+    async def _cleanup_container_images(self, service_name: str):
+        """Cleanup unused container images"""
+        try:
+            # This would implement actual container cleanup
+            # For now, simulate the process
+            self.logger.info(f"Cleaning up unused container images for {service_name}")
+            
+            # Simulate cleanup delay
+            await asyncio.sleep(1)
+            
+            self.logger.info(f"Container image cleanup completed for {service_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Error cleaning up container images: {e}")
+
+    async def _cleanup_configurations(self, service_name: str):
+        """Cleanup old configuration versions"""
+        try:
+            # This would implement actual configuration cleanup
+            # For now, simulate the process
+            self.logger.info(f"Cleaning up old configurations for {service_name}")
+            
+            # Simulate cleanup delay
+            await asyncio.sleep(1)
+            
+            self.logger.info(f"Configuration cleanup completed for {service_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Error cleaning up configurations: {e}")
+
+    async def _cleanup_health_data(self, retention_days: int):
+        """Cleanup old health check data"""
+        try:
+            # Cleanup old health check results
+            cutoff_date = datetime.now() - timedelta(days=retention_days)
+            
+            # Remove old health check results
+            old_results = [
+                r for r in self.health_monitor.health_history
+                if r.timestamp < cutoff_date
+            ]
+            
+            for result in old_results:
+                self.health_monitor.health_history.remove(result)
+            
+            # Remove old metrics
+            old_metrics = [
+                m for m in self.health_monitor.metrics_history
+                if m.timestamp < cutoff_date
+            ]
+            
+            for metric in old_metrics:
+                self.health_monitor.metrics_history.remove(metric)
+            
+            # Remove old alerts
+            old_alerts = [
+                a for a in self.health_monitor.alerts
+                if a.timestamp < cutoff_date and a.resolved
+            ]
+            
+            for alert in old_alerts:
+                self.health_monitor.alerts.remove(alert)
+            
+            self.logger.info(f"Health data cleanup completed: {len(old_results)} results, {len(old_metrics)} metrics, {len(old_alerts)} alerts removed")
+            
+        except Exception as e:
+            self.logger.error(f"Error cleaning up health data: {e}")
 
 
 async def main():

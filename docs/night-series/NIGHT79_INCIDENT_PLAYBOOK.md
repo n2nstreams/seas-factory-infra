@@ -216,7 +216,7 @@ graph TD
    
    # Manual rollback
    gcloud run services update api-gateway \
-     --image=gcr.io/PROJECT/api-gateway:previous-stable \
+     --image=gcr.io/PROJECT/api_gateway:previous-stable \
      --region=us-central1
    ```
 

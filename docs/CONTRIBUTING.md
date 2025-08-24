@@ -24,7 +24,7 @@ saas-factory/
 │   ├── docs/             # DocAgent - Documentation generation
 │   └── shared/           # Shared utilities and components
 ├── ui/                   # React dashboard + marketplace
-├── api-gateway/          # FastAPI gateway with tenant routing
+├── api_gateway/          # FastAPI gateway with tenant routing
 └── docs/                 # Generated & manual documentation
 ```
 

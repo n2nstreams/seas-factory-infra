@@ -23,8 +23,8 @@ SERVICES = {
         'requirements': 'requirements-agents.txt',
         'backup_existing': True
     },
-    'api-gateway': {
-        'path': 'api-gateway',
+    'api_gateway': {
+        'path': 'api_gateway',
         'requirements': 'requirements-agents.txt',
         'backup_existing': True
     },

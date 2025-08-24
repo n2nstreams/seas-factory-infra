@@ -15,6 +15,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,22 +79,17 @@ export default function ChatWidget() {
       } catch (error) {
         console.error('Error fetching chat response:', error);
         
-        // Provide more helpful error messages
-        let errorMessage = 'Sorry, something went wrong.';
-        if (error instanceof Error) {
-          if (error.message.includes('Failed to fetch')) {
-            errorMessage = 'Unable to connect to chat service. Please try again later.';
-          } else if (error.message.includes('HTTP 500')) {
-            errorMessage = 'Chat service is temporarily unavailable. Please try again later.';
-          } else {
-            errorMessage = `Error: ${error.message}`;
-          }
-        }
-        
+        // Show contact form when chat is unavailable
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: errorMessage },
+          { 
+            role: 'assistant', 
+            content: 'Chat service is currently unavailable. Please use our contact form below or email us at support@forge95.com for immediate assistance.' 
+          },
         ]);
+        
+        // Show contact form
+        setShowContactForm(true);
       } finally {
         setIsLoading(false);
       }
@@ -147,6 +143,36 @@ export default function ChatWidget() {
                   <div className="flex items-end justify-start">
                     <div className="px-4 py-2 rounded-lg max-w-xs bg-white/40 backdrop-blur-sm border border-stone-400/30">
                       <Loader2 className="h-5 w-5 animate-spin text-green-800" />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Contact Form when chat is unavailable */}
+                {showContactForm && (
+                  <div className="flex items-end justify-start">
+                    <div className="px-4 py-2 rounded-lg max-w-xs bg-blue-50 border border-blue-200 text-blue-800">
+                      <h4 className="font-medium mb-2 text-sm">Contact Support</h4>
+                      <div className="space-y-2 text-xs">
+                        <input
+                          type="email"
+                          placeholder="Your email"
+                          className="w-full px-2 py-1 border border-blue-300 rounded text-xs"
+                        />
+                        <textarea
+                          placeholder="Describe your issue"
+                          rows={2}
+                          className="w-full px-2 py-1 border border-blue-300 rounded text-xs"
+                        />
+                        <button
+                          className="w-full bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
+                          onClick={() => {
+                            alert('Thank you! We\'ll get back to you within 24 hours.');
+                            setShowContactForm(false);
+                          }}
+                        >
+                          Send Message
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

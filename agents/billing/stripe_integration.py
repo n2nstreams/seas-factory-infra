@@ -9,7 +9,7 @@ import logging
 import stripe
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 import json
 from agents.shared.tenant_db import TenantDatabase, TenantContext

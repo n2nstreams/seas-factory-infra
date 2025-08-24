@@ -30,11 +30,11 @@
 
 #### New Modules
 - **`agents/shared/privacy_service.py`** - Core privacy service for GDPR operations
-- **`api-gateway/privacy_routes.py`** - Privacy-related API endpoints
+- **`api_gateway/privacy_routes.py`** - Privacy-related API endpoints
 
 #### Modified Modules
-- **`api-gateway/user_routes.py`** - Updated user registration to track GDPR consent
-- **`api-gateway/app.py`** - Added privacy routes to API gateway
+- **`api_gateway/user_routes.py`** - Updated user registration to track GDPR consent
+- **`api_gateway/app.py`** - Added privacy routes to API gateway
 
 ### Database Schema
 
@@ -130,7 +130,7 @@ Comprehensive privacy service providing:
 
 ### 5. Privacy API Endpoints
 
-**Location:** `api-gateway/privacy_routes.py`
+**Location:** `api_gateway/privacy_routes.py`
 
 RESTful API endpoints for privacy operations:
 

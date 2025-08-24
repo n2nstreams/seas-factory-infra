@@ -36,7 +36,7 @@ resource "google_service_account_iam_member" "gateway_sa_user" {
 
 # Cloud Run service for API Gateway
 resource "google_cloud_run_v2_service" "gateway" {
-  name     = "api-gateway"
+  name     = "api_gateway"
   location = var.region
   project  = var.project_id
   
@@ -48,7 +48,7 @@ resource "google_cloud_run_v2_service" "gateway" {
     service_account = google_service_account.gateway_sa.email
     
     containers {
-      image = "us-central1-docker.pkg.dev/${var.project_id}/saas-factory/api-gateway:v1.0"
+      image = "us-central1-docker.pkg.dev/${var.project_id}/saas-factory/api_gateway:v1.0"
       
       ports {
         container_port = 8000
