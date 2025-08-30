@@ -1,0 +1,414 @@
+# Cloud Build configuration for Security Scanning
+# Night 41: Security scan step: Snyk CLI in pipeline; SecurityAgent parses report.
+
+steps:
+  # Step 1: Install Snyk CLI and dependencies
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Installing Snyk CLI and dependencies..."
+        apt-get update && apt-get install -y curl nodejs npm python3 python3-pip
+        
+        # Install Snyk CLI globally
+        npm install -g snyk
+        
+        # Verify installation
+        snyk --version
+        echo "Snyk CLI installed successfully"
+        
+        # Install Python dependencies for SecurityAgent
+        pip3 install --upgrade pip
+        pip3 install requests httpx asyncio pydantic fastapi
+
+  # Step 2: Authenticate with Snyk
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Authenticating with Snyk..."
+        snyk auth ${_SNYK_TOKEN}
+        echo "Snyk authentication completed"
+    secretEnv: ['SNYK_TOKEN']
+
+  # Step 3: Run comprehensive security scan
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Starting comprehensive security scan..."
+        
+        # Create results directory
+        mkdir -p /workspace/security-results
+        
+        # Run dependency vulnerability scan
+        echo "=== Running dependency vulnerability scan ==="
+        snyk test \
+          --all-projects \
+          --json \
+          --severity-threshold=low \
+          --org=${_SNYK_ORG} \
+          --project-name="${_PROJECT_NAME}" \
+          > /workspace/security-results/dependencies-scan.json || echo "Dependencies scan completed with issues"
+        
+        # Run code vulnerability scan
+        echo "=== Running code vulnerability scan ==="
+        snyk code test \
+          --json \
+          --severity-threshold=low \
+          --org=${_SNYK_ORG} \
+          --project-name="${_PROJECT_NAME}" \
+          > /workspace/security-results/code-scan.json || echo "Code scan completed with issues"
+        
+        # Run container vulnerability scan (if Dockerfile exists)
+        if [ -f "Dockerfile" ]; then
+          echo "=== Running container vulnerability scan ==="
+          snyk container test \
+            --json \
+            --severity-threshold=low \
+            --org=${_SNYK_ORG} \
+            --project-name="${_PROJECT_NAME}" \
+            . > /workspace/security-results/container-scan.json || echo "Container scan completed with issues"
+        else
+          echo "No Dockerfile found, skipping container scan"
+        fi
+        
+        # Run Infrastructure as Code scan
+        echo "=== Running Infrastructure as Code scan ==="
+        snyk iac test \
+          --json \
+          --severity-threshold=low \
+          --org=${_SNYK_ORG} \
+          --project-name="${_PROJECT_NAME}" \
+          . > /workspace/security-results/iac-scan.json || echo "IaC scan completed with issues"
+        
+        # Create combined results file
+        echo "=== Creating combined security report ==="
+        cat > /workspace/security-results/combined-report.json << 'EOF'
+        {
+          "scan_metadata": {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "build_id": "${BUILD_ID}",
+            "project_name": "${_PROJECT_NAME}",
+            "branch": "${BRANCH_NAME}",
+            "commit_sha": "${COMMIT_SHA}",
+            "snyk_org": "${_SNYK_ORG}"
+          },
+          "scan_results": {
+            "dependencies": {},
+            "code": {},
+            "container": {},
+            "iac": {}
+          }
+        }
+        EOF
+        
+        # Parse individual scan results into combined report
+        python3 << 'PYEOF'
+        import json
+        import os
+        
+        # Load the combined report template
+        with open('/workspace/security-results/combined-report.json', 'r') as f:
+            combined_report = json.load(f)
+        
+        # Load individual scan results
+        scan_files = {
+            'dependencies': '/workspace/security-results/dependencies-scan.json',
+            'code': '/workspace/security-results/code-scan.json',
+            'container': '/workspace/security-results/container-scan.json',
+            'iac': '/workspace/security-results/iac-scan.json'
+        }
+        
+        for scan_type, file_path in scan_files.items():
+            if os.path.exists(file_path):
+                try:
+                    with open(file_path, 'r') as f:
+                        scan_data = json.load(f)
+                    combined_report['scan_results'][scan_type] = scan_data
+                    print(f"Loaded {scan_type} scan results")
+                except json.JSONDecodeError:
+                    print(f"Warning: Could not parse {scan_type} scan results")
+                    combined_report['scan_results'][scan_type] = {"error": "Failed to parse scan results"}
+            else:
+                print(f"No {scan_type} scan results found")
+        
+        # Save combined report
+        with open('/workspace/security-results/combined-report.json', 'w') as f:
+            json.dump(combined_report, f, indent=2)
+        
+        print("Combined security report created")
+        PYEOF
+        
+        # Display summary
+        echo "=== Security scan summary ==="
+        ls -la /workspace/security-results/
+        
+        # Create human-readable summary
+        echo "=== Generating human-readable summary ==="
+        snyk test --all-projects --severity-threshold=medium || echo "Medium+ severity issues found"
+        
+        echo "Security scan completed"
+    secretEnv: ['SNYK_TOKEN']
+
+  # Step 4: Process results with SecurityAgent
+  - name: 'python:3.11-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Processing security scan results with SecurityAgent..."
+        
+        # Install required Python packages
+        pip install --upgrade pip
+        pip install requests httpx asyncio pydantic fastapi python-multipart
+        
+        # Create SecurityAgent result processor
+        cat > /workspace/process_security_results.py << 'PYEOF'
+        import json
+        import os
+        import sys
+        from datetime import datetime
+        from typing import Dict, List, Any, Optional
+        
+        def calculate_risk_score(vulnerabilities_by_severity: Dict[str, int]) -> float:
+            """Calculate risk score based on vulnerabilities"""
+            severity_weights = {
+                'low': 1,
+                'medium': 3,
+                'high': 7,
+                'critical': 10
+            }
+            
+            total_vulnerabilities = sum(vulnerabilities_by_severity.values())
+            if total_vulnerabilities == 0:
+                return 0.0
+            
+            weighted_score = 0
+            for severity, count in vulnerabilities_by_severity.items():
+                weighted_score += severity_weights.get(severity, 0) * count
+            
+            max_possible_score = total_vulnerabilities * severity_weights['critical']
+            risk_score = (weighted_score / max_possible_score) * 100 if max_possible_score > 0 else 0
+            
+            return min(risk_score, 100.0)
+        
+        def extract_vulnerability_summary(scan_data: Dict[str, Any]) -> Dict[str, Any]:
+            """Extract vulnerability summary from scan data"""
+            summary = {
+                'total_vulnerabilities': 0,
+                'vulnerabilities_by_severity': {'low': 0, 'medium': 0, 'high': 0, 'critical': 0},
+                'unique_vulnerabilities': 0,
+                'patchable_vulnerabilities': 0,
+                'upgradable_vulnerabilities': 0
+            }
+            
+            if isinstance(scan_data, list):
+                # Multiple projects
+                for project in scan_data:
+                    vulnerabilities = project.get('vulnerabilities', [])
+                    summary['total_vulnerabilities'] += len(vulnerabilities)
+                    
+                    for vuln in vulnerabilities:
+                        severity = vuln.get('severity', 'low')
+                        if severity in summary['vulnerabilities_by_severity']:
+                            summary['vulnerabilities_by_severity'][severity] += 1
+                        
+                        if vuln.get('isPatchable', False):
+                            summary['patchable_vulnerabilities'] += 1
+                        if vuln.get('isUpgradable', False):
+                            summary['upgradable_vulnerabilities'] += 1
+            else:
+                # Single project
+                vulnerabilities = scan_data.get('vulnerabilities', [])
+                summary['total_vulnerabilities'] = len(vulnerabilities)
+                
+                for vuln in vulnerabilities:
+                    severity = vuln.get('severity', 'low')
+                    if severity in summary['vulnerabilities_by_severity']:
+                        summary['vulnerabilities_by_severity'][severity] += 1
+                    
+                    if vuln.get('isPatchable', False):
+                        summary['patchable_vulnerabilities'] += 1
+                    if vuln.get('isUpgradable', False):
+                        summary['upgradable_vulnerabilities'] += 1
+            
+            summary['unique_vulnerabilities'] = summary['total_vulnerabilities']
+            return summary
+        
+        def generate_recommendations(summary: Dict[str, Any]) -> List[str]:
+            """Generate security recommendations"""
+            recommendations = []
+            
+            if summary['vulnerabilities_by_severity']['critical'] > 0:
+                recommendations.append("🚨 CRITICAL vulnerabilities found - immediate action required")
+            
+            if summary['vulnerabilities_by_severity']['high'] > 0:
+                recommendations.append("⚠️ HIGH severity vulnerabilities found - review and fix soon")
+            
+            if summary['patchable_vulnerabilities'] > 0:
+                recommendations.append(f"🔧 {summary['patchable_vulnerabilities']} vulnerabilities can be patched")
+            
+            if summary['upgradable_vulnerabilities'] > 0:
+                recommendations.append(f"⬆️ {summary['upgradable_vulnerabilities']} vulnerabilities can be fixed by upgrading")
+            
+            if summary['total_vulnerabilities'] == 0:
+                recommendations.append("✅ No vulnerabilities found in this scan")
+            
+            return recommendations
+        
+        # Process the combined report
+        try:
+            with open('/workspace/security-results/combined-report.json', 'r') as f:
+                combined_report = json.load(f)
+            
+            # Extract summaries from each scan type
+            scan_summaries = {}
+            total_summary = {
+                'total_vulnerabilities': 0,
+                'vulnerabilities_by_severity': {'low': 0, 'medium': 0, 'high': 0, 'critical': 0},
+                'patchable_vulnerabilities': 0,
+                'upgradable_vulnerabilities': 0
+            }
+            
+            for scan_type, scan_data in combined_report['scan_results'].items():
+                if scan_data and 'error' not in scan_data:
+                    summary = extract_vulnerability_summary(scan_data)
+                    scan_summaries[scan_type] = summary
+                    
+                    # Add to total summary
+                    total_summary['total_vulnerabilities'] += summary['total_vulnerabilities']
+                    for severity in ['low', 'medium', 'high', 'critical']:
+                        total_summary['vulnerabilities_by_severity'][severity] += summary['vulnerabilities_by_severity'][severity]
+                    total_summary['patchable_vulnerabilities'] += summary['patchable_vulnerabilities']
+                    total_summary['upgradable_vulnerabilities'] += summary['upgradable_vulnerabilities']
+            
+            # Calculate risk score
+            risk_score = calculate_risk_score(total_summary['vulnerabilities_by_severity'])
+            
+            # Generate recommendations
+            recommendations = generate_recommendations(total_summary)
+            
+            # Create SecurityAgent-compatible report
+            security_report = {
+                'scan_id': combined_report['scan_metadata']['build_id'],
+                'project_name': combined_report['scan_metadata']['project_name'],
+                'scan_metadata': combined_report['scan_metadata'],
+                'summary': total_summary,
+                'scan_summaries': scan_summaries,
+                'risk_score': risk_score,
+                'recommendations': recommendations,
+                'scan_status': 'completed',
+                'processed_at': datetime.utcnow().isoformat()
+            }
+            
+            # Save processed report
+            with open('/workspace/security-results/security-agent-report.json', 'w') as f:
+                json.dump(security_report, f, indent=2)
+            
+            print("SecurityAgent report generated successfully")
+            print(f"Risk Score: {risk_score:.2f}/100")
+            print(f"Total Vulnerabilities: {total_summary['total_vulnerabilities']}")
+            print(f"Critical: {total_summary['vulnerabilities_by_severity']['critical']}")
+            print(f"High: {total_summary['vulnerabilities_by_severity']['high']}")
+            print(f"Medium: {total_summary['vulnerabilities_by_severity']['medium']}")
+            print(f"Low: {total_summary['vulnerabilities_by_severity']['low']}")
+            
+        except Exception as e:
+            print(f"Error processing security results: {e}")
+            sys.exit(1)
+        
+        PYEOF
+        
+        # Run the result processor
+        python3 /workspace/process_security_results.py
+        
+        echo "Security results processed successfully"
+
+  # Step 5: Upload results and send notifications
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Uploading security scan results..."
+        
+        # Upload results to Cloud Storage
+        gsutil -m cp -r /workspace/security-results/* gs://${_SECURITY_RESULTS_BUCKET}/scans/${BUILD_ID}/
+        
+        # Create a summary file for the build
+        echo "Build ID: ${BUILD_ID}" > /workspace/security-results/build-summary.txt
+        echo "Project: ${_PROJECT_NAME}" >> /workspace/security-results/build-summary.txt
+        echo "Branch: ${BRANCH_NAME}" >> /workspace/security-results/build-summary.txt
+        echo "Commit: ${COMMIT_SHA}" >> /workspace/security-results/build-summary.txt
+        echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /workspace/security-results/build-summary.txt
+        
+        # Check if SecurityAgent service is available for notification
+        if [ -n "${_SECURITY_AGENT_URL}" ]; then
+          echo "Sending results to SecurityAgent..."
+          
+          # Send notification to SecurityAgent (webhook-style)
+          cat > /workspace/security-results/webhook-payload.json << EOF
+        {
+          "build_id": "${BUILD_ID}",
+          "project_name": "${_PROJECT_NAME}",
+          "branch": "${BRANCH_NAME}",
+          "commit_sha": "${COMMIT_SHA}",
+          "results_url": "gs://${_SECURITY_RESULTS_BUCKET}/scans/${BUILD_ID}/",
+          "webhook_type": "security_scan_completed"
+        }
+        EOF
+          
+          # Send webhook (you would need to implement this based on your SecurityAgent setup)
+          echo "Webhook payload prepared for SecurityAgent"
+          cat /workspace/security-results/webhook-payload.json
+        else
+          echo "No SecurityAgent URL configured, skipping notification"
+        fi
+        
+        echo "Security scan results uploaded successfully"
+
+# Store build artifacts
+artifacts:
+  objects:
+    location: 'gs://${_SECURITY_RESULTS_BUCKET}/scans/${BUILD_ID}'
+    paths:
+      - '/workspace/security-results/**'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+  diskSizeGb: '50'
+  env:
+    - 'PYTHONUNBUFFERED=1'
+    - 'SNYK_CFG_DISABLE_ANALYTICS=1'
+
+# Set timeout to 20 minutes
+timeout: '1200s'
+
+# Available secrets
+availableSecrets:
+  secretManager:
+    - versionName: projects/${PROJECT_ID}/secrets/snyk-token/versions/latest
+      env: 'SNYK_TOKEN'
+
+# Required substitutions
+substitutions:
+  _PROJECT_NAME: 'ai-saas-factory'
+  _SNYK_ORG: 'your-snyk-org'
+  _SECURITY_RESULTS_BUCKET: '${PROJECT_ID}-security-results'
+  _SECURITY_AGENT_URL: 'https://security-agent-service-url'
+
+# Tags for organization
+tags:
+  - 'security-scan'
+  - 'snyk'
+  - 'vulnerability-assessment'
+  - 'night-41' 

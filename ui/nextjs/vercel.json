@@ -1,0 +1,93 @@
+{
+  "version": 2,
+  "name": "saas-factory-nextjs",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/app2/(.*)",
+      "dest": "/app2/$1",
+      "headers": {
+        "X-Canary-Version": "v2",
+        "X-Migration-Status": "active"
+      }
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1",
+      "headers": {
+        "X-API-Version": "v2"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1",
+      "headers": {
+        "X-App-Version": "legacy"
+      }
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/app2/(.*)",
+      "headers": [
+        {
+          "key": "X-Canary-Version",
+          "value": "v2"
+        },
+        {
+          "key": "X-Migration-Status",
+          "value": "active"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": ["iad1"],
+  "crons": [
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

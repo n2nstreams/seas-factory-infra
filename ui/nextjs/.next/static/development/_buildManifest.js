@@ -1,0 +1,1 @@
+self.__BUILD_MANIFEST = (function(a,b){return {__rewrites:{afterFiles:[{has:[{type:"header",key:"X-Canary-Version",value:"v2"}],source:a,destination:a}],beforeFiles:[],fallback:[]},__routerFilterStatic:b,__routerFilterDynamic:b,sortedPages:["\u002F_app"]}}("\u002Fapp2\u002F:path*",void 0));self.__BUILD_MANIFEST_CB && self.__BUILD_MANIFEST_CB()

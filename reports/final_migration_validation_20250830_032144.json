@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-08-30T03:21:44.685143",
+  "overall_score": 71.2,
+  "tests": {
+    "freeze_window": {
+      "name": "Freeze Window Testing",
+      "score": 85.0,
+      "details": {
+        "database_freeze": 100.0,
+        "api_freeze": 50.0,
+        "notifications": 100.0,
+        "timing": 90.0
+      },
+      "status": "WARNING"
+    },
+    "cutover": {
+      "name": "Cutover Procedures",
+      "score": 40.0,
+      "details": {
+        "traffic_switching": 75.0,
+        "dns_propagation": 85.0,
+        "load_balancer": 0.0,
+        "service_health": 0.0
+      },
+      "status": "FAIL"
+    },
+    "post_cutover_monitoring": {
+      "name": "Post-Cutover Monitoring",
+      "score": 62.5,
+      "details": {
+        "realtime_monitoring": 100.0,
+        "alert_generation": 80.0,
+        "metric_collection": 70.0,
+        "dashboard_functionality": 0.0
+      },
+      "status": "FAIL"
+    },
+    "rollback_triggers": {
+      "name": "Rollback Triggers",
+      "score": 97.5,
+      "details": {
+        "automatic_triggers": 100.0,
+        "manual_procedures": 100.0,
+        "timing": 90.0,
+        "data_integrity": 100.0
+      },
+      "status": "PASS"
+    }
+  },
+  "recommendations": [
+    "IMPROVE: Enhance freeze_window - Score: 85.0/100",
+    "CRITICAL: Fix cutover - Score: 40.0/100",
+    "CRITICAL: Fix post_cutover_monitoring - Score: 62.5/100",
+    "\u26a0\ufe0f CAUTION: Address warnings before production deployment"
+  ],
+  "critical_issues": [],
+  "status": "WARNING"
+}

@@ -1,0 +1,490 @@
+# Status Page Service - Night 79 Implementation
+# Terraform configuration for public status page and incident management
+
+# Status Page Cloud Run Service
+resource "google_cloud_run_v2_service" "status_page" {
+  name     = "status-page"
+  location = var.region
+  project  = var.project_id
+
+  template {
+    labels = {
+      service = "status-page"
+      tier    = "production"
+      version = "v1"
+    }
+
+    annotations = {
+      "autoscaling.knative.dev/minScale" = "1"
+      "autoscaling.knative.dev/maxScale" = "10"
+      "run.googleapis.com/execution-environment" = "gen2"
+      "run.googleapis.com/cpu-throttling" = "false"
+    }
+
+    containers {
+      # Use the status page container image
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/status-page:latest"
+
+      # Resource allocation
+      resources {
+        limits = {
+          cpu    = "2"
+          memory = "4Gi"
+        }
+        cpu_idle = true
+      }
+
+      # Environment variables
+      env {
+        name  = "GOOGLE_CLOUD_PROJECT"
+        value = var.project_id
+      }
+
+      env {
+        name  = "ENV"
+        value = "production"
+      }
+
+      env {
+        name  = "LOG_LEVEL"
+        value = "INFO"
+      }
+
+      # Service account for Google Cloud access
+      env {
+        name  = "GOOGLE_APPLICATION_CREDENTIALS"
+        value = "/secrets/gcp-key/key.json"
+      }
+
+      # Port configuration
+      ports {
+        container_port = 8080
+        name          = "http1"
+      }
+
+      # Health check
+      startup_probe {
+        http_get {
+          path = "/health"
+          port = 8080
+        }
+        initial_delay_seconds = 10
+        timeout_seconds       = 5
+        period_seconds        = 10
+        failure_threshold     = 3
+      }
+
+      liveness_probe {
+        http_get {
+          path = "/health"
+          port = 8080
+        }
+        initial_delay_seconds = 30
+        timeout_seconds       = 5
+        period_seconds        = 30
+        failure_threshold     = 3
+      }
+
+      # Mount service account key
+      volume_mounts {
+        name       = "gcp-key"
+        mount_path = "/secrets/gcp-key"
+        read_only  = true
+      }
+    }
+
+    # Service account volume
+    volumes {
+      name = "gcp-key"
+      secret {
+        secret = google_secret_manager_secret.status_page_sa_key.secret_id
+        items {
+          key  = "latest"
+          path = "key.json"
+        }
+      }
+    }
+
+    # Service account
+    service_account = google_service_account.status_page.email
+
+    # Timeout configuration
+    timeout = "900s"
+  }
+
+  traffic {
+    percent = 100
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+  }
+
+  depends_on = [
+    google_project_service.cloudrun_api,
+    google_service_account.status_page,
+    google_secret_manager_secret_version.status_page_sa_key
+  ]
+}
+
+# Service Account for Status Page
+resource "google_service_account" "status_page" {
+  account_id   = "status-page-sa"
+  display_name = "Status Page Service Account"
+  description  = "Service account for Status Page service"
+  project      = var.project_id
+}
+
+# Service Account IAM permissions
+resource "google_project_iam_member" "status_page_monitoring_viewer" {
+  project = var.project_id
+  role    = "roles/monitoring.viewer"
+  member  = "serviceAccount:${google_service_account.status_page.email}"
+}
+
+resource "google_project_iam_member" "status_page_logging_viewer" {
+  project = var.project_id
+  role    = "roles/logging.viewer"
+  member  = "serviceAccount:${google_service_account.status_page.email}"
+}
+
+resource "google_project_iam_member" "status_page_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.status_page.email}"
+}
+
+resource "google_project_iam_member" "status_page_vertex_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.status_page.email}"
+}
+
+resource "google_project_iam_member" "status_page_cloudsql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.status_page.email}"
+}
+
+# Secret Manager secret for service account key
+resource "google_secret_manager_secret" "status_page_sa_key" {
+  secret_id = "status-page-sa-key"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.secretmanager_api]
+}
+
+# Service account key
+resource "google_service_account_key" "status_page_key" {
+  service_account_id = google_service_account.status_page.name
+  public_key_type    = "TYPE_X509_PEM_FILE"
+}
+
+# Store service account key in Secret Manager
+resource "google_secret_manager_secret_version" "status_page_sa_key" {
+  secret      = google_secret_manager_secret.status_page_sa_key.id
+  secret_data = base64decode(google_service_account_key.status_page_key.private_key)
+
+  depends_on = [google_secret_manager_secret.status_page_sa_key]
+}
+
+# IAM policy for public access to status page
+resource "google_cloud_run_service_iam_member" "status_page_public" {
+  location = google_cloud_run_v2_service.status_page.location
+  project  = google_cloud_run_v2_service.status_page.project
+  service  = google_cloud_run_v2_service.status_page.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+# Custom domain mapping for status page
+resource "google_cloud_run_domain_mapping" "status_page_domain" {
+  location = var.region
+  name     = "status.${var.domain_name}"
+  project  = var.project_id
+
+  metadata {
+    namespace = var.project_id
+  }
+
+  spec {
+    route_name = google_cloud_run_v2_service.status_page.name
+  }
+
+  depends_on = [google_cloud_run_v2_service.status_page]
+}
+
+# Load balancer configuration for status page
+resource "google_compute_url_map" "status_page_lb" {
+  name            = "status-page-lb"
+  description     = "Load balancer for Status Page"
+  default_service = google_compute_backend_service.status_page_backend.id
+  project         = var.project_id
+
+  host_rule {
+    hosts        = ["status.${var.domain_name}"]
+    path_matcher = "status-page"
+  }
+
+  path_matcher {
+    name            = "status-page"
+    default_service = google_compute_backend_service.status_page_backend.id
+
+    path_rule {
+      paths   = ["/*"]
+      service = google_compute_backend_service.status_page_backend.id
+    }
+  }
+}
+
+# Backend service for status page
+resource "google_compute_backend_service" "status_page_backend" {
+  name                  = "status-page-backend"
+  description           = "Backend service for Status Page"
+  protocol              = "HTTP"
+  port_name             = "http"
+  load_balancing_scheme = "EXTERNAL"
+  timeout_sec           = 30
+  project               = var.project_id
+
+  backend {
+    group = google_compute_region_network_endpoint_group.status_page_neg.id
+  }
+
+  health_checks = [google_compute_health_check.status_page_health.id]
+
+  log_config {
+    enable      = true
+    sample_rate = 1.0
+  }
+}
+
+# Network Endpoint Group for status page
+resource "google_compute_region_network_endpoint_group" "status_page_neg" {
+  name                  = "status-page-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+  project               = var.project_id
+
+  cloud_run {
+    service = google_cloud_run_v2_service.status_page.name
+  }
+}
+
+# Health check for status page
+resource "google_compute_health_check" "status_page_health" {
+  name               = "status-page-health-check"
+  description        = "Health check for Status Page service"
+  timeout_sec        = 5
+  check_interval_sec = 30
+  project            = var.project_id
+
+  http_health_check {
+    port               = 8080
+    request_path       = "/health"
+    response           = "healthy"
+  }
+}
+
+# Uptime check for status page
+resource "google_monitoring_uptime_check_config" "status_page_uptime" {
+  display_name = "Status Page Uptime Check"
+  timeout      = "10s"
+  period       = "60s"
+  project      = var.project_id
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      project_id = var.project_id
+      host       = "status.${var.domain_name}"
+    }
+  }
+
+  http_check {
+    port         = 443
+    use_ssl      = true
+    path         = "/api/status"
+    validate_ssl = true
+
+    accepted_response_status_codes {
+      status_class = "STATUS_CLASS_2XX"
+    }
+  }
+
+  content_matchers {
+    content = "overall_status"
+    matcher = "CONTAINS_STRING"
+  }
+
+  depends_on = [google_cloud_run_v2_service.status_page]
+}
+
+# Alert policy for status page uptime
+resource "google_monitoring_alert_policy" "status_page_uptime_alert" {
+  display_name = "Status Page Service Down"
+  project      = var.project_id
+  combiner     = "OR"
+  enabled      = true
+
+  conditions {
+    display_name = "Status page uptime check failure"
+
+    condition_threshold {
+      filter          = "resource.type=\"uptime_url\" AND metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.labels.host=\"status.${var.domain_name}\""
+      comparison      = "COMPARISON_EQUAL"
+      threshold_value = 0
+      duration        = "180s"
+
+      aggregations {
+        alignment_period     = "60s"
+        per_series_aligner   = "ALIGN_NEXT_OLDER"
+        cross_series_reducer = "REDUCE_COUNT_FALSE"
+        group_by_fields      = ["resource.label.host"]
+      }
+
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  alert_strategy {
+    auto_close = "86400s"
+  }
+
+  notification_channels = [
+    google_monitoring_notification_channel.slack.id,
+    google_monitoring_notification_channel.email.id
+  ]
+
+  documentation {
+    content   = "🚨 **CRITICAL**: Status Page service is down! This affects our ability to communicate service status to customers. Immediate attention required."
+    mime_type = "text/markdown"
+  }
+}
+
+# Status page database table (for incident storage)
+resource "google_sql_database" "status_page_db" {
+  name     = "status_page"
+  instance = google_sql_database_instance.main.name
+  project  = var.project_id
+}
+
+# Database user for status page service
+resource "google_sql_user" "status_page_user" {
+  name     = "status_page_user"
+  instance = google_sql_database_instance.main.name
+  password = random_password.status_page_db_password.result
+  project  = var.project_id
+}
+
+# Random password for status page database user
+resource "random_password" "status_page_db_password" {
+  length  = 32
+  special = true
+}
+
+# Store database password in Secret Manager
+resource "google_secret_manager_secret" "status_page_db_password" {
+  secret_id = "status-page-db-password"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "status_page_db_password" {
+  secret      = google_secret_manager_secret.status_page_db_password.id
+  secret_data = random_password.status_page_db_password.result
+}
+
+# Cloud Build trigger for status page deployment
+resource "google_cloudbuild_trigger" "status_page_deploy" {
+  name     = "status-page-deploy"
+  project  = var.project_id
+  location = var.region
+
+  github {
+    owner = var.github_repo_owner
+    name  = var.github_repo_name
+    push {
+      branch = "^main$"
+    }
+  }
+
+  included_files = [
+    "agents/ops/status_page_*",
+    "agents/ops/requirements.txt",
+    "agents/ops/Dockerfile",
+    "agents/shared/**"
+  ]
+
+  build {
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = [
+        "build",
+        "-t", "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/status-page:$COMMIT_SHA",
+        "-t", "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/status-page:latest",
+        "-f", "agents/ops/Dockerfile",
+        "agents/ops"
+      ]
+    }
+
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = [
+        "push",
+        "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/status-page:$COMMIT_SHA"
+      ]
+    }
+
+    step {
+      name = "gcr.io/cloud-builders/docker"
+      args = [
+        "push",
+        "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/status-page:latest"
+      ]
+    }
+
+    step {
+      name = "gcr.io/cloud-builders/gcloud"
+      args = [
+        "run", "deploy", "status-page",
+        "--image", "${var.region}-docker.pkg.dev/${var.project_id}/saas-factory/status-page:$COMMIT_SHA",
+        "--region", var.region,
+        "--project", var.project_id,
+        "--platform", "managed",
+        "--allow-unauthenticated"
+      ]
+    }
+
+    options {
+      logging = "CLOUD_LOGGING_ONLY"
+    }
+  }
+
+  depends_on = [
+    google_project_service.cloudbuild_api,
+    google_artifact_registry_repository.main
+  ]
+}
+
+# Output status page URL
+output "status_page_url" {
+  description = "URL of the public status page"
+  value       = "https://status.${var.domain_name}"
+}
+
+output "status_page_api_url" {
+  description = "URL of the status page API"
+  value       = "https://status.${var.domain_name}/api"
+}
+
+output "status_page_service_url" {
+  description = "Cloud Run service URL for status page"
+  value       = google_cloud_run_v2_service.status_page.uri
+} 

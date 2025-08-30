@@ -1,0 +1,190 @@
+[
+  {
+    "id": "1",
+    "name": "AI TaskMaster Pro",
+    "description": "Intelligent project management tool that uses AI to automatically prioritize tasks, estimate timelines, and optimize team workflows.",
+    "category": "Productivity & Automation",
+    "price": "$29/month",
+    "rating": 4.8,
+    "users": 1250,
+    "status": "Live",
+    "image": "/api/placeholder/300/200",
+    "features": [
+      "AI-powered task prioritization",
+      "Smart time estimation",
+      "Team collaboration tools",
+      "Progress analytics",
+      "Mobile app support"
+    ],
+    "techStack": ["React", "Node.js", "PostgreSQL", "OpenAI API"],
+    "demo_available": true,
+    "demo_url": "https://demo.taskmaster.ai",
+    "screenshots": [
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600"
+    ],
+    "pricing_plans": [
+      {
+        "name": "Starter",
+        "price": "$29/month",
+        "features": ["Up to 10 team members", "Basic AI features", "Email support"]
+      },
+      {
+        "name": "Pro",
+        "price": "$79/month",
+        "features": ["Unlimited team members", "Advanced AI insights", "Priority support", "Custom integrations"]
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "SmartInvoice AI",
+    "description": "Automated invoicing system that generates professional invoices, tracks payments, and provides financial insights using machine learning.",
+    "category": "Finance & Fintech",
+    "price": "$19/month",
+    "rating": 4.6,
+    "users": 890,
+    "status": "Live",
+    "image": "/api/placeholder/300/200",
+    "features": [
+      "AI-generated invoice templates",
+      "Automatic payment tracking",
+      "Financial analytics dashboard",
+      "Multi-currency support",
+      "Stripe integration"
+    ],
+    "techStack": ["Vue.js", "Python", "MongoDB", "TensorFlow"],
+    "demo_available": true,
+    "demo_url": "https://demo.smartinvoice.ai",
+    "screenshots": [
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600"
+    ],
+    "pricing_plans": [
+      {
+        "name": "Basic",
+        "price": "$19/month",
+        "features": ["Up to 100 invoices/month", "Basic templates", "Email support"]
+      },
+      {
+        "name": "Professional",
+        "price": "$49/month",
+        "features": ["Unlimited invoices", "Advanced templates", "API access", "Priority support"]
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "name": "CustomerVoice Analytics",
+    "description": "AI-powered customer feedback analysis platform that automatically categorizes, analyzes, and provides actionable insights from customer interactions.",
+    "category": "Marketing & Analytics",
+    "price": "$39/month",
+    "rating": 4.7,
+    "users": 2100,
+    "status": "Live",
+    "image": "/api/placeholder/300/200",
+    "features": [
+      "Sentiment analysis",
+      "Automatic feedback categorization",
+      "Trend identification",
+      "Custom dashboards",
+      "Slack integration"
+    ],
+    "techStack": ["Angular", "Python", "Redis", "BERT NLP"],
+    "demo_available": true,
+    "demo_url": "https://demo.customervoice.ai",
+    "screenshots": [
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600"
+    ],
+    "pricing_plans": [
+      {
+        "name": "Growth",
+        "price": "$39/month",
+        "features": ["Up to 10,000 feedback items/month", "Basic analytics", "Email support"]
+      },
+      {
+        "name": "Enterprise",
+        "price": "$99/month",
+        "features": ["Unlimited feedback", "Advanced AI models", "Custom integrations", "Dedicated support"]
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "name": "EduTech AI Tutor",
+    "description": "Personalized learning platform that adapts to each student's learning style and pace using artificial intelligence.",
+    "category": "Education & Training",
+    "price": "$15/month",
+    "rating": 4.9,
+    "users": 3400,
+    "status": "Live",
+    "image": "/api/placeholder/300/200",
+    "features": [
+      "Adaptive learning paths",
+      "Personalized content",
+      "Progress tracking",
+      "Interactive exercises",
+      "Parent dashboard"
+    ],
+    "techStack": ["React Native", "Python", "PostgreSQL", "Scikit-learn"],
+    "demo_available": true,
+    "demo_url": "https://demo.edutech.ai",
+    "screenshots": [
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600"
+    ],
+    "pricing_plans": [
+      {
+        "name": "Student",
+        "price": "$15/month",
+        "features": ["Access to all subjects", "Basic progress tracking", "Email support"]
+      },
+      {
+        "name": "Family",
+        "price": "$35/month",
+        "features": ["Up to 4 students", "Advanced analytics", "Priority support", "Custom learning plans"]
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "name": "HealthTrack AI",
+    "description": "Intelligent health monitoring system that tracks vital signs, provides health insights, and alerts users to potential health issues.",
+    "category": "Healthcare & Wellness",
+    "price": "$25/month",
+    "rating": 4.5,
+    "users": 1560,
+    "status": "Live",
+    "image": "/api/placeholder/300/200",
+    "features": [
+      "Vital sign monitoring",
+      "Health trend analysis",
+      "Early warning system",
+      "Doctor integration",
+      "HIPAA compliant"
+    ],
+    "techStack": ["Flutter", "Python", "Firebase", "TensorFlow"],
+    "demo_available": true,
+    "demo_url": "https://demo.healthtrack.ai",
+    "screenshots": [
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600",
+      "/api/placeholder/800/600"
+    ],
+    "pricing_plans": [
+      {
+        "name": "Individual",
+        "price": "$25/month",
+        "features": ["Basic health tracking", "Standard reports", "Email support"]
+      },
+      {
+        "name": "Family",
+        "price": "$45/month",
+        "features": ["Up to 6 family members", "Advanced analytics", "Priority support", "Doctor consultations"]
+      }
+    ]
+  }
+]

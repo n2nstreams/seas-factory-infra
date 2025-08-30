@@ -1,0 +1,187 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devagent-ingress
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: saas-factory
+  annotations:
+    description: "DevAgent ingress for external access"
+    # GKE Ingress annotations
+    kubernetes.io/ingress.class: "gce"
+    cloud.google.com/backend-config: '{"default": "devagent-backend-config"}'
+    networking.gke.io/managed-certificates: "devagent-ssl-cert"
+    networking.gke.io/v1beta1.FrontendConfig: "devagent-frontend-config"
+    
+    # Security annotations
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # Load balancer type
+    cloud.google.com/load-balancer-type: "External"
+    
+    # Health check configuration
+    ingress.gcp.kubernetes.io/backend-config: '{"default": "devagent-backend-config"}'
+spec:
+  rules:
+  - host: devagent-poc.your-domain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: devagent
+            port:
+              number: 8083
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: devagent
+            port:
+              number: 8083
+      - path: /ready
+        pathType: Exact
+        backend:
+          service:
+            name: devagent
+            port:
+              number: 8083
+      - path: /generate
+        pathType: Exact
+        backend:
+          service:
+            name: devagent
+            port:
+              number: 8083
+      - path: /metrics
+        pathType: Prefix
+        backend:
+          service:
+            name: devagent
+            port:
+              number: 8084
+  tls:
+  - hosts:
+    - devagent-poc.your-domain.com
+    secretName: devagent-tls-secret
+---
+# Backend configuration for health checks and other settings
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: devagent-backend-config
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: backend-config
+spec:
+  healthCheck:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /health
+    port: 8083
+  timeoutSec: 30
+  connectionDraining:
+    drainingTimeoutSec: 60
+  sessionAffinity:
+    affinityType: "CLIENT_IP"
+    affinityCookieTtlSec: 3600
+  logging:
+    enable: true
+    sampleRate: 1.0
+  securityPolicy:
+    name: "devagent-security-policy"
+---
+# Frontend configuration for SSL and other frontend settings
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: devagent-frontend-config
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: frontend-config
+spec:
+  sslPolicy: devagent-ssl-policy
+  redirectToHttps:
+    enabled: true
+    responseCodeName: MOVED_PERMANENTLY_DEFAULT
+---
+# Managed SSL certificate
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: devagent-ssl-cert
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: ssl-cert
+spec:
+  domains:
+  - devagent-poc.your-domain.com
+---
+# Network policy for additional security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: devagent-network-policy
+  namespace: devagent-poc
+  labels:
+    app.kubernetes.io/name: devagent
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: devagent
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow ingress from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: TCP
+      port: 8083
+  # Allow ingress from same namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: devagent-poc
+    ports:
+    - protocol: TCP
+      port: 8083
+    - protocol: TCP
+      port: 8084
+  egress:
+  # Allow egress to DNS
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow egress to Cloud SQL (private IP range)
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow egress to OpenAI API
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow egress to GitHub API
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443 

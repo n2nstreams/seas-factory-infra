@@ -1,0 +1,50 @@
+================================================================================
+DATA INTEGRITY VERIFICATION REPORT
+================================================================================
+Generated: 2025-08-30 00:12:57
+
+SUMMARY
+----------------------------------------
+Total Checks: 4
+Passed: 0
+Failed: 4
+Success Rate: 0.0%
+
+DETAILED RESULTS
+----------------------------------------
+❌ Database Parity - Table Coverage: FAIL
+  missing_tables: 19 items
+  extra_tables: 0 items
+  legacy_table_count: 19
+  supabase_table_count: 0
+  Error: Table coverage mismatch detected
+
+❌ Golden Query Validation: FAIL
+  query_results: {'Active Users Count': {'match': False, 'error': 'relation "users" does not exist'}, 'Tenant User Distribution': {'match': False, 'error': 'relation "users" does not exist'}, 'Recent Ideas': {'match': False, 'error': 'relation "ideas" does not exist'}}
+  total_queries: 3
+  matching_queries: 0
+  Error: Some golden queries returned different results
+
+❌ Referential Integrity: FAIL
+  missing_foreign_keys: 32 items
+  orphaned_records: 0 items
+  legacy_fk_count: 32
+  supabase_fk_count: 0
+  Error: Referential integrity issues detected
+
+❌ Data Completeness: FAIL
+  completeness_results: {'users': {'legacy_count': 23, 'supabase_count': 0, 'completeness_percentage': 0.0}, 'tenants': {'legacy_count': 1, 'supabase_count': 0, 'completeness_percentage': 0.0}, 'ideas': {'legacy_count': 5, 'supabase_count': 0, 'completeness_percentage': 0.0}, 'factory_pipelines': {'legacy_count': 0, 'supabase_count': 0, 'completeness_percentage': 100}}
+  incomplete_tables: 3 items
+  total_tables: 4
+  Error: Incomplete data migration detected in tables: ['users', 'tenants', 'ideas']
+
+RECOMMENDATIONS
+----------------------------------------
+⚠️  Some checks failed. Review the details above and address issues before proceeding.
+🔧 Recommended actions:
+  - Fix Database Parity - Table Coverage: Table coverage mismatch detected
+  - Fix Golden Query Validation: Some golden queries returned different results
+  - Fix Referential Integrity: Referential integrity issues detected
+  - Fix Data Completeness: Incomplete data migration detected in tables: ['users', 'tenants', 'ideas']
+
+================================================================================

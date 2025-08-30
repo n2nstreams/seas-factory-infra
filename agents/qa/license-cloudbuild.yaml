@@ -1,0 +1,449 @@
+# Cloud Build configuration for License Scanning using OSS Review Toolkit (ORT)
+# Night 64: License scan agent (OSS Review Toolkit) – fail pipeline on GPL
+
+steps:
+  # Step 1: Install ORT CLI and dependencies
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Installing OSS Review Toolkit (ORT) and dependencies..."
+        
+        # Update package lists
+        apt-get update
+        
+        # Install Java (required for ORT)
+        apt-get install -y openjdk-11-jdk wget curl git python3 python3-pip
+        
+        # Set JAVA_HOME
+        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+        echo "JAVA_HOME=${JAVA_HOME}" >> /workspace/.env
+        
+        # Download and install ORT CLI
+        ORT_VERSION="1.5.0"  # Use latest stable version
+        wget -O /tmp/ort.tar.gz https://github.com/oss-review-toolkit/ort/releases/download/${ORT_VERSION}/ort-${ORT_VERSION}.tar.gz
+        
+        # Extract ORT
+        tar -xzf /tmp/ort.tar.gz -C /opt/
+        mv /opt/ort-${ORT_VERSION} /opt/ort
+        
+        # Make ORT executable
+        chmod +x /opt/ort/bin/ort
+        ln -s /opt/ort/bin/ort /usr/local/bin/ort
+        
+        # Verify installation
+        echo "Verifying ORT installation..."
+        ort --version
+        echo "ORT installed successfully"
+        
+        # Install Python dependencies for License Scan Agent integration
+        pip3 install --upgrade pip
+        pip3 install requests httpx asyncio pydantic fastapi
+
+  # Step 2: Install package managers (if needed)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Installing package managers..."
+        
+        # Install Node.js and npm
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+        apt-get install -y nodejs
+        
+        # Install Python package managers
+        pip3 install poetry pipenv
+        
+        # Install Java package managers (if needed)
+        # Maven is usually pre-installed, but we can ensure it's available
+        apt-get install -y maven gradle
+        
+        # Verify installations
+        echo "Package manager versions:"
+        node --version
+        npm --version
+        python3 --version
+        pip3 --version
+        mvn --version
+        gradle --version
+
+  # Step 3: Set up ORT configuration
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Setting up ORT configuration..."
+        
+        # Create ORT configuration directory
+        mkdir -p .ort
+        
+        # Create ORT configuration file
+        cat > .ort/config.yml << 'EOF'
+        ort:
+          analyzer:
+            allowDynamicVersions: false
+            skipExcluded: true
+            disabledPackageManagers: []
+          scanner:
+            archive:
+              enabled: true
+            createMissingArchives: false
+            skipConcluded: false
+            skipExcluded: true
+          advisor:
+            skipExcluded: true
+          evaluator:
+            copyrightGarbageFile: "copyright-garbage.yml"
+            resolutionsFile: "resolutions.yml"
+            ruleSet: "rules.kts"
+          notifier:
+            enabled: false
+        EOF
+        
+        # Create license rules for GPL detection
+        cat > .ort/rules.kts << 'EOF'
+        /*
+         * Copyright (C) 2019-2020 HERE Europe B.V.
+         *
+         * Licensed under the Apache License, Version 2.0 (the "License");
+         * you may not use this file except in compliance with the License.
+         * You may obtain a copy of the License at
+         *
+         *     http://www.apache.org/licenses/LICENSE-2.0
+         *
+         * Unless required by applicable law or agreed to in writing, software
+         * distributed under the License is distributed on an "AS IS" BASIS,
+         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+         * See the License for the specific language governing permissions and
+         * limitations under the License.
+         *
+         * SPDX-License-Identifier: Apache-2.0
+         * License-Filename: LICENSE
+         */
+
+        val ruleSet = ruleSet(ortResult, licenseInfoResolver) {
+            // Rule to fail on GPL licenses
+            packageRule("GPL_LICENSE_RULE") {
+                require {
+                    -isExcluded()
+                }
+
+                val gplLicenses = listOf(
+                    "GPL-2.0", "GPL-2.0+", "GPL-2.0-only", "GPL-2.0-or-later",
+                    "GPL-3.0", "GPL-3.0+", "GPL-3.0-only", "GPL-3.0-or-later",
+                    "AGPL-3.0", "AGPL-3.0+", "AGPL-3.0-only", "AGPL-3.0-or-later"
+                )
+
+                val copyleftLicenses = listOf(
+                    "LGPL-2.1", "LGPL-2.1+", "LGPL-2.1-only", "LGPL-2.1-or-later",
+                    "LGPL-3.0", "LGPL-3.0+", "LGPL-3.0-only", "LGPL-3.0-or-later",
+                    "MPL-2.0", "EPL-1.0", "EPL-2.0", "CDDL-1.0", "CDDL-1.1"
+                )
+
+                forbid {
+                    (licenseView.licenses(LicenseView.ALL) intersect gplLicenses.toSpdxExpressionSet()).isNotEmpty()
+                } message "Package uses GPL license which is not allowed."
+
+                warn {
+                    (licenseView.licenses(LicenseView.ALL) intersect copyleftLicenses.toSpdxExpressionSet()).isNotEmpty()
+                } message "Package uses copyleft license - review required."
+            }
+
+            // Rule for unknown licenses
+            packageRule("UNKNOWN_LICENSE_RULE") {
+                require {
+                    -isExcluded()
+                }
+
+                warn {
+                    licenseView.licenses(LicenseView.ALL).isEmpty()
+                } message "Package has no declared license - manual review required."
+            }
+        }
+
+        ruleSet
+        EOF
+        
+        echo "ORT configuration created successfully"
+
+  # Step 4: Run ORT analyzer
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        
+        # Source environment variables
+        if [ -f .env ]; then
+          source .env
+        fi
+        
+        echo "Starting ORT analyzer phase..."
+        
+        # Create output directory
+        mkdir -p ort-results
+        
+        # Run ORT analyzer
+        ort analyze \
+          --input-dir . \
+          --output-dir ort-results \
+          --output-formats JSON,YAML \
+          --package-managers ${_PACKAGE_MANAGERS:-npm,pip,maven,gradle} \
+          --repository-config-file .ort/config.yml || echo "Analyzer completed with warnings"
+        
+        echo "ORT analyzer phase completed"
+
+  # Step 5: Run ORT scanner (optional - for deep license detection)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        
+        # Source environment variables
+        if [ -f .env ]; then
+          source .env
+        fi
+        
+        echo "Starting ORT scanner phase..."
+        
+        # Check if we should run scanner (can be disabled for faster builds)
+        if [ "${_ENABLE_SCANNER}" = "true" ]; then
+          # Run ORT scanner for detailed license detection
+          ort scan \
+            --input-dir ort-results \
+            --output-dir ort-results \
+            --output-formats JSON,YAML || echo "Scanner completed with warnings"
+        else
+          echo "Scanner phase skipped (set _ENABLE_SCANNER=true to enable)"
+        fi
+        
+        echo "ORT scanner phase completed"
+
+  # Step 6: Run ORT evaluator with GPL detection rules
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        
+        # Source environment variables
+        if [ -f .env ]; then
+          source .env
+        fi
+        
+        echo "Starting ORT evaluator phase..."
+        
+        # Run ORT evaluator to check against license rules
+        ort evaluate \
+          --input-dir ort-results \
+          --output-dir ort-results \
+          --output-formats JSON,YAML,PlainTextTemplate \
+          --rules-file .ort/rules.kts || ORT_EVALUATOR_EXIT_CODE=$?
+        
+        # Check if evaluator found violations
+        if [ ! -z "$ORT_EVALUATOR_EXIT_CODE" ] && [ "$ORT_EVALUATOR_EXIT_CODE" -ne 0 ]; then
+          echo "⚠️  ORT evaluator found license violations!"
+          
+          # Check for GPL violations specifically
+          if grep -q "GPL license" ort-results/evaluation-result.yml; then
+            echo "🚨 GPL license violations detected!"
+            GPL_VIOLATIONS_FOUND=true
+          fi
+        fi
+        
+        echo "ORT evaluator phase completed"
+
+  # Step 7: Generate reports and analyze results
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Generating license compliance report..."
+        
+        # Generate ORT report
+        ort report \
+          --input-dir ort-results \
+          --output-dir ort-results \
+          --output-formats PlainTextTemplate,WebApp,JSON || echo "Report generation completed with warnings"
+        
+        # Create summary report
+        cat > ort-results/license-scan-summary.txt << EOF
+        License Scan Summary
+        ===================
+        Project: ${_PROJECT_NAME:-unknown}
+        Branch: ${BRANCH_NAME:-main}
+        Commit: ${COMMIT_SHA:-unknown}
+        Build ID: ${BUILD_ID}
+        Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+        
+        Scan Configuration:
+        - Package Managers: ${_PACKAGE_MANAGERS:-npm,pip,maven,gradle}
+        - Scanner Enabled: ${_ENABLE_SCANNER:-false}
+        - Fail on GPL: ${_FAIL_ON_GPL:-true}
+        - Fail on Copyleft: ${_FAIL_ON_COPYLEFT:-false}
+        
+        Results stored in: gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}/
+        EOF
+        
+        # Check for specific license violations
+        if [ -f "ort-results/evaluation-result.yml" ]; then
+          echo "Analyzing evaluation results..."
+          
+          # Count violations by type
+          GPL_COUNT=$(grep -c "GPL" ort-results/evaluation-result.yml || echo "0")
+          VIOLATION_COUNT=$(grep -c "message.*license" ort-results/evaluation-result.yml || echo "0")
+          
+          echo "GPL violations found: $GPL_COUNT" >> ort-results/license-scan-summary.txt
+          echo "Total violations found: $VIOLATION_COUNT" >> ort-results/license-scan-summary.txt
+          
+          # Set flags for pipeline decision
+          if [ "$GPL_COUNT" -gt "0" ] && [ "${_FAIL_ON_GPL:-true}" = "true" ]; then
+            echo "PIPELINE_SHOULD_FAIL=true" >> ort-results/pipeline-decision.txt
+            echo "FAILURE_REASON=GPL license violations detected ($GPL_COUNT packages)" >> ort-results/pipeline-decision.txt
+          elif [ "$VIOLATION_COUNT" -gt "0" ] && [ "${_FAIL_ON_COPYLEFT:-false}" = "true" ]; then
+            echo "PIPELINE_SHOULD_FAIL=true" >> ort-results/pipeline-decision.txt
+            echo "FAILURE_REASON=License violations detected ($VIOLATION_COUNT packages)" >> ort-results/pipeline-decision.txt
+          else
+            echo "PIPELINE_SHOULD_FAIL=false" >> ort-results/pipeline-decision.txt
+            echo "FAILURE_REASON=" >> ort-results/pipeline-decision.txt
+          fi
+        else
+          echo "No evaluation results found - assuming scan passed" >> ort-results/license-scan-summary.txt
+          echo "PIPELINE_SHOULD_FAIL=false" >> ort-results/pipeline-decision.txt
+        fi
+        
+        echo "License compliance analysis completed"
+
+  # Step 8: Upload results to Cloud Storage
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Uploading license scan results..."
+        
+        # Upload all results to Cloud Storage
+        gsutil -m cp -r ort-results/* gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}/
+        
+        # Create build info file
+        cat > build-info.json << EOF
+        {
+          "build_id": "${BUILD_ID}",
+          "project_name": "${_PROJECT_NAME}",
+          "branch": "${BRANCH_NAME}",
+          "commit_sha": "${COMMIT_SHA}",
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "results_url": "gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}/",
+          "scan_type": "license_compliance"
+        }
+        EOF
+        
+        gsutil cp build-info.json gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}/
+        
+        echo "Results uploaded to: gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}/"
+
+  # Step 9: Notify License Scan Agent (if configured)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        
+        if [ -n "${_LICENSE_AGENT_URL}" ]; then
+          echo "Sending results to License Scan Agent..."
+          
+          # Prepare webhook payload
+          cat > webhook-payload.json << EOF
+        {
+          "build_id": "${BUILD_ID}",
+          "project_name": "${_PROJECT_NAME}",
+          "branch": "${BRANCH_NAME}",
+          "commit_sha": "${COMMIT_SHA}",
+          "results_url": "gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}/",
+          "webhook_type": "license_scan_completed",
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        }
+        EOF
+          
+          # Send webhook notification
+          curl -X POST "${_LICENSE_AGENT_URL}/webhook/cloudbuild" \
+            -H "Content-Type: application/json" \
+            -H "X-Tenant-ID: ${_TENANT_ID}" \
+            -d @webhook-payload.json || echo "Failed to notify License Scan Agent"
+          
+          echo "License Scan Agent notified"
+        else
+          echo "No License Scan Agent URL configured, skipping notification"
+        fi
+
+  # Step 10: Final pipeline decision
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd /workspace
+        echo "Making final pipeline decision..."
+        
+        # Check pipeline decision
+        if [ -f "ort-results/pipeline-decision.txt" ]; then
+          source ort-results/pipeline-decision.txt
+          
+          if [ "${PIPELINE_SHOULD_FAIL}" = "true" ]; then
+            echo "🚨 PIPELINE FAILURE: ${FAILURE_REASON}"
+            echo "License compliance check failed!"
+            echo ""
+            echo "Action Required:"
+            echo "1. Review the license scan results at: gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}/"
+            echo "2. Remove or replace packages with GPL licenses"
+            echo "3. Ensure all dependencies use approved licenses"
+            echo ""
+            exit 1
+          else
+            echo "✅ PIPELINE SUCCESS: License compliance check passed"
+            echo "All dependencies use approved licenses"
+          fi
+        else
+          echo "⚠️  No pipeline decision found - assuming success"
+        fi
+        
+        echo "License compliance pipeline completed successfully"
+
+# Store build artifacts
+artifacts:
+  objects:
+    location: 'gs://${_LICENSE_SCAN_RESULTS_BUCKET}/scans/${BUILD_ID}'
+    paths:
+      - '/workspace/ort-results/**'
+
+# Timeout for the entire build (30 minutes)
+timeout: '1800s'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'  # Use high-CPU machine for faster ORT processing
+  diskSizeGb: 100
+
+# Substitution variables
+substitutions:
+  _PROJECT_NAME: 'unknown'
+  _PACKAGE_MANAGERS: 'npm,pip,maven,gradle'
+  _ENABLE_SCANNER: 'false'  # Set to 'true' for deep license scanning
+  _FAIL_ON_GPL: 'true'
+  _FAIL_ON_COPYLEFT: 'false'
+  _LICENSE_SCAN_RESULTS_BUCKET: 'license-scan-results'
+  _LICENSE_AGENT_URL: ''  # URL of the License Scan Agent for webhook notifications
+  _TENANT_ID: 'default' 

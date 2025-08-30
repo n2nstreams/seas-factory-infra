@@ -1,0 +1,49 @@
+version: '3.8'
+
+networks:
+  saas-factory:
+    driver: bridge
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: saas_factory_postgres
+    environment:
+      POSTGRES_DB: saas_factory
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"  # Use different port to avoid conflicts
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - ./migrations/001_create_tenant_model.sql:/docker-entrypoint-initdb.d/002_create_tenant_model.sql
+      - ./migrations/002_create_security_scan_results.sql:/docker-entrypoint-initdb.d/003_create_security_scan_results.sql
+      - ./migrations/003_create_ideas_table.sql:/docker-entrypoint-initdb.d/004_create_ideas_table.sql
+      - ./migrations/004_create_factory_pipelines_table.sql:/docker-entrypoint-initdb.d/005_create_factory_pipelines_table.sql
+    networks:
+      - saas-factory
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: saas_factory_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - saas-factory
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Development API Gateway - REMOVED (service decommissioned)
+  # api_gateway service removed as part of tech stack transition
+
+volumes:
+  postgres_data: 

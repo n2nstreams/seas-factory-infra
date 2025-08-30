@@ -1,0 +1,19 @@
+{
+  "migration_summary": {
+    "started_at": "2025-08-30T14:46:06.470200",
+    "current_phase": "initializing",
+    "tables_migrated": 0,
+    "total_tables": 16,
+    "errors": [
+      "Database connection failed: connection to server at \"localhost\" (::1), port 5432 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\nconnection to server at \"localhost\" (127.0.0.1), port 5432 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\n"
+    ],
+    "warnings": [],
+    "freeze_window_active": false
+  },
+  "timestamp": "2025-08-30T14:46:06.472021",
+  "duration": "0:00:00.001825",
+  "recommendations": [
+    "Review and resolve all migration errors",
+    "Complete migration of remaining tables"
+  ]
+}

@@ -1,0 +1,33 @@
+# CI Requirements - Essential dependencies for CI/CD workflows
+# This file contains only the core dependencies needed for CI to function
+
+# Core web framework (single version)
+fastapi==0.115.14
+uvicorn[standard]==0.34.0
+pydantic==2.11.1
+starlette==0.46.2
+
+# HTTP and database
+httpx==0.28.1
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Testing and development tools
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.1.0
+black==24.1.1
+ruff==0.2.1
+
+# Basic utilities
+python-dotenv==1.0.1
+jinja2==3.1.6
+pyyaml==6.0.2
+
+# Authentication
+PyJWT==2.8.0
+bcrypt==4.1.2
+
+# Google Cloud (minimal set)
+google-auth==2.40.3
+google-cloud-logging==3.12.1
