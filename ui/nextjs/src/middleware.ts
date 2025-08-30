@@ -1,103 +1,75 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { canaryDeploymentService } from './lib/canary-deployment';
-
-/**
- * Canary Deployment Middleware
- * Routes traffic between legacy and new systems based on canary configuration
- */
+import { NextRequest, NextResponse } from 'next/server'
+import { correlationIDManager } from './lib/correlation-id'
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  // Extract correlation ID from incoming request headers
+  const headers = Object.fromEntries(request.headers.entries())
+  const correlationContext = correlationIDManager.extractFromHeaders(headers)
   
-  // Skip middleware for static assets and API routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/static') ||
-    pathname.includes('.')
-  ) {
-    return NextResponse.next();
+  // If no correlation context exists, create one
+  if (!correlationContext) {
+    correlationIDManager.generateContext(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { 
+        operation: 'http_request', 
+        path: request.nextUrl.pathname,
+        method: request.method,
+        userAgent: headers['user-agent'],
+        referer: headers['referer']
+      }
+    )
   }
 
-  // Check if canary deployment is active
-  const canaryStatus = canaryDeploymentService.getStatus();
+  // Clone the request headers to add correlation IDs
+  const requestHeaders = new Headers(request.headers)
+  const correlationHeaders = correlationIDManager.getHeaders()
   
-  if (!canaryStatus.isActive || canaryStatus.rollbackTriggered) {
-    // Canary is not active or rolled back - route to legacy
-    return NextResponse.next();
-  }
+  // Add correlation headers to the request
+  Object.entries(correlationHeaders).forEach(([key, value]) => {
+    if (value) {
+      requestHeaders.set(key, value)
+    }
+  })
 
-  // Get user identifier for consistent routing
-  const userId = getUserId(request);
-  
-  // Check if user should be routed to canary
-  const shouldRouteToCanary = canaryDeploymentService.shouldRouteToCanary(userId);
-  
-  if (shouldRouteToCanary && !pathname.startsWith('/app2')) {
-    // Route to canary version
-    const canaryUrl = new URL(`/app2${pathname}`, request.url);
-    canaryUrl.search = request.nextUrl.search;
-    
-    const response = NextResponse.rewrite(canaryUrl);
-    
-    // Add canary headers
-    response.headers.set('X-Canary-Version', 'v2');
-    response.headers.set('X-Migration-Status', 'active');
-    response.headers.set('X-Traffic-Percentage', canaryStatus.currentTrafficPercentage.toString());
-    
-    return response;
-  }
+  // Create a new request with correlation headers
+  const enhancedRequest = new NextRequest(request, {
+    headers: requestHeaders
+  })
 
-  // Route to legacy version
-  const response = NextResponse.next();
-  response.headers.set('X-App-Version', 'legacy');
-  response.headers.set('X-Canary-Version', 'v1');
-  
-  return response;
-}
+  // Process the request
+  const response = NextResponse.next({
+    request: enhancedRequest
+  })
 
-/**
- * Get user identifier from request
- */
-function getUserId(request: NextRequest): string | undefined {
-  // Try to get user ID from various sources
-  const authHeader = request.headers.get('authorization');
-  const cookieHeader = request.headers.get('cookie');
-  const userIdHeader = request.headers.get('x-user-id');
-  
-  if (userIdHeader) {
-    return userIdHeader;
-  }
-  
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    // Extract user ID from JWT token if possible
-    const token = authHeader.substring(7);
-    try {
-      // Simple JWT payload extraction (in production, use proper JWT library)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub || payload.userId;
-    } catch {
-      // Ignore JWT parsing errors
+  // Add correlation headers to the response
+  Object.entries(correlationHeaders).forEach(([key, value]) => {
+    if (value) {
+      response.headers.set(key, value)
+    }
+  })
+
+  // Add additional response headers for tracking
+  response.headers.set('X-Request-ID', correlationIDManager.getCurrentContext()?.requestId || '')
+  response.headers.set('X-Span-ID', correlationIDManager.getCurrentContext()?.spanId || '')
+  response.headers.set('X-Trace-ID', correlationIDManager.getCurrentContext()?.traceId || '')
+
+  // Log the request with correlation context
+  const currentContext = correlationIDManager.getCurrentContext()
+  if (currentContext) {
+    // Only log for non-asset requests to avoid noise
+    if (!request.nextUrl.pathname.startsWith('/_next/') && 
+        !request.nextUrl.pathname.startsWith('/favicon.ico') &&
+        !request.nextUrl.pathname.startsWith('/api/health')) {
+      correlationIDManager.logContext(currentContext, 'info')
     }
   }
-  
-  if (cookieHeader) {
-    // Try to extract user ID from cookies
-    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-    
-    return cookies.userId || cookies.user_id || cookies.sub;
-  }
-  
-  return undefined;
+
+  return response
 }
 
-/**
- * Configure middleware matcher
- */
 export const config = {
   matcher: [
     /*
@@ -106,8 +78,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - static files (images, etc.)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|static|.*\\.).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
-};
+}

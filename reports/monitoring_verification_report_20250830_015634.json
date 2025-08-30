@@ -1,0 +1,221 @@
+{
+  "timestamp": "2025-08-30T01:56:34.161701",
+  "overall_score": 80.0,
+  "tests_passed": 12,
+  "total_tests": 15,
+  "health_check_results": [
+    {
+      "endpoint": "http://localhost:3001/api/health",
+      "status": "pass",
+      "response_time": 636.8920803070068,
+      "status_code": 200,
+      "error": null,
+      "details": {
+        "headers": {
+          "X-Frame-Options": "DENY",
+          "X-Content-Type-Options": "nosniff",
+          "Referrer-Policy": "origin-when-cross-origin",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+          "X-XSS-Protection": "1; mode=block",
+          "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+          "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Content-Type": "application/json",
+          "x-response-time": "624ms",
+          "Date": "Sat, 30 Aug 2025 05:56:28 GMT",
+          "Connection": "keep-alive",
+          "Keep-Alive": "timeout=5",
+          "Transfer-Encoding": "chunked"
+        }
+      }
+    },
+    {
+      "endpoint": "http://localhost:8000/health",
+      "status": "pass",
+      "response_time": 5.101919174194336,
+      "status_code": 200,
+      "error": null,
+      "details": {
+        "headers": {
+          "Date": "Sat, 30 Aug 2025 05:56:27 GMT",
+          "Server": "uvicorn",
+          "Content-Length": "103",
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "endpoint": "http://localhost:3001/app2/health",
+      "status": "pass",
+      "response_time": 3624.5670318603516,
+      "status_code": 200,
+      "error": null,
+      "details": {
+        "headers": {
+          "X-Frame-Options": "DENY",
+          "X-Content-Type-Options": "nosniff",
+          "Referrer-Policy": "origin-when-cross-origin",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+          "X-XSS-Protection": "1; mode=block",
+          "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+          "X-Canary-Version": "v2",
+          "X-Migration-Status": "active",
+          "Cache-Control": "no-store, must-revalidate",
+          "x-correlation-id": "8c48b721-2583-4712-83c8-f857e7bc30ec",
+          "x-request-id": "f1bb621b-2c1d-410c-81a4-31f4d7956d8d",
+          "x-service": "frontend",
+          "x-span-id": "b7dbc4ee-4dc1-4a98-b830-4cf61b88bdca",
+          "x-timestamp": "1756533388712",
+          "x-trace-id": "cc323e68-6ed2-455d-b8a4-716201a5bc22",
+          "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+          "Link": "</_next/static/media/e4af272ccee01ff0-s.p.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Date": "Sat, 30 Aug 2025 05:56:32 GMT",
+          "Connection": "keep-alive",
+          "Keep-Alive": "timeout=5",
+          "Transfer-Encoding": "chunked"
+        }
+      }
+    }
+  ],
+  "alert_threshold_tests": [
+    {
+      "threshold_name": "Error Rate Warning",
+      "current_value": 3.0,
+      "threshold_value": 5.0,
+      "status": "normal",
+      "message": "Error Rate Warning within normal range: 3.0 < 5.0"
+    },
+    {
+      "threshold_name": "Error Rate Critical",
+      "current_value": 8.0,
+      "threshold_value": 10.0,
+      "status": "warning",
+      "message": "Error Rate Critical approaching threshold: 8.0 (80% of 10.0)"
+    },
+    {
+      "threshold_name": "Response Time Warning",
+      "current_value": 800,
+      "threshold_value": 1000,
+      "status": "warning",
+      "message": "Response Time Warning approaching threshold: 800 (80% of 1000)"
+    },
+    {
+      "threshold_name": "Response Time Critical",
+      "current_value": 3000,
+      "threshold_value": 5000,
+      "status": "normal",
+      "message": "Response Time Critical within normal range: 3000 < 5000"
+    },
+    {
+      "threshold_name": "CPU Usage Warning",
+      "current_value": 75.0,
+      "threshold_value": 80.0,
+      "status": "warning",
+      "message": "CPU Usage Warning approaching threshold: 75.0 (80% of 80.0)"
+    },
+    {
+      "threshold_name": "Memory Usage Warning",
+      "current_value": 85.0,
+      "threshold_value": 90.0,
+      "status": "warning",
+      "message": "Memory Usage Warning approaching threshold: 85.0 (80% of 90.0)"
+    }
+  ],
+  "correlation_id_tests": [
+    {
+      "endpoint": "http://localhost:3001/api/health",
+      "correlation_id_present": false,
+      "correlation_id_propagated": false,
+      "trace_headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "X-XSS-Protection": "1; mode=block",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Content-Type": "application/json",
+        "x-response-time": "651ms",
+        "Date": "Sat, 30 Aug 2025 05:56:32 GMT",
+        "Connection": "keep-alive",
+        "Keep-Alive": "timeout=5",
+        "Transfer-Encoding": "chunked"
+      },
+      "error": null
+    },
+    {
+      "endpoint": "http://localhost:8000/health",
+      "correlation_id_present": false,
+      "correlation_id_propagated": false,
+      "trace_headers": {
+        "Date": "Sat, 30 Aug 2025 05:56:31 GMT",
+        "Server": "uvicorn",
+        "Content-Length": "103",
+        "Content-Type": "application/json"
+      },
+      "error": null
+    },
+    {
+      "endpoint": "http://localhost:3001/app2/health",
+      "correlation_id_present": false,
+      "correlation_id_propagated": false,
+      "trace_headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "X-XSS-Protection": "1; mode=block",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        "X-Canary-Version": "v2",
+        "X-Migration-Status": "active",
+        "Cache-Control": "no-store, must-revalidate",
+        "x-correlation-id": "test-1756533392-53",
+        "x-request-id": "req-test-1756533392-53",
+        "x-service": "unknown",
+        "x-span-id": "5df2bf8e-be90-4c8d-8549-1de2065ceefe",
+        "x-timestamp": "1756533392866",
+        "x-trace-id": "trace-test-1756533392-53",
+        "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+        "Link": "</_next/static/media/e4af272ccee01ff0-s.p.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Encoding": "gzip",
+        "Date": "Sat, 30 Aug 2025 05:56:32 GMT",
+        "Connection": "keep-alive",
+        "Keep-Alive": "timeout=5",
+        "Transfer-Encoding": "chunked"
+      },
+      "error": null
+    }
+  ],
+  "dashboard_tests": [
+    {
+      "dashboard_name": "Health Monitoring Dashboard",
+      "accessible": true,
+      "data_loading": true,
+      "real_time_updates": true,
+      "error": null
+    },
+    {
+      "dashboard_name": "Performance Dashboard",
+      "accessible": true,
+      "data_loading": true,
+      "real_time_updates": true,
+      "error": null
+    },
+    {
+      "dashboard_name": "Admin Dashboard",
+      "accessible": true,
+      "data_loading": true,
+      "real_time_updates": true,
+      "error": null
+    }
+  ],
+  "recommendations": [
+    "Implement correlation ID propagation across all services",
+    "Minor improvements recommended for production readiness"
+  ],
+  "critical_issues": []
+}

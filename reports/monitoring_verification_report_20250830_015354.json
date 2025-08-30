@@ -1,0 +1,241 @@
+{
+  "timestamp": "2025-08-30T01:53:54.832267",
+  "overall_score": 80.0,
+  "tests_passed": 12,
+  "total_tests": 15,
+  "health_check_results": [
+    {
+      "endpoint": "http://localhost:3000/api/health",
+      "status": "pass",
+      "response_time": 659.0490341186523,
+      "status_code": 200,
+      "error": null,
+      "details": {
+        "headers": {
+          "X-Frame-Options": "DENY",
+          "X-Content-Type-Options": "nosniff",
+          "Referrer-Policy": "origin-when-cross-origin",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+          "X-XSS-Protection": "1; mode=block",
+          "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+          "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Content-Type": "application/json",
+          "x-correlation-id": "",
+          "x-parent-id": "",
+          "x-request-id": "",
+          "x-response-time": "629ms",
+          "x-service": "",
+          "x-session-id": "",
+          "x-span-id": "",
+          "x-tenant-id": "",
+          "x-timestamp": "",
+          "x-trace-id": "",
+          "x-user-id": "",
+          "Date": "Sat, 30 Aug 2025 05:53:53 GMT",
+          "Connection": "keep-alive",
+          "Keep-Alive": "timeout=5",
+          "Transfer-Encoding": "chunked"
+        }
+      }
+    },
+    {
+      "endpoint": "http://localhost:8000/health",
+      "status": "pass",
+      "response_time": 5.681037902832031,
+      "status_code": 200,
+      "error": null,
+      "details": {
+        "headers": {
+          "Date": "Sat, 30 Aug 2025 05:53:52 GMT",
+          "Server": "uvicorn",
+          "Content-Length": "103",
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "endpoint": "http://localhost:3000/app2/health",
+      "status": "pass",
+      "response_time": 160.96830368041992,
+      "status_code": 200,
+      "error": null,
+      "details": {
+        "headers": {
+          "X-Frame-Options": "DENY",
+          "X-Content-Type-Options": "nosniff",
+          "Referrer-Policy": "origin-when-cross-origin",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+          "X-XSS-Protection": "1; mode=block",
+          "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+          "X-Canary-Version": "v2",
+          "X-Migration-Status": "active",
+          "Cache-Control": "no-store, must-revalidate",
+          "x-correlation-id": "65b2aa1e-5510-438b-a114-970c44561cbe",
+          "x-request-id": "32e3ced5-04bc-48b2-965e-02123d0145f3",
+          "x-service": "frontend",
+          "x-span-id": "a5cc5801-fd99-4b23-942b-0da29b50199a",
+          "x-timestamp": "1756533233875",
+          "x-trace-id": "60574793-8479-42af-84b5-88df1b55c88c",
+          "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+          "Link": "</_next/static/media/e4af272ccee01ff0-s.p.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Encoding": "gzip",
+          "Date": "Sat, 30 Aug 2025 05:53:53 GMT",
+          "Connection": "keep-alive",
+          "Keep-Alive": "timeout=5",
+          "Transfer-Encoding": "chunked"
+        }
+      }
+    }
+  ],
+  "alert_threshold_tests": [
+    {
+      "threshold_name": "Error Rate Warning",
+      "current_value": 3.0,
+      "threshold_value": 5.0,
+      "status": "normal",
+      "message": "Error Rate Warning within normal range: 3.0 < 5.0"
+    },
+    {
+      "threshold_name": "Error Rate Critical",
+      "current_value": 8.0,
+      "threshold_value": 10.0,
+      "status": "warning",
+      "message": "Error Rate Critical approaching threshold: 8.0 (80% of 10.0)"
+    },
+    {
+      "threshold_name": "Response Time Warning",
+      "current_value": 800,
+      "threshold_value": 1000,
+      "status": "warning",
+      "message": "Response Time Warning approaching threshold: 800 (80% of 1000)"
+    },
+    {
+      "threshold_name": "Response Time Critical",
+      "current_value": 3000,
+      "threshold_value": 5000,
+      "status": "normal",
+      "message": "Response Time Critical within normal range: 3000 < 5000"
+    },
+    {
+      "threshold_name": "CPU Usage Warning",
+      "current_value": 75.0,
+      "threshold_value": 80.0,
+      "status": "warning",
+      "message": "CPU Usage Warning approaching threshold: 75.0 (80% of 80.0)"
+    },
+    {
+      "threshold_name": "Memory Usage Warning",
+      "current_value": 85.0,
+      "threshold_value": 90.0,
+      "status": "warning",
+      "message": "Memory Usage Warning approaching threshold: 85.0 (80% of 90.0)"
+    }
+  ],
+  "correlation_id_tests": [
+    {
+      "endpoint": "http://localhost:3000/api/health",
+      "correlation_id_present": false,
+      "correlation_id_propagated": false,
+      "trace_headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "X-XSS-Protection": "1; mode=block",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Content-Type": "application/json",
+        "x-correlation-id": "",
+        "x-parent-id": "",
+        "x-request-id": "",
+        "x-response-time": "626ms",
+        "x-service": "",
+        "x-session-id": "",
+        "x-span-id": "",
+        "x-tenant-id": "",
+        "x-timestamp": "",
+        "x-trace-id": "",
+        "x-user-id": "",
+        "Date": "Sat, 30 Aug 2025 05:53:54 GMT",
+        "Connection": "keep-alive",
+        "Keep-Alive": "timeout=5",
+        "Transfer-Encoding": "chunked"
+      },
+      "error": null
+    },
+    {
+      "endpoint": "http://localhost:8000/health",
+      "correlation_id_present": false,
+      "correlation_id_propagated": false,
+      "trace_headers": {
+        "Date": "Sat, 30 Aug 2025 05:53:53 GMT",
+        "Server": "uvicorn",
+        "Content-Length": "103",
+        "Content-Type": "application/json"
+      },
+      "error": null
+    },
+    {
+      "endpoint": "http://localhost:3000/app2/health",
+      "correlation_id_present": false,
+      "correlation_id_propagated": false,
+      "trace_headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "X-XSS-Protection": "1; mode=block",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+        "X-Canary-Version": "v2",
+        "X-Migration-Status": "active",
+        "Cache-Control": "no-store, must-revalidate",
+        "x-correlation-id": "test-1756533234-754",
+        "x-request-id": "req-test-1756533234-754",
+        "x-service": "frontend",
+        "x-span-id": "eba4e39f-599d-4846-815b-b21b0d179497",
+        "x-timestamp": "1756533234621",
+        "x-trace-id": "trace-test-1756533234-754",
+        "Vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+        "Link": "</_next/static/media/e4af272ccee01ff0-s.p.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Encoding": "gzip",
+        "Date": "Sat, 30 Aug 2025 05:53:54 GMT",
+        "Connection": "keep-alive",
+        "Keep-Alive": "timeout=5",
+        "Transfer-Encoding": "chunked"
+      },
+      "error": null
+    }
+  ],
+  "dashboard_tests": [
+    {
+      "dashboard_name": "Health Monitoring Dashboard",
+      "accessible": true,
+      "data_loading": true,
+      "real_time_updates": true,
+      "error": null
+    },
+    {
+      "dashboard_name": "Performance Dashboard",
+      "accessible": true,
+      "data_loading": true,
+      "real_time_updates": true,
+      "error": null
+    },
+    {
+      "dashboard_name": "Admin Dashboard",
+      "accessible": true,
+      "data_loading": true,
+      "real_time_updates": true,
+      "error": null
+    }
+  ],
+  "recommendations": [
+    "Implement correlation ID propagation across all services",
+    "Minor improvements recommended for production readiness"
+  ],
+  "critical_issues": []
+}

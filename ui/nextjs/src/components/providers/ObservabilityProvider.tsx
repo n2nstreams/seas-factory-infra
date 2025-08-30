@@ -1,320 +1,243 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { useFeatureFlags } from './FeatureFlagProvider'
-import { healthMonitoring, type HealthCheckResult, type HealthIndexMetrics } from '@/lib/health-monitoring-simple'
-import { correlationManager, createCorrelationContext, type CorrelationContext } from '@/lib/correlation-id'
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { healthMonitoring, type HealthResult, type HealthIndexMetrics } from '@/lib/health-monitoring-simple'
+import { correlationIDManager, useCorrelationID } from '@/lib/correlation-id'
+import { alertThresholdManager, type AlertThreshold, type AlertEvent } from '@/lib/alert-thresholds'
 
 // Observability context interface
 interface ObservabilityContextType {
   // Health monitoring
-  currentHealth: HealthCheckResult | null
-  healthHistory: HealthCheckResult[]
+  currentHealth: HealthResult | null
+  healthHistory: HealthResult[]
   metricsHistory: HealthIndexMetrics[]
   isMonitoring: boolean
-  startMonitoring: (intervalMs?: number) => Promise<void>
+  startMonitoring: () => void
   stopMonitoring: () => void
-  runHealthCheck: () => Promise<HealthCheckResult>
+  runHealthCheck: () => Promise<void>
   
-  // Correlation IDs
-  correlationContext: CorrelationContext | null
-  createCorrelationContext: (metadata?: Record<string, any>) => CorrelationContext
-  updateCorrelationContext: (metadata: Record<string, any>) => void
-  clearCorrelationContext: () => void
+  // Correlation ID tracking
+  correlationId: string | undefined
+  requestId: string | undefined
+  spanId: string | undefined
+  traceId: string | undefined
+  generateCorrelationContext: (
+    parentId?: string,
+    userId?: string,
+    tenantId?: string,
+    sessionId?: string,
+    metadata?: Record<string, any>
+  ) => void
+  getCorrelationHeaders: () => Record<string, string>
   
-  // Feature flags
-  isSentryEnabled: boolean
-  isVercelAnalyticsEnabled: boolean
-  isHealthMonitoringEnabled: boolean
+  // Alert thresholds
+  alertThresholds: AlertThreshold[]
+  alertHistory: AlertEvent[]
+  isAlertMonitoring: boolean
+  startAlertMonitoring: () => void
+  stopAlertMonitoring: () => void
+  updateThreshold: (name: string, updates: Partial<AlertThreshold>) => boolean
+  addThreshold: (threshold: AlertThreshold) => void
+  removeThreshold: (name: string) => boolean
   
-  // Error tracking
-  captureError: (error: Error, context?: Record<string, any>) => void
-  captureMessage: (message: string, level?: 'info' | 'warn' | 'error') => void
-  
-  // Performance monitoring
-  startTransaction: (name: string, operation: string) => void
-  endTransaction: (name: string, status?: 'success' | 'error') => void
+  // System status
+  systemStatus: {
+    health: 'healthy' | 'degraded' | 'unhealthy'
+    alerts: {
+      warning: number
+      critical: number
+      resolved: number
+    }
+    uptime: number
+    lastUpdate: string
+  }
 }
 
+// Create observability context
 const ObservabilityContext = createContext<ObservabilityContextType | undefined>(undefined)
 
 // Observability provider component
 export function ObservabilityProvider({ children }: { children: ReactNode }) {
-  const { isEnabled } = useFeatureFlags()
-  
-  // Feature flags for observability
-  const isSentryEnabled = isEnabled('observability_v2') && isEnabled('sentry_enabled')
-  const isVercelAnalyticsEnabled = isEnabled('observability_v2') && isEnabled('vercel_analytics_enabled')
-  const isHealthMonitoringEnabled = isEnabled('observability_v2') && isEnabled('health_monitoring_enabled')
-  
-  // State for health monitoring
-  const [currentHealth, setCurrentHealth] = useState<HealthCheckResult | null>(null)
-  const [healthHistory, setHealthHistory] = useState<HealthCheckResult[]>([])
+  // Health monitoring state
+  const [currentHealth, setCurrentHealth] = useState<HealthResult | null>(null)
+  const [healthHistory, setHealthHistory] = useState<HealthResult[]>([])
   const [metricsHistory, setMetricsHistory] = useState<HealthIndexMetrics[]>([])
   const [isMonitoring, setIsMonitoring] = useState(false)
-  
-  // State for correlation context
-  const [correlationContext, setCorrelationContext] = useState<CorrelationContext | null>(null)
-  
-  // Initialize observability when component mounts
+
+  // Alert threshold state
+  const [alertThresholds, setAlertThresholds] = useState<AlertThreshold[]>([])
+  const [alertHistory, setAlertHistory] = useState<AlertEvent[]>([])
+  const [isAlertMonitoring, setIsAlertMonitoring] = useState(false)
+
+  // System status state
+  const [systemStatus, setSystemStatus] = useState({
+    health: 'healthy' as const,
+    alerts: { warning: 0, critical: 0, resolved: 0 },
+    uptime: 0,
+    lastUpdate: new Date().toISOString()
+  })
+
+  // Initialize correlation ID context for this provider
   useEffect(() => {
-    if (isHealthMonitoringEnabled) {
-      initializeHealthMonitoring()
-    }
+    const context = correlationIDManager.generateContext(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { operation: 'observability_provider_init', component: 'ObservabilityProvider' }
+    )
     
-    if (isSentryEnabled) {
-      initializeSentry()
-    }
-    
-    if (isVercelAnalyticsEnabled) {
-      initializeVercelAnalytics()
-    }
-    
-    // Initialize correlation context
-    initializeCorrelationContext()
-    
-    // Cleanup on unmount
-    return () => {
-      if (isHealthMonitoringEnabled) {
-        healthMonitoring.stopMonitoring()
-      }
-    }
-  }, [isHealthMonitoringEnabled, isSentryEnabled, isVercelAnalyticsEnabled])
-  
+    // Log the initialization
+    correlationIDManager.logContext(context, 'info')
+  }, [])
+
   // Initialize health monitoring
-  const initializeHealthMonitoring = async () => {
-    try {
-      // Subscribe to health monitoring updates
-      const updateHealth = () => {
-        const current = healthMonitoring.getCurrentHealth()
-        const history = healthMonitoring.getHealthHistory()
-        const metrics = healthMonitoring.getMetricsHistory()
+  useEffect(() => {
+    const initializeHealthMonitoring = async () => {
+      try {
+        // Run initial health check
+        await runHealthCheck()
         
-        setCurrentHealth(current)
-        setHealthHistory(history)
-        setMetricsHistory(metrics)
-        setIsMonitoring(healthMonitoring.isMonitoringActive())
+        // Start monitoring
+        startMonitoring()
+      } catch (error) {
+        console.error('Failed to initialize health monitoring:', error)
       }
-      
-      // Initial update
-      updateHealth()
-      
-      // Start monitoring if not already running
-      if (!healthMonitoring.isMonitoringActive()) {
-        await healthMonitoring.startMonitoring()
-        updateHealth()
+    }
+
+    initializeHealthMonitoring()
+
+    return () => {
+      stopMonitoring()
+    }
+  }, [])
+
+  // Initialize alert thresholds
+  useEffect(() => {
+    const thresholds = alertThresholdManager.getAllThresholds()
+    setAlertThresholds(thresholds)
+    
+    // Start alert monitoring
+    startAlertMonitoring()
+    
+    return () => {
+      stopAlertMonitoring()
+    }
+  }, [])
+
+  // Update system status periodically
+  useEffect(() => {
+    const updateSystemStatus = () => {
+      const health = currentHealth?.status || 'healthy'
+      const alerts = {
+        warning: alertHistory.filter(a => a.status === 'warning').length,
+        critical: alertHistory.filter(a => a.status === 'critical').length,
+        resolved: alertHistory.filter(a => a.status === 'resolved').length
       }
+      const uptime = currentHealth ? Date.now() - new Date(currentHealth.timestamp).getTime() : 0
       
-      // Set up periodic updates
-      const interval = setInterval(updateHealth, 10000) // Update every 10 seconds
-      
-      return () => clearInterval(interval)
-    } catch (error) {
-      console.error('Failed to initialize health monitoring:', error)
-    }
-  }
-  
-  // Initialize Sentry
-  const initializeSentry = () => {
-    try {
-      // Sentry is initialized via sentry.client.config.ts
-      console.log('Sentry initialized for client-side error tracking')
-    } catch (error) {
-      console.error('Failed to initialize Sentry:', error)
-    }
-  }
-  
-  // Initialize Vercel Analytics
-  const initializeVercelAnalytics = () => {
-    try {
-      // Vercel Analytics is initialized via the Analytics component in layout
-      console.log('Vercel Analytics initialized')
-    } catch (error) {
-      console.error('Failed to initialize Vercel Analytics:', error)
-    }
-  }
-  
-  // Initialize correlation context
-  const initializeCorrelationContext = () => {
-    try {
-      // Create initial correlation context
-      const context = createCorrelationContext({}, {
-        component: 'ObservabilityProvider',
-        initialized_at: new Date().toISOString(),
+      setSystemStatus({
+        health,
+        alerts,
+        uptime,
+        lastUpdate: new Date().toISOString()
       })
-      
-      correlationManager.setContext(context)
-      setCorrelationContext(context)
-      
-      // Subscribe to correlation context changes
-      const unsubscribe = correlationManager.subscribe((newContext) => {
-        setCorrelationContext(newContext)
-      })
-      
-      return unsubscribe
-    } catch (error) {
-      console.error('Failed to initialize correlation context:', error)
     }
-  }
-  
+
+    const interval = setInterval(updateSystemStatus, 10000) // Update every 10 seconds
+    updateSystemStatus() // Initial update
+
+    return () => clearInterval(interval)
+  }, [currentHealth, alertHistory])
+
   // Health monitoring functions
-  const startMonitoring = async (intervalMs: number = 30000) => {
-    try {
-      await healthMonitoring.startMonitoring(intervalMs)
-      setIsMonitoring(true)
-    } catch (error) {
-      console.error('Failed to start health monitoring:', error)
-    }
+  const startMonitoring = () => {
+    healthMonitoring.startMonitoring()
+    setIsMonitoring(true)
   }
-  
+
   const stopMonitoring = () => {
-    try {
-      healthMonitoring.stopMonitoring()
-      setIsMonitoring(false)
-    } catch (error) {
-      console.error('Failed to stop health monitoring:', error)
-    }
+    healthMonitoring.stopMonitoring()
+    setIsMonitoring(false)
   }
-  
-  const runHealthCheck = async (): Promise<HealthCheckResult> => {
+
+  const runHealthCheck = async () => {
     try {
-      const result = await healthMonitoring.runHealthCheck()
-      
-      // Update state with new health check result
+      const result = await healthMonitoring.runComprehensiveHealthCheck()
       setCurrentHealth(result)
       setHealthHistory(healthMonitoring.getHealthHistory())
       setMetricsHistory(healthMonitoring.getMetricsHistory())
-      
-      return result
     } catch (error) {
-      console.error('Failed to run health check:', error)
-      throw error
+      console.error('Health check failed:', error)
     }
   }
-  
-  // Correlation context functions
-  const createNewCorrelationContext = (metadata: Record<string, any> = {}): CorrelationContext => {
-    try {
-      const context = correlationManager.createChildContext(metadata)
-      return context
-    } catch (error) {
-      console.error('Failed to create correlation context:', error)
-      // Return a fallback context
-      return createCorrelationContext({}, metadata)
+
+  // Alert monitoring functions
+  const startAlertMonitoring = () => {
+    alertThresholdManager.startMonitoring()
+    setIsAlertMonitoring(true)
+    
+    // Set up periodic alert history updates
+    const updateAlertHistory = () => {
+      setAlertHistory(alertThresholdManager.getAlertHistory())
+    }
+    
+    const interval = setInterval(updateAlertHistory, 5000) // Update every 5 seconds
+    updateAlertHistory() // Initial update
+    
+    // Store interval for cleanup
+    ;(window as any).alertHistoryInterval = interval
+  }
+
+  const stopAlertMonitoring = () => {
+    alertThresholdManager.stopMonitoring()
+    setIsAlertMonitoring(false)
+    
+    // Clear interval
+    if ((window as any).alertHistoryInterval) {
+      clearInterval((window as any).alertHistoryInterval)
     }
   }
-  
-  const updateCorrelationContext = (metadata: Record<string, any>) => {
-    try {
-      correlationManager.updateContext(metadata)
-    } catch (error) {
-      console.error('Failed to update correlation context:', error)
+
+  const updateThreshold = (name: string, updates: Partial<AlertThreshold>): boolean => {
+    const success = alertThresholdManager.updateThreshold(name, updates)
+    if (success) {
+      setAlertThresholds(alertThresholdManager.getAllThresholds())
     }
+    return success
   }
-  
-  const clearCorrelationContext = () => {
-    try {
-      correlationManager.clearContext()
-    } catch (error) {
-      console.error('Failed to clear correlation context:', error)
+
+  const addThreshold = (threshold: AlertThreshold) => {
+    alertThresholdManager.addThreshold(threshold)
+    setAlertThresholds(alertThresholdManager.getAllThresholds())
+  }
+
+  const removeThreshold = (name: string): boolean => {
+    const success = alertThresholdManager.removeThreshold(name)
+    if (success) {
+      setAlertThresholds(alertThresholdManager.getAllThresholds())
     }
+    return success
   }
-  
-  // Error tracking functions
-  const captureError = (error: Error, context?: Record<string, any>) => {
-    try {
-      if (isSentryEnabled && typeof window !== 'undefined') {
-        // Import Sentry dynamically to avoid SSR issues
-        import('@sentry/nextjs').then((Sentry) => {
-          Sentry.captureException(error, {
-            extra: {
-              ...context,
-              correlation_id: correlationContext?.id,
-              trace_id: correlationContext?.traceId,
-              span_id: correlationContext?.spanId,
-            },
-          })
-        })
-      }
-      
-      // Always log to console for development
-      console.error('Error captured:', error, context)
-    } catch (err) {
-      console.error('Failed to capture error:', err)
-    }
+
+  // Correlation ID functions
+  const generateCorrelationContext = (
+    parentId?: string,
+    userId?: string,
+    tenantId?: string,
+    sessionId?: string,
+    metadata?: Record<string, any>
+  ) => {
+    correlationIDManager.generateContext(parentId, userId, tenantId, sessionId, metadata)
   }
-  
-  const captureMessage = (message: string, level: 'info' | 'warn' | 'error' = 'info') => {
-    try {
-      if (isSentryEnabled && typeof window !== 'undefined') {
-        import('@sentry/nextjs').then((Sentry) => {
-          Sentry.captureMessage(message, {
-            level: level === 'info' ? 'info' : level === 'warn' ? 'warning' : 'error',
-            extra: {
-              correlation_id: correlationContext?.id,
-              trace_id: correlationContext?.traceId,
-              span_id: correlationContext?.spanId,
-            },
-          })
-        })
-      }
-      
-      // Always log to console for development
-      const logLevel = level === 'info' ? 'info' : level === 'warn' ? 'warn' : 'error'
-      console[logLevel]('Message captured:', message)
-    } catch (err) {
-      console.error('Failed to capture message:', err)
-    }
-  }
-  
-  // Performance monitoring functions
-  const startTransaction = (name: string, operation: string) => {
-    try {
-      if (isSentryEnabled && typeof window !== 'undefined') {
-        import('@sentry/nextjs').then((Sentry) => {
-          const transaction = Sentry.startTransaction({
-            name,
-            op: operation,
-          })
-          
-          Sentry.getCurrentHub().configureScope((scope) => {
-            scope.setSpan(transaction)
-          })
-          
-          // Store transaction reference for later use
-          ;(window as any).__currentTransaction = transaction
-        })
-      }
-      
-      // Log transaction start
-      console.log('Transaction started:', name, operation)
-    } catch (err) {
-      console.error('Failed to start transaction:', err)
-    }
-  }
-  
-  const endTransaction = (name: string, status: 'success' | 'error' = 'success') => {
-    try {
-      if (isSentryEnabled && typeof window !== 'undefined') {
-        import('@sentry/nextjs').then((Sentry) => {
-          const transaction = (window as any).__currentTransaction
-          if (transaction) {
-            transaction.setStatus(status)
-            transaction.finish()
-            ;(window as any).__currentTransaction = null
-          }
-        })
-      }
-      
-      // Log transaction end
-      console.log('Transaction ended:', name, status)
-    } catch (err) {
-      console.error('Failed to end transaction:', err)
-    }
-  }
-  
+
+  const getCorrelationHeaders = () => correlationIDManager.getHeaders()
+
+  // Get current correlation context
+  const currentContext = correlationIDManager.getCurrentContext()
+
   // Context value
-  const value: ObservabilityContextType = {
+  const contextValue: ObservabilityContextType = {
     // Health monitoring
     currentHealth,
     healthHistory,
@@ -324,95 +247,83 @@ export function ObservabilityProvider({ children }: { children: ReactNode }) {
     stopMonitoring,
     runHealthCheck,
     
-    // Correlation IDs
-    correlationContext,
-    createCorrelationContext: createNewCorrelationContext,
-    updateCorrelationContext,
-    clearCorrelationContext,
+    // Correlation ID tracking
+    correlationId: currentContext?.correlationId,
+    requestId: currentContext?.requestId,
+    spanId: currentContext?.spanId,
+    traceId: currentContext?.traceId,
+    generateCorrelationContext,
+    getCorrelationHeaders,
     
-    // Feature flags
-    isSentryEnabled,
-    isVercelAnalyticsEnabled,
-    isHealthMonitoringEnabled,
+    // Alert thresholds
+    alertThresholds,
+    alertHistory,
+    isAlertMonitoring,
+    startAlertMonitoring,
+    stopAlertMonitoring,
+    updateThreshold,
+    addThreshold,
+    removeThreshold,
     
-    // Error tracking
-    captureError,
-    captureMessage,
-    
-    // Performance monitoring
-    startTransaction,
-    endTransaction,
+    // System status
+    systemStatus
   }
-  
+
   return (
-    <ObservabilityContext.Provider value={value}>
+    <ObservabilityContext.Provider value={contextValue}>
       {children}
     </ObservabilityContext.Provider>
   )
 }
 
 // Hook to use observability context
-export function useObservability() {
+export function useHealthMonitoring() {
   const context = useContext(ObservabilityContext)
   if (context === undefined) {
-    throw new Error('useObservability must be used within an ObservabilityProvider')
+    throw new Error('useHealthMonitoring must be used within an ObservabilityProvider')
   }
   return context
 }
 
-// Hook for specific observability features
-export function useHealthMonitoring() {
-  const { 
-    currentHealth, 
-    healthHistory, 
-    metricsHistory, 
-    isMonitoring, 
-    startMonitoring, 
-    stopMonitoring, 
-    runHealthCheck 
-  } = useObservability()
-  
+// Hook to use correlation ID
+export function useObservabilityCorrelationID() {
+  const context = useContext(ObservabilityContext)
+  if (context === undefined) {
+    throw new Error('useObservabilityCorrelationID must be used within an ObservabilityProvider')
+  }
   return {
-    currentHealth,
-    healthHistory,
-    metricsHistory,
-    isMonitoring,
-    startMonitoring,
-    stopMonitoring,
-    runHealthCheck,
+    correlationId: context.correlationId,
+    requestId: context.requestId,
+    spanId: context.spanId,
+    traceId: context.traceId,
+    generateCorrelationContext: context.generateCorrelationContext,
+    getCorrelationHeaders: context.getCorrelationHeaders
   }
 }
 
-export function useCorrelationContext() {
-  const { 
-    correlationContext, 
-    createCorrelationContext, 
-    updateCorrelationContext, 
-    clearCorrelationContext 
-  } = useObservability()
-  
+// Hook to use alert thresholds
+export function useAlertThresholds() {
+  const context = useContext(ObservabilityContext)
+  if (context === undefined) {
+    throw new Error('useAlertThresholds must be used within an ObservabilityProvider')
+  }
   return {
-    correlationContext,
-    createCorrelationContext,
-    updateCorrelationContext,
-    clearCorrelationContext,
+    alertThresholds: context.alertThresholds,
+    alertHistory: context.alertHistory,
+    isAlertMonitoring: context.isAlertMonitoring,
+    startAlertMonitoring: context.startAlertMonitoring,
+    stopAlertMonitoring: context.stopAlertMonitoring,
+    updateThreshold: context.updateThreshold,
+    addThreshold: context.addThreshold,
+    removeThreshold: context.removeThreshold
   }
 }
 
-export function useErrorTracking() {
-  const { captureError, captureMessage } = useObservability()
-  
-  return {
-    captureError,
-    captureMessage,
+// Hook to use system status
+export function useSystemStatus() {
+  const context = useContext(ObservabilityContext)
+  if (context === undefined) {
+    throw new Error('useSystemStatus must be used within an ObservabilityProvider')
   }
-}
-
-export function usePerformanceMonitoring() {
-  const { startTransaction, endTransaction } = useObservability()
-  
-  return {
-    startTransaction,
-    endTransaction,
-  }
+  return context.systemStatus
 }

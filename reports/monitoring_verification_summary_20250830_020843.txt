@@ -1,0 +1,44 @@
+MONITORING & ALERTING VERIFICATION SUMMARY
+Generated: 2025-08-30 02:08:43
+
+OVERALL RESULTS
+==============
+Overall Score: 80.0/100
+Tests Passed: 12/15
+Status: ✅ PASSED
+
+HEALTH CHECK ENDPOINTS
+=====================
+✅ http://localhost:3001/api/health: pass (19.8ms)
+✅ http://localhost:8000/health: pass (4.9ms)
+✅ http://localhost:3001/app2/health: pass (377.7ms)
+
+ALERT THRESHOLDS
+================
+✅ Error Rate Warning: normal - Error Rate Warning within normal range: 3.0 < 5.0
+⚠️ Error Rate Critical: warning - Error Rate Critical approaching threshold: 8.0 (80% of 10.0)
+⚠️ Response Time Warning: warning - Response Time Warning approaching threshold: 800 (80% of 1000)
+✅ Response Time Critical: normal - Response Time Critical within normal range: 3000 < 5000
+⚠️ CPU Usage Warning: warning - CPU Usage Warning approaching threshold: 75.0 (80% of 80.0)
+⚠️ Memory Usage Warning: warning - Memory Usage Warning approaching threshold: 85.0 (80% of 90.0)
+
+CORRELATION ID TRACKING
+======================
+⚠️ http://localhost:3001/api/health: Incomplete
+⚠️ http://localhost:8000/health: Incomplete
+⚠️ http://localhost:3001/app2/health: Incomplete
+
+MONITORING DASHBOARDS
+====================
+✅ Health Monitoring Dashboard: Accessible
+✅ Performance Dashboard: Accessible
+✅ Admin Dashboard: Accessible
+
+💡 RECOMMENDATIONS
+==================
+• Implement correlation ID propagation across all services
+• Minor improvements recommended for production readiness
+
+📊 DETAILED RESULTS
+==================
+Full JSON report: monitoring_verification_report_20250830_020843.json

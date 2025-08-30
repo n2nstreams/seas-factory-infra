@@ -18,7 +18,7 @@ import {
   RefreshCw, 
   Server, 
   Shield, 
-  Storage, 
+  HardDrive, 
   TrendingUp,
   TrendingDown,
   Minus
@@ -362,7 +362,7 @@ export default function HealthMonitoringDashboard() {
                     <div className="flex items-center gap-3">
                       {name === 'supabase-database' && <Database className="w-4 h-4 text-blue-600" />}
                       {name === 'supabase-auth' && <Shield className="w-4 h-4 text-green-600" />}
-                      {name === 'supabase-storage' && <Storage className="w-4 h-4 text-purple-600" />}
+                      {name === 'supabase-storage' && <HardDrive className="w-4 h-4 text-purple-600" />}
                       {name === 'backend-api' && <Server className="w-4 h-4 text-orange-600" />}
                       {name === 'frontend' && <Activity className="w-4 h-4 text-indigo-600" />}
                       

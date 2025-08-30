@@ -77,7 +77,7 @@ class MonitoringVerificationService:
     """Service to verify monitoring and alerting systems"""
     
     def __init__(self):
-        self.base_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        self.base_url = os.getenv('FRONTEND_URL', 'http://localhost:3001')
         self.api_url = os.getenv('API_URL', 'http://localhost:8000')
         self.session: Optional[aiohttp.ClientSession] = None
         self.test_results = []
@@ -232,9 +232,16 @@ class MonitoringVerificationService:
                 async with self.session.get(endpoint, headers=headers, timeout=10) as response:
                     response_headers = dict(response.headers)
                     
-                    # Check if correlation ID is present in response
-                    correlation_id_present = 'X-Correlation-ID' in response_headers
-                    correlation_id_propagated = response_headers.get('X-Correlation-ID') == test_correlation_id
+                    # Check if correlation ID is present in response (case-insensitive)
+                    correlation_id_present = False
+                    correlation_id_propagated = False
+                    
+                    # Check for correlation ID in various cases
+                    for header_name, header_value in response_headers.items():
+                        if header_name.lower() == 'x-correlation-id':
+                            correlation_id_present = True
+                            correlation_id_propagated = header_value == test_correlation_id
+                            break
                     
                     result = CorrelationIDTest(
                         endpoint=endpoint,

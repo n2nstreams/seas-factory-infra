@@ -14,11 +14,5 @@
   "../../../node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch": {
     "id": "../../../node_modules/@supabase/storage-js/dist/module/lib/helpers.js -> @supabase/node-fetch",
     "files": []
-  },
-  "components/providers/ObservabilityProvider.tsx -> @sentry/nextjs": {
-    "id": "components/providers/ObservabilityProvider.tsx -> @sentry/nextjs",
-    "files": [
-      "static/chunks/_app-pages-browser_node_modules_sentry_nextjs_build_esm_index_client_js.js"
-    ]
   }
 }

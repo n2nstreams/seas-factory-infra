@@ -1,0 +1,23 @@
+{
+  "report_id": "ea23d1bb-32f7-48c2-b4f0-581dfcee8da5",
+  "generated_at": "2025-08-30T06:25:45.111676",
+  "overall_score": 100.0,
+  "rollback_score": 100.0,
+  "disaster_recovery_score": 100.0,
+  "support_team_score": 100.0,
+  "documentation_score": 100.0,
+  "production_readiness": true,
+  "critical_issues": [],
+  "recommendations": [
+    "Complete remaining support team training",
+    "Address support team improvement areas",
+    "Create missing documentation",
+    "Update outdated documentation"
+  ],
+  "next_steps": [
+    "Retest all procedures after fixes",
+    "Update runbooks and procedures",
+    "Schedule regular business continuity drills",
+    "Establish continuous improvement process"
+  ]
+}

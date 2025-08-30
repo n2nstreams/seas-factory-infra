@@ -1,7 +1,6 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/app2/admin/page": "app/app2/admin/page.js",
   "/api/health/route": "app/api/health/route.js",
   "/app2/health/page": "app/app2/health/page.js",
-  "/app2/performance/page": "app/app2/performance/page.js"
+  "/app2/performance/page": "app/app2/performance/page.js",
+  "/app2/admin/page": "app/app2/admin/page.js"
 }

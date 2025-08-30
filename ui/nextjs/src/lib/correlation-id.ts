@@ -1,278 +1,276 @@
-// Correlation ID service for request tracing and observability
+import { v4 as uuidv4 } from 'uuid'
 
-// Configuration
-const CORRELATION_ID_HEADER = process.env.NEXT_PUBLIC_CORRELATION_ID_HEADER || 'X-Correlation-ID'
-const CORRELATION_ID_LENGTH = parseInt(process.env.NEXT_PUBLIC_CORRELATION_ID_LENGTH || '16', 10)
-
-// Correlation ID interface
+// Correlation ID context for request tracing
 export interface CorrelationContext {
-  id: string
+  correlationId: string
+  requestId: string
   parentId?: string
-  traceId?: string
-  spanId?: string
+  spanId: string
+  traceId: string
   userId?: string
+  tenantId?: string
   sessionId?: string
-  requestId?: string
-  timestamp: string
+  timestamp: number
   metadata: Record<string, any>
 }
 
-// Generate a unique correlation ID
-export function generateCorrelationId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  for (let i = 0; i < CORRELATION_ID_LENGTH; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
+// Global correlation context
+let globalCorrelationContext: CorrelationContext | null = null
 
-// Generate a trace ID (longer, more unique identifier)
-export function generateTraceId(): string {
-  return generateCorrelationId() + generateCorrelationId()
-}
+// Correlation ID manager
+export class CorrelationIDManager {
+  private static instance: CorrelationIDManager
+  private contextMap = new Map<string, CorrelationContext>()
 
-// Generate a span ID (shorter identifier for individual operations)
-export function generateSpanId(): string {
-  return generateCorrelationId().substring(0, 8)
-}
-
-// Create a new correlation context
-export function createCorrelationContext(
-  parentContext?: Partial<CorrelationContext>,
-  metadata: Record<string, any> = {}
-): CorrelationContext {
-  const now = new Date().toISOString()
-  
-  return {
-    id: parentContext?.id || generateCorrelationId(),
-    parentId: parentContext?.parentId,
-    traceId: parentContext?.traceId || generateTraceId(),
-    spanId: generateSpanId(),
-    userId: parentContext?.userId,
-    sessionId: parentContext?.sessionId,
-    requestId: parentContext?.requestId || generateCorrelationId(),
-    timestamp: now,
-    metadata: {
-      ...parentContext?.metadata,
-      ...metadata,
-      created_at: now,
-    },
-  }
-}
-
-// Extract correlation ID from headers
-export function extractCorrelationId(headers: Headers | Record<string, string>): string | null {
-  if (headers instanceof Headers) {
-    return headers.get(CORRELATION_ID_HEADER) || null
-  }
-  return headers[CORRELATION_ID_HEADER] || null
-}
-
-// Add correlation ID to headers
-export function addCorrelationId(
-  headers: Headers | Record<string, string>,
-  correlationId: string
-): void {
-  if (headers instanceof Headers) {
-    headers.set(CORRELATION_ID_HEADER, correlationId)
-  } else {
-    headers[CORRELATION_ID_HEADER] = correlationId
-  }
-}
-
-// Create headers with correlation ID
-export function createHeadersWithCorrelation(
-  correlationId: string,
-  additionalHeaders: Record<string, string> = {}
-): Record<string, string> {
-  return {
-    [CORRELATION_ID_HEADER]: correlationId,
-    'Content-Type': 'application/json',
-    ...additionalHeaders,
-  }
-}
-
-// Create fetch options with correlation ID
-export function createFetchOptionsWithCorrelation(
-  correlationId: string,
-  options: RequestInit = {}
-): RequestInit {
-  return {
-    ...options,
-    headers: {
-      ...createHeadersWithCorrelation(correlationId),
-      ...options.headers,
-    },
-  }
-}
-
-// Correlation context manager for React components
-class CorrelationContextManager {
-  private currentContext: CorrelationContext | null = null
-  private listeners: Set<(context: CorrelationContext | null) => void> = new Set()
-
-  // Set the current correlation context
-  setContext(context: CorrelationContext): void {
-    this.currentContext = context
-    this.notifyListeners()
-  }
-
-  // Get the current correlation context
-  getContext(): CorrelationContext | null {
-    return this.currentContext
-  }
-
-  // Create a child context
-  createChildContext(metadata: Record<string, any> = {}): CorrelationContext {
-    if (!this.currentContext) {
-      return createCorrelationContext({}, metadata)
+  static getInstance(): CorrelationIDManager {
+    if (!CorrelationIDManager.instance) {
+      CorrelationIDManager.instance = new CorrelationIDManager()
     }
+    return CorrelationIDManager.instance
+  }
+
+  // Generate a new correlation context
+  generateContext(
+    parentId?: string,
+    userId?: string,
+    tenantId?: string,
+    sessionId?: string,
+    metadata: Record<string, any> = {}
+  ): CorrelationContext {
+    const correlationId = uuidv4()
+    const requestId = uuidv4()
+    const spanId = uuidv4()
+    const traceId = parentId || uuidv4()
+
+    const context: CorrelationContext = {
+      correlationId,
+      requestId,
+      parentId,
+      spanId,
+      traceId,
+      userId,
+      tenantId,
+      sessionId,
+      timestamp: Date.now(),
+      metadata: {
+        service: 'frontend',
+        version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        ...metadata
+      }
+    }
+
+    this.contextMap.set(correlationId, context)
+    globalCorrelationContext = context
+
+    return context
+  }
+
+  // Get current correlation context
+  getCurrentContext(): CorrelationContext | null {
+    return globalCorrelationContext
+  }
+
+  // Get context by correlation ID
+  getContext(correlationId: string): CorrelationContext | null {
+    return this.contextMap.get(correlationId) || null
+  }
+
+  // Set current context
+  setCurrentContext(context: CorrelationContext): void {
+    globalCorrelationContext = context
+    this.contextMap.set(context.correlationId, context)
+  }
+
+  // Clear current context
+  clearCurrentContext(): void {
+    globalCorrelationContext = null
+  }
+
+  // Propagate correlation ID to headers
+  getHeaders(): Record<string, string> {
+    const context = this.getCurrentContext()
+    if (!context) return {}
+
+    return {
+      'X-Correlation-ID': context.correlationId,
+      'X-Request-ID': context.requestId,
+      'X-Span-ID': context.spanId,
+      'X-Trace-ID': context.traceId,
+      'X-Parent-ID': context.parentId || '',
+      'X-User-ID': context.userId || '',
+      'X-Tenant-ID': context.tenantId || '',
+      'X-Session-ID': context.sessionId || '',
+      'X-Timestamp': context.timestamp.toString(),
+      'X-Service': context.metadata.service || 'frontend'
+    }
+  }
+
+  // Extract correlation ID from headers
+  extractFromHeaders(headers: Record<string, string>): CorrelationContext | null {
+    const correlationId = headers['x-correlation-id'] || headers['X-Correlation-ID']
+    if (!correlationId) return null
+
+    // Check if we already have this context
+    const existingContext = this.getContext(correlationId)
+    if (existingContext) {
+      this.setCurrentContext(existingContext)
+      return existingContext
+    }
+
+    // Create new context from headers, preserving the incoming correlation ID
+    const newContext: CorrelationContext = {
+      correlationId: correlationId, // Use the incoming correlation ID exactly
+      requestId: headers['x-request-id'] || headers['X-Request-ID'] || uuidv4(),
+      parentId: headers['x-parent-id'] || headers['X-Parent-ID'] || undefined,
+      spanId: headers['x-span-id'] || headers['X-Span-ID'] || uuidv4(),
+      traceId: headers['x-trace-id'] || headers['X-Trace-ID'] || correlationId,
+      userId: headers['x-user-id'] || headers['X-User-ID'] || undefined,
+      tenantId: headers['x-tenant-id'] || headers['X-Tenant-ID'] || undefined,
+      sessionId: headers['x-session-id'] || headers['X-Session-ID'] || undefined,
+      timestamp: parseInt(headers['x-timestamp'] || headers['X-Timestamp'] || Date.now().toString()),
+      metadata: {
+        service: headers['x-service'] || headers['X-Service'] || 'unknown',
+        version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+      }
+    }
+
+    // Store and set as current context
+    this.contextMap.set(correlationId, newContext)
+    this.setCurrentContext(newContext)
     
-    return createCorrelationContext(this.currentContext, {
-      ...metadata,
-      parent_correlation_id: this.currentContext.id,
-    })
+    return newContext
   }
 
-  // Update the current context with additional metadata
-  updateContext(metadata: Record<string, any>): void {
-    if (this.currentContext) {
-      this.currentContext.metadata = {
-        ...this.currentContext.metadata,
+  // Create child span
+  createChildSpan(metadata: Record<string, any> = {}): CorrelationContext {
+    const parentContext = this.getCurrentContext()
+    if (!parentContext) {
+      return this.generateContext(undefined, undefined, undefined, undefined, metadata)
+    }
+
+    const childContext: CorrelationContext = {
+      ...parentContext,
+      requestId: uuidv4(),
+      spanId: uuidv4(),
+      parentId: parentContext.spanId,
+      timestamp: Date.now(),
+      metadata: {
+        ...parentContext.metadata,
         ...metadata,
-        updated_at: new Date().toISOString(),
+        parentSpanId: parentContext.spanId
       }
-      this.notifyListeners()
+    }
+
+    this.contextMap.set(childContext.correlationId, childContext)
+    return childContext
+  }
+
+  // Log correlation context
+  logContext(context: CorrelationContext, level: 'info' | 'warn' | 'error' = 'info'): void {
+    const logData = {
+      level,
+      correlationId: context.correlationId,
+      requestId: context.requestId,
+      spanId: context.spanId,
+      traceId: context.traceId,
+      parentId: context.parentId,
+      userId: context.userId,
+      tenantId: context.tenantId,
+      sessionId: context.sessionId,
+      timestamp: context.timestamp,
+      metadata: context.metadata
+    }
+
+    switch (level) {
+      case 'error':
+        console.error('🔗 Correlation Context:', logData)
+        break
+      case 'warn':
+        console.warn('🔗 Correlation Context:', logData)
+        break
+      default:
+        console.log('🔗 Correlation Context:', logData)
     }
   }
 
-  // Clear the current context
-  clearContext(): void {
-    this.currentContext = null
-    this.notifyListeners()
+  // Get all contexts for a trace
+  getTraceContexts(traceId: string): CorrelationContext[] {
+    return Array.from(this.contextMap.values()).filter(context => context.traceId === traceId)
   }
 
-  // Subscribe to context changes
-  subscribe(listener: (context: CorrelationContext | null) => void): () => void {
-    this.listeners.add(listener)
-    return () => {
-      this.listeners.delete(listener)
-    }
-  }
-
-  // Notify all listeners of context changes
-  private notifyListeners(): void {
-    this.listeners.forEach(listener => {
-      try {
-        listener(this.currentContext)
-      } catch (error) {
-        console.error('Error in correlation context listener:', error)
+  // Clean up old contexts (older than 1 hour)
+  cleanup(): void {
+    const oneHourAgo = Date.now() - (60 * 60 * 1000)
+    for (const [correlationId, context] of this.contextMap.entries()) {
+      if (context.timestamp < oneHourAgo) {
+        this.contextMap.delete(correlationId)
       }
-    })
+    }
   }
 }
 
 // Export singleton instance
-export const correlationManager = new CorrelationContextManager()
+export const correlationIDManager = CorrelationIDManager.getInstance()
 
-// Utility function to log with correlation context
-export function logWithCorrelation(
-  level: 'info' | 'warn' | 'error' | 'debug',
-  message: string,
-  data?: any
-): void {
-  const context = correlationManager.getContext()
-  const logData = {
-    message,
-    data,
-    correlation_id: context?.id,
-    trace_id: context?.traceId,
-    span_id: context?.spanId,
-    timestamp: new Date().toISOString(),
-  }
-
-  switch (level) {
-    case 'info':
-      console.info('📊', logData)
-      break
-    case 'warn':
-      console.warn('⚠️', logData)
-      break
-    case 'error':
-      console.error('❌', logData)
-      break
-    case 'debug':
-      console.debug('🔍', logData)
-      break
-  }
-}
-
-// Utility function to create a correlation-aware fetch wrapper
-export function createCorrelationAwareFetch(): typeof fetch {
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const context = correlationManager.getContext()
-    
-    if (context) {
-      const options = createFetchOptionsWithCorrelation(context.id, init)
-      
-      // Log the request
-      logWithCorrelation('info', 'API Request', {
-        url: typeof input === 'string' ? input : input.toString(),
-        method: options.method || 'GET',
-        correlation_id: context.id,
-      })
-      
-      try {
-        const response = await fetch(input, options)
-        
-        // Log the response
-        logWithCorrelation('info', 'API Response', {
-          url: typeof input === 'string' ? input : input.toString(),
-          status: response.status,
-          statusText: response.statusText,
-          correlation_id: context.id,
-        })
-        
-        return response
-      } catch (error) {
-        // Log the error
-        logWithCorrelation('error', 'API Request Failed', {
-          url: typeof input === 'string' ? input : input.toString(),
-          error: error instanceof Error ? error.message : String(error),
-          correlation_id: context.id,
-        })
-        
-        throw error
-      }
-    }
-    
-    // Fallback to regular fetch if no correlation context
-    return fetch(input, init)
-  }
-}
-
-// Export the correlation-aware fetch function
-export const correlationAwareFetch = createCorrelationAwareFetch()
-
-// Utility function to wrap async operations with correlation context
-export function withCorrelationContext<T>(
-  operation: () => Promise<T>,
-  metadata: Record<string, any> = {}
-): Promise<T> {
-  const childContext = correlationManager.createChildContext(metadata)
-  correlationManager.setContext(childContext)
+// React hook for correlation ID
+export function useCorrelationID() {
+  const context = correlationIDManager.getCurrentContext()
   
-  return operation().finally(() => {
-    // Restore parent context if it exists
-    if (childContext.parentId) {
-      const parentContext = correlationManager.getContext()
-      if (parentContext && parentContext.id === childContext.parentId) {
-        correlationManager.setContext(parentContext)
-      }
-    }
-  })
+  const generateNew = (
+    parentId?: string,
+    userId?: string,
+    tenantId?: string,
+    sessionId?: string,
+    metadata?: Record<string, any>
+  ) => {
+    return correlationIDManager.generateContext(parentId, userId, tenantId, sessionId, metadata)
+  }
+
+  const getHeaders = () => correlationIDManager.getHeaders()
+  const logContext = (level: 'info' | 'warn' | 'error' = 'info') => {
+    if (context) correlationIDManager.logContext(context, level)
+  }
+
+  return {
+    context,
+    generateNew,
+    getHeaders,
+    logContext,
+    correlationId: context?.correlationId,
+    requestId: context?.requestId,
+    spanId: context?.spanId,
+    traceId: context?.traceId
+  }
 }
 
-// Export types for external use
-export type { CorrelationContext }
+// Utility function to add correlation headers to fetch requests
+export function fetchWithCorrelation(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const headers = correlationIDManager.getHeaders()
+  
+  const enhancedOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...headers,
+      ...options.headers
+    }
+  }
+
+  return fetch(url, enhancedOptions)
+}
+
+// Utility function to add correlation headers to axios requests
+export function getCorrelationHeaders(): Record<string, string> {
+  return correlationIDManager.getHeaders()
+}
+
+// Auto-cleanup every hour
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    correlationIDManager.cleanup()
+  }, 60 * 60 * 1000) // 1 hour
+}

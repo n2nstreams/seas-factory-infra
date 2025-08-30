@@ -1,6 +1,6 @@
-// Simple Health Monitoring System
-// This version provides basic health checks without external dependencies
+import { correlationIDManager, getCorrelationHeaders } from './correlation-id'
 
+// Health check configuration interface
 export interface HealthCheckConfig {
   name: string
   endpoint: string
@@ -8,42 +8,56 @@ export interface HealthCheckConfig {
   expectedStatus?: number
   critical: boolean
   retries: number
+  headers?: Record<string, string>
+  method?: 'GET' | 'HEAD' // Added method for backend checks
 }
 
+// Health check result interface
 export interface HealthCheckResult {
-  status: 'pass' | 'fail' | 'warn'
-  responseTime?: number
+  status: 'pass' | 'warn' | 'fail'
+  responseTime: number
   error?: string
   details?: any
+  timestamp: string
+  correlationId?: string
 }
 
+// Health index metrics interface
 export interface HealthIndexMetrics {
-  timestamp: string
+  overallScore: number
   errorRate: number
   responseTime: number
   uptime: number
-  jobFailures: number
-  authFailures: number
-  webhookFailures: number
-  overallScore: number
+  lastCheck: string
 }
 
+// Health summary interface
 export interface HealthSummary {
+  overallHealth: number
   totalChecks: number
   passedChecks: number
   failedChecks: number
   warningChecks: number
-  overallHealth: number
+  averageResponseTime: number
 }
 
+// Health result interface
 export interface HealthResult {
   status: 'healthy' | 'degraded' | 'unhealthy'
   timestamp: string
-  checks: { [key: string]: HealthCheckResult }
+  checks: Record<string, HealthCheckResult>
   summary: HealthSummary
+  metadata: {
+    service: string
+    region: string
+    instance: string
+    build: string
+    commit: string
+    correlationId?: string
+  }
 }
 
-// Default health check configuration
+// Default health check configurations
 const DEFAULT_HEALTH_CHECKS: HealthCheckConfig[] = [
   {
     name: 'system',
@@ -52,6 +66,8 @@ const DEFAULT_HEALTH_CHECKS: HealthCheckConfig[] = [
     critical: false,
     retries: 2,
   },
+  // Remove frontend self-check to avoid circular dependency
+  // The frontend health is determined by the overall API response
   {
     name: 'backend-api',
     endpoint: process.env.NEXT_PUBLIC_HEALTH_API_URL || 'http://localhost:8000/health',
@@ -59,229 +75,287 @@ const DEFAULT_HEALTH_CHECKS: HealthCheckConfig[] = [
     expectedStatus: 200,
     critical: true,
     retries: 3,
+    method: 'GET', // Use GET instead of HEAD for backend
   },
 ]
 
-class SimpleHealthMonitoringService {
+// Health monitoring service
+class HealthMonitoringService {
   private healthHistory: HealthResult[] = []
   private metricsHistory: HealthIndexMetrics[] = []
+  private isMonitoring: boolean = false
+  private monitoringInterval: NodeJS.Timeout | null = null
+
+  // Run a single health check
+  async runHealthCheck(config: HealthCheckConfig): Promise<HealthCheckResult> {
+    const startTime = Date.now()
+    const correlationId = correlationIDManager.getCurrentContext()?.correlationId
+
+    try {
+      let result: HealthCheckResult
+
+      if (config.endpoint === 'internal') {
+        // Internal system check
+        result = await this.runInternalHealthCheck(config)
+      } else {
+        // External endpoint check
+        result = await this.runExternalHealthCheck(config)
+      }
+
+      // Add correlation ID to result
+      if (correlationId) {
+        result.correlationId = correlationId
+      }
+
+      return result
+    } catch (error) {
+      const responseTime = Date.now() - startTime
+      return {
+        status: 'fail',
+        responseTime,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+        correlationId
+      }
+    }
+  }
+
+  // Run internal health check
+  private async runInternalHealthCheck(config: HealthCheckConfig): Promise<HealthCheckResult> {
+    const startTime = Date.now()
+    
+    try {
+      // Check system resources
+      const systemInfo = await this.getSystemInfo()
+      
+      const responseTime = Date.now() - startTime
+      
+      return {
+        status: 'pass',
+        responseTime,
+        details: systemInfo,
+        timestamp: new Date().toISOString()
+      }
+    } catch (error) {
+      const responseTime = Date.now() - startTime
+      return {
+        status: 'fail',
+        responseTime,
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      }
+    }
+  }
+
+  // Run external health check
+  private async runExternalHealthCheck(config: HealthCheckConfig): Promise<HealthCheckResult> {
+    const startTime = Date.now()
+    let lastError: Error | null = null
+
+    // Try with retries
+    for (let attempt = 1; attempt <= config.retries; attempt++) {
+      try {
+        const headers = {
+          ...getCorrelationHeaders(),
+          ...config.headers,
+          'User-Agent': 'Health-Monitor/1.0'
+        }
+
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), config.timeout)
+
+        const response = await fetch(config.endpoint, {
+          method: config.method || 'HEAD', // Use method from config or default to HEAD
+          headers,
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
+        const responseTime = Date.now() - startTime
+
+        if (config.expectedStatus && response.status !== config.expectedStatus) {
+          throw new Error(`Expected status ${config.expectedStatus}, got ${response.status}`)
+        }
+
+        return {
+          status: response.status < 400 ? 'pass' : response.status < 500 ? 'warn' : 'fail',
+          responseTime,
+          details: {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries())
+          },
+          timestamp: new Date().toISOString()
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        
+        // If this is the last attempt, throw the error
+        if (attempt === config.retries) {
+          break
+        }
+
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 100))
+      }
+    }
+
+    const responseTime = Date.now() - startTime
+    throw lastError || new Error('Health check failed after all retries')
+  }
+
+  // Get system information
+  private async getSystemInfo(): Promise<any> {
+    if (typeof window === 'undefined') {
+      // Server-side
+      return {
+        platform: 'server',
+        timestamp: new Date().toISOString()
+      }
+    }
+
+    // Client-side
+    return {
+      platform: 'browser',
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      cookieEnabled: navigator.cookieEnabled,
+      onLine: navigator.onLine,
+      timestamp: new Date().toISOString()
+    }
+  }
 
   // Run comprehensive health check
-  async runHealthCheck(): Promise<HealthResult> {
+  async runComprehensiveHealthCheck(): Promise<HealthResult> {
     const startTime = Date.now()
-    const checks: { [key: string]: HealthCheckResult } = {}
-    let totalChecks = 0
-    let passedChecks = 0
-    let failedChecks = 0
-    let warningChecks = 0
+    const correlationId = correlationIDManager.getCurrentContext()?.correlationId
 
-    // Run all health checks in parallel
-    const checkPromises = DEFAULT_HEALTH_CHECKS.map(async (config) => {
-      const checkStartTime = Date.now()
-      let retryCount = 0
-      let lastError: string | undefined
-
-      while (retryCount < config.retries) {
-        try {
-          const result = await this.performHealthCheck(config)
-          const responseTime = Date.now() - checkStartTime
-          
-          checks[config.name] = {
-            ...result,
-            responseTime,
-          }
-
-          if (result.status === 'pass') {
-            passedChecks++
-          } else if (result.status === 'warn') {
-            warningChecks++
-          } else {
-            failedChecks++
-          }
-
-          break // Success, no need to retry
-        } catch (error) {
-          lastError = error instanceof Error ? error.message : String(error)
-          retryCount++
-          
-          if (retryCount >= config.retries) {
-            checks[config.name] = {
-              status: 'fail',
-              error: lastError,
-            }
-            failedChecks++
-          } else {
-            // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount))
-          }
-        }
-      }
-    })
-
-    await Promise.all(checkPromises)
-
-    totalChecks = Object.keys(checks).length
-    const overallHealth = totalChecks > 0 ? (passedChecks / totalChecks) * 100 : 0
-
-    const healthResult: HealthResult = {
-      status: this.determineOverallStatus(overallHealth, failedChecks),
-      timestamp: new Date().toISOString(),
-      checks,
-      summary: {
-        totalChecks,
-        passedChecks,
-        failedChecks,
-        warningChecks,
-        overallHealth: Math.round(overallHealth),
-      },
-    }
-
-    // Store in history
-    this.healthHistory.push(healthResult)
-    if (this.healthHistory.length > 100) {
-      this.healthHistory = this.healthHistory.slice(-100)
-    }
-
-    // Calculate and store health index metrics
-    await this.calculateHealthIndexMetrics(healthResult)
-
-    console.log('Health check completed:', healthResult.summary)
-    return healthResult
-  }
-
-  // Perform individual health check
-  private async performHealthCheck(config: HealthCheckConfig): Promise<HealthCheckResult> {
-    if (config.endpoint === 'internal') {
-      return this.performInternalHealthCheck(config)
-    }
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), config.timeout)
+    // Generate correlation context for this health check
+    const healthCheckContext = correlationIDManager.generateContext(
+      correlationId,
+      undefined,
+      undefined,
+      undefined,
+      { operation: 'health_check', type: 'comprehensive' }
+    )
 
     try {
-      const response = await fetch(config.endpoint, {
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const checkResults: Record<string, HealthCheckResult> = {}
+      const checkPromises = DEFAULT_HEALTH_CHECKS.map(async (config) => {
+        const result = await this.runHealthCheck(config)
+        checkResults[config.name] = result
+        return result
       })
 
-      clearTimeout(timeoutId)
+      await Promise.allSettled(checkPromises)
 
-      if (response.ok) {
-        const data = await response.json()
-        return {
-          status: 'pass',
-          details: data,
-        }
-      } else if (response.status >= 500) {
-        return {
-          status: 'fail',
-          details: { status: response.status, statusText: response.statusText },
-        }
-      } else {
-        return {
-          status: 'warn',
-          details: { status: response.status, statusText: response.statusText },
-        }
-      }
-    } catch (error) {
-      clearTimeout(timeoutId)
+      // Calculate summary
+      const summary = this.calculateHealthSummary(checkResults)
       
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Health check timeout after ${config.timeout}ms`)
+      // Determine overall status
+      let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy'
+      if (summary.failedChecks > 0) {
+        status = 'unhealthy'
+      } else if (summary.warningChecks > 0 || summary.overallHealth < 90) {
+        status = 'degraded'
       }
-      
-      throw error
-    }
-  }
 
-  // Perform internal health checks
-  private async performInternalHealthCheck(config: HealthCheckConfig): Promise<HealthCheckResult> {
-    try {
-      switch (config.name) {
-        case 'system':
-          // Basic system health check that doesn't require external services
-          return {
-            status: 'pass',
-            details: { 
-              uptime: process.uptime(),
-              memory: process.memoryUsage(),
-              nodeVersion: process.version,
-              platform: process.platform,
-              timestamp: new Date().toISOString()
-            },
-          }
-
-        default:
-          return {
-            status: 'warn',
-            details: { error: 'Unknown internal health check' },
-          }
+      const result: HealthResult = {
+        status,
+        timestamp: new Date().toISOString(),
+        checks: checkResults,
+        summary,
+        metadata: {
+          service: 'AI SaaS Factory - Next.js Frontend',
+          region: 'local',
+          instance: 'localhost',
+          build: 'local',
+          commit: 'local',
+          correlationId: healthCheckContext.correlationId
+        }
       }
+
+      // Add to history
+      this.healthHistory.push(result)
+      if (this.healthHistory.length > 100) {
+        this.healthHistory = this.healthHistory.slice(-100)
+      }
+
+      // Update metrics
+      this.updateMetrics(result)
+
+      // Log correlation context
+      correlationIDManager.logContext(healthCheckContext, 'info')
+
+      return result
     } catch (error) {
-      return {
-        status: 'warn',
-        details: { 
-          error: error instanceof Error ? error.message : String(error),
-          message: 'Internal health check failed'
+      const responseTime = Date.now() - startTime
+      
+      // Create error result
+      const errorResult: HealthResult = {
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        checks: {},
+        summary: {
+          overallHealth: 0,
+          totalChecks: 0,
+          passedChecks: 0,
+          failedChecks: 1,
+          warningChecks: 0,
+          averageResponseTime: responseTime
         },
+        metadata: {
+          service: 'AI SaaS Factory - Next.js Frontend',
+          region: 'local',
+          instance: 'localhost',
+          build: 'local',
+          commit: 'local',
+          correlationId: healthCheckContext.correlationId
+        }
       }
+
+      // Log error with correlation context
+      correlationIDManager.logContext(healthCheckContext, 'error')
+      
+      return errorResult
+    } finally {
+      // Clear the health check context
+      correlationIDManager.clearCurrentContext()
     }
   }
 
-  // Determine overall health status
-  private determineOverallStatus(overallHealth: number, failedChecks: number): 'healthy' | 'degraded' | 'unhealthy' {
-    if (overallHealth >= 90 && failedChecks === 0) {
-      return 'healthy'
-    } else if (overallHealth >= 70 && failedChecks <= 1) {
-      return 'degraded'
-    } else {
-      return 'unhealthy'
-    }
-  }
+  // Calculate health summary
+  private calculateHealthSummary(checks: Record<string, HealthCheckResult>): HealthSummary {
+    const checkArray = Object.values(checks)
+    const totalChecks = checkArray.length
+    const passedChecks = checkArray.filter(c => c.status === 'pass').length
+    const failedChecks = checkArray.filter(c => c.status === 'fail').length
+    const warningChecks = checkArray.filter(c => c.status === 'warn').length
 
-  // Calculate health index metrics
-  private async calculateHealthIndexMetrics(healthResult: HealthResult): Promise<void> {
-    const now = new Date()
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
-    
-    // Get recent health checks for metrics calculation
-    const recentChecks = this.healthHistory.filter(
-      check => new Date(check.timestamp) >= oneHourAgo
-    )
-
-    if (recentChecks.length === 0) return
-
-    // Calculate error rate
-    const totalChecks = recentChecks.reduce((sum, check) => sum + check.summary.totalChecks, 0)
-    const totalFailures = recentChecks.reduce((sum, check) => sum + check.summary.failedChecks, 0)
-    const errorRate = totalChecks > 0 ? totalFailures / totalChecks : 0
-
-    // Calculate average response time
-    const responseTimes = recentChecks.flatMap(check => 
-      Object.values(check.checks)
-        .map(c => c.responseTime)
-        .filter((rt): rt is number => rt !== undefined)
-    )
-    const avgResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((sum, rt) => sum + rt, 0) / responseTimes.length 
+    const overallHealth = totalChecks > 0 ? (passedChecks / totalChecks) * 100 : 0
+    const averageResponseTime = checkArray.length > 0 
+      ? checkArray.reduce((sum, c) => sum + c.responseTime, 0) / checkArray.length 
       : 0
 
-    // Calculate uptime (simplified - just check if we have recent health checks)
-    const uptime = recentChecks.length > 0 ? 1.0 : 0.0
+    return {
+      overallHealth: Math.round(overallHealth),
+      totalChecks,
+      passedChecks,
+      failedChecks,
+      warningChecks,
+      averageResponseTime: Math.round(averageResponseTime)
+    }
+  }
 
-    // Create metrics entry
+  // Update metrics history
+  private updateMetrics(healthResult: HealthResult): void {
     const metrics: HealthIndexMetrics = {
-      timestamp: now.toISOString(),
-      errorRate: errorRate * 100, // Convert to percentage
-      responseTime: avgResponseTime,
-      uptime: uptime * 100, // Convert to percentage
-      jobFailures: 0, // Placeholder
-      authFailures: 0, // Placeholder
-      webhookFailures: 0, // Placeholder
       overallScore: healthResult.summary.overallHealth,
+      errorRate: healthResult.summary.failedChecks / healthResult.summary.totalChecks,
+      responseTime: healthResult.summary.averageResponseTime,
+      uptime: healthResult.status === 'healthy' ? 100 : healthResult.status === 'degraded' ? 75 : 0,
+      lastCheck: healthResult.timestamp
     }
 
     this.metricsHistory.push(metrics)
@@ -300,19 +374,59 @@ class SimpleHealthMonitoringService {
     return [...this.metricsHistory]
   }
 
-  // Start monitoring (placeholder for future implementation)
-  async startMonitoring(intervalMs: number = 30000): Promise<void> {
-    console.log(`Health monitoring started with ${intervalMs}ms interval`)
+  // Start monitoring
+  startMonitoring(intervalMs: number = 30000): void {
+    if (this.isMonitoring) return
+
+    this.isMonitoring = true
+    this.monitoringInterval = setInterval(async () => {
+      try {
+        await this.runComprehensiveHealthCheck()
+      } catch (error) {
+        console.error('Health monitoring error:', error)
+      }
+    }, intervalMs)
+
+    console.log('Health monitoring started with interval:', intervalMs, 'ms')
   }
 
-  // Stop monitoring (placeholder for future implementation)
+  // Stop monitoring
   stopMonitoring(): void {
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval)
+      this.monitoringInterval = null
+    }
+    this.isMonitoring = false
     console.log('Health monitoring stopped')
+  }
+
+  // Get current health
+  getCurrentHealth(): HealthResult | null {
+    return this.healthHistory.length > 0 ? this.healthHistory[this.healthHistory.length - 1] : null
+  }
+
+  // Check if monitoring is active
+  isMonitoringActive(): boolean {
+    return this.isMonitoring
+  }
+
+  // Get monitoring status
+  getMonitoringStatus(): { isActive: boolean; interval: number | null } {
+    return {
+      isActive: this.isMonitoring,
+      interval: this.monitoringInterval ? 30000 : null
+    }
   }
 }
 
 // Export singleton instance
-export const healthMonitoring = new SimpleHealthMonitoringService()
+export const healthMonitoring = new HealthMonitoringService()
 
-// Export types for external use
-export type { HealthCheckConfig, HealthCheckResult, HealthIndexMetrics, HealthSummary, HealthResult }
+// Export types
+export type {
+  HealthCheckConfig,
+  HealthCheckResult,
+  HealthIndexMetrics,
+  HealthSummary,
+  HealthResult
+}
