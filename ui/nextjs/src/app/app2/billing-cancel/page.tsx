@@ -1,15 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { XCircle, ArrowLeft, ArrowRight, Heart, Shield, Zap } from 'lucide-react';
 
 export default function BillingCancel() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleBackToPricing = () => {
-    navigate('/pricing');
+    router.push('/pricing');
   };
 
   const handleContactSupport = () => {
@@ -17,7 +17,7 @@ export default function BillingCancel() {
   };
 
   const handleTryAgain = () => {
-    navigate('/pricing');
+    router.push('/pricing');
   };
 
   return (
@@ -91,7 +91,7 @@ export default function BillingCancel() {
                   <Button 
                     variant="outline" 
                     className="btn-secondary"
-                    onClick={() => navigate('/signup')}
+                    onClick={() => router.push('/signup')}
                   >
                     Get Started Free
                   </Button>

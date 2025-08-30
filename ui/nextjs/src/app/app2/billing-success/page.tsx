@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ArrowRight, Zap, Users, HardDrive, Brain, Rocket } from 'lucide-react';
-import { billingService, PricingTier } from '../lib/billing';
+import { billingService, PricingTier } from '../../../../lib/billing';
 
 export default function BillingSuccess() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<any>(null);
@@ -55,12 +55,12 @@ export default function BillingSuccess() {
   };
 
   const handleGetStarted = () => {
-    navigate('/dashboard');
+    router.push('/dashboard');
   };
 
   const handleViewBilling = () => {
     // Navigate to billing management
-    navigate('/dashboard?tab=billing');
+    router.push('/dashboard?tab=billing');
   };
 
   if (loading) {
@@ -91,7 +91,7 @@ export default function BillingSuccess() {
             <CardDescription>Unable to load subscription details</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
+            <Button onClick={() => router.push('/dashboard')} className="w-full">
               Go to Dashboard
             </Button>
           </CardContent>

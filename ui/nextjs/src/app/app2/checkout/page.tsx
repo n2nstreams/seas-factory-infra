@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, ArrowLeft, CreditCard, Shield, Zap, Users, HardDrive, Brain } from 'lucide-react';
-import { billingService, PricingTier } from '../lib/billing';
+import { billingService, PricingTier } from '../../../../lib/billing';
 
 export default function Checkout() {
   const navigate = useNavigate();

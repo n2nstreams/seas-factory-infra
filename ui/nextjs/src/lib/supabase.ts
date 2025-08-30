@@ -17,18 +17,35 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Helper function to get user session
 export const getSupabaseSession = async () => {
-  const { data: { session }, error } = await supabase.auth.getSession()
-  if (error) {
+  try {
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Session check timeout')), 5000)
+    )
+    
+    const sessionPromise = supabase.auth.getSession()
+    const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any
+    
+    if (error) {
+      console.error('Error getting Supabase session:', error)
+      return null
+    }
+    return session
+  } catch (error) {
     console.error('Error getting Supabase session:', error)
     return null
   }
-  return session
 }
 
 // Helper function to sign out
 export const signOutSupabase = async () => {
-  const { error } = await supabase.auth.signOut()
-  if (error) {
+  try {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('Error signing out from Supabase:', error)
+      throw error
+    }
+  } catch (error) {
     console.error('Error signing out from Supabase:', error)
     throw error
   }
@@ -36,10 +53,22 @@ export const signOutSupabase = async () => {
 
 // Helper function to get user
 export const getSupabaseUser = async () => {
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error) {
+  try {
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('User check timeout')), 5000)
+    )
+    
+    const userPromise = supabase.auth.getUser()
+    const { data: { user }, error } = await Promise.race([userPromise, timeoutPromise]) as any
+    
+    if (error) {
+      console.error('Error getting Supabase user:', error)
+      return null
+    }
+    return user
+  } catch (error) {
     console.error('Error getting Supabase user:', error)
     return null
   }
-  return user
 }

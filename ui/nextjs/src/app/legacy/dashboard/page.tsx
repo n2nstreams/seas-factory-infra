@@ -8,7 +8,7 @@ import FactoryProgressMonitor from "@/components/FactoryProgressMonitor";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { onboardingUtils } from "@/lib/userPreferences";
 import { apiClient } from '@/lib/api';
-import { useAuth } from '@/App';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { 
   Code2, 
   Settings, 

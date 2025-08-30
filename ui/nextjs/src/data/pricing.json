@@ -1,0 +1,97 @@
+{
+  "currency": "USD",
+  "annualDiscount": 0.167,
+  "overage": { "blockHours": 20, "blockPrice": 5 },
+  "tiers": [
+    {
+      "id": "FREE",
+      "name": "Free",
+      "monthly": 0,
+      "yearly": 0,
+      "limits": {
+        "projects": 1,
+        "buildHours": 5,
+        "storageGB": 1,
+        "embeddingsMB": 100
+      },
+      "features": [
+        "Idea → plan",
+        "1 demo deploy",
+        "Shared DB (RLS)",
+        "Community support",
+        "7-day retention"
+      ],
+      "description": "Perfect for testing your first idea",
+      "ctaText": "Get Started Free",
+      "ctaVariant": "outline"
+    },
+    {
+      "id": "STARTER",
+      "name": "Starter",
+      "monthly": 30,
+      "yearly": 300,
+      "limits": {
+        "projects": 1,
+        "buildHours": 40,
+        "storageGB": 10
+      },
+      "features": [
+        "Core AI agents",
+        "Stripe integration",
+        "Email support (48h)",
+        "Custom domain",
+        "Basic analytics",
+        "1 demo deploy"
+      ],
+      "description": "Perfect for solo entrepreneurs launching their first SaaS",
+      "ctaText": "Start Building",
+      "ctaVariant": "default"
+    },
+    {
+      "id": "PRO", 
+      "name": "Pro",
+      "monthly": 60,
+      "yearly": 600,
+      "limits": {
+        "projects": 3,
+        "buildHours": 150,
+        "storageGB": 50
+      },
+      "features": [
+        "Advanced AI agents",
+        "Autoscale & monitoring",
+        "Email support (24h)",
+        "A/B testing tools",
+        "Custom integrations",
+        "Advanced analytics",
+        "Priority support"
+      ],
+      "description": "For entrepreneurs building multiple SaaS products",
+      "ctaText": "Scale Up",
+      "ctaVariant": "default"
+    },
+    {
+      "id": "SCALE",
+      "name": "Scale", 
+      "monthly": 120,
+      "yearly": 1200,
+      "limits": {
+        "projects": 8,
+        "buildHours": 500,
+        "storageGB": 200
+      },
+      "features": [
+        "Growth & optimization agents",
+        "Isolated database options",
+        "Slack support (12h)",
+        "White-label capabilities",
+        "Multi-tenant architecture",
+        "Custom AI training",
+        "Dedicated account manager"
+      ],
+      "description": "For teams building enterprise-grade SaaS at scale",
+      "ctaText": "Go Enterprise",
+      "ctaVariant": "outline"
+    }
+  ]
+} 

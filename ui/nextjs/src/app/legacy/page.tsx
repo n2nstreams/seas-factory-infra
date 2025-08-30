@@ -6,11 +6,11 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Check, Code2, Shield, TrendingUp, Star, ArrowRight, Sparkles, Layers, Cpu, Wrench, Clock, Zap, Lightbulb, Rocket, Users, BarChart3, Search } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import pricingData from '../data/pricing.json';
 
 export default function Home() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [currentView, setCurrentView] = useState(0); // 0 = assembly line, 1 = dashboard
   const [assemblyStage, setAssemblyStage] = useState(0); // 0 = idea, 1 = design, 2 = code, 3 = dashboard
   const [email, setEmail] = useState("");
@@ -49,7 +49,7 @@ export default function Home() {
 
   const handleIdeaSubmit = () => {
     if (ideaInput.trim()) {
-      navigate('/submit-idea', { state: { idea: ideaInput } });
+      router.push('/app2/submit-idea');
     }
   };
 

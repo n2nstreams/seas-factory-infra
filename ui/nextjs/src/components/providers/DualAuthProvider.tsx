@@ -88,7 +88,7 @@ export const DualAuthProvider: React.FC<DualAuthProviderProps> = ({ children }) 
     const timeoutId = setTimeout(() => {
       console.warn('DualAuth loading timeout reached, forcing loading state to false')
       setLoading(false)
-    }, 3000) // 3 second timeout
+    }, 1000) // 1 second timeout
 
     initializeAuth()
 

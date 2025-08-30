@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
-import { Badge } from '../components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../components/ui/accordion';
+import { Badge } from '../../components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 
 interface FAQItem {
   question: string;
@@ -69,7 +69,7 @@ const defaultFAQs: FAQItem[] = [
   },
   {
     question: "How much does it cost to build a SaaS application?",
-            answer: "We offer different pricing tiers starting with a Free plan, then $30/month for the Starter plan. The cost depends on complexity, features, and ongoing support requirements. Check our pricing page for detailed information on each tier.",
+    answer: "We offer different pricing tiers starting with a Free plan, then $30/month for the Starter plan. The cost depends on complexity, features, and ongoing support requirements. Check our pricing page for detailed information on each tier.",
     category: "Getting Started",
     source: "fallback"
   },
@@ -309,7 +309,7 @@ export default function FAQPage() {
       <footer className="border-t border-stone-200/50 bg-stone-50/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-stone-600">
-                            <p>&copy; 2025 Forge95. Built with intelligent automation.</p>
+            <p>&copy; 2025 Forge95. Built with intelligent automation.</p>
             {stats && (
               <p className="text-xs mt-2">
                 FAQ powered by {Object.keys(stats.sources).join(", ")} • 

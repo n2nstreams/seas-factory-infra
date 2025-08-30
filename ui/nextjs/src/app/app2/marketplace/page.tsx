@@ -20,7 +20,7 @@ import {
   X
 } from 'lucide-react';
 import { marketplaceApi, tenantUtils } from '@/lib/api';
-import sampleProducts from '../data/sample_marketplace_products.json';
+import sampleProducts from '../../../data/sample_marketplace_products.json';
 
 interface SaaSProduct {
   id: string;
