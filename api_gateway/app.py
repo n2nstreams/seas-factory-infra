@@ -23,6 +23,11 @@ from marketplace_routes import router as marketplace_router
 from oauth_routes import router as oauth_router
 from websocket_manager import get_websocket_manager
 
+# Import new controllers for final migration validation
+from rollback_controller import router as rollback_router
+from monitoring_controller import router as monitoring_router
+from notification_controller import router as notification_router
+
 # Import security middleware
 from security_middleware import create_security_middleware
 
@@ -73,6 +78,11 @@ app.include_router(ideas_router)
 app.include_router(factory_router)
 app.include_router(marketplace_router)
 app.include_router(oauth_router)
+
+# Add final migration validation controllers
+app.include_router(rollback_router)
+app.include_router(monitoring_router)
+app.include_router(notification_router)
 
 # Health check endpoint
 @app.get("/health")
