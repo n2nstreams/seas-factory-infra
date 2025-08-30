@@ -79,6 +79,57 @@ async def health_check():
         "version": "1.0.0"
     }
 
+# Feature flags monitoring endpoint
+@app.get("/api/feature-flags/status")
+async def get_feature_flags_status(flag: str = None):
+    """Get feature flag status for monitoring"""
+    try:
+        # In a real implementation, this would fetch from a feature flag service
+        # For now, we'll return simulated flag status based on the flag parameter
+        
+        if flag:
+            # Return status for specific flag
+            flag_status = {
+                "flag": flag,
+                "enabled": flag in ["ui_shell_v2", "storage_supabase", "jobs_pg", "observability_v2", "performance_monitoring"],
+                "last_updated": datetime.utcnow().isoformat(),
+                "status": "active"
+            }
+            return flag_status
+        else:
+            # Return status for all flags
+            all_flags = [
+                "ui_shell_v2", "auth_supabase", "db_dual_write", 
+                "db_dual_write_tenants", "db_dual_write_users", 
+                "db_dual_write_projects", "db_dual_write_ideas",
+                "storage_supabase", "jobs_pg", "billing_v2", 
+                "emails_v2", "observability_v2", "ai_workloads_v2",
+                "hosting_vercel", "security_compliance_v2", 
+                "performance_monitoring", "data_migration_final", 
+                "decommission_legacy"
+            ]
+            
+            flags_status = []
+            for flag_name in all_flags:
+                flags_status.append({
+                    "flag": flag_name,
+                    "enabled": flag_name in ["ui_shell_v2", "storage_supabase", "jobs_pg", "observability_v2", "performance_monitoring"],
+                    "last_updated": datetime.utcnow().isoformat(),
+                    "status": "active"
+                })
+            
+            return {
+                "flags": flags_status,
+                "total": len(flags_status),
+                "enabled": len([f for f in flags_status if f["enabled"]]),
+                "disabled": len([f for f in flags_status if not f["enabled"]]),
+                "last_updated": datetime.utcnow().isoformat()
+            }
+            
+    except Exception as e:
+        logger.error(f"Error getting feature flag status: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 # Root endpoint with API information
 @app.get("/")
 async def root():

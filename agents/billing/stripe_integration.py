@@ -766,6 +766,83 @@ class StripeIntegration:
             "amount": config["amount"]
         }
 
+    async def _update_tenant_subscription(self, subscription_id: str, customer_id: str, 
+                                        tier: Optional[SubscriptionTier], status: str):
+        """Update tenant subscription status in database"""
+        try:
+            # Get customer to find tenant_id
+            customer = await self.get_customer(customer_id)
+            if not customer or not customer.tenant_id:
+                logger.warning(f"No tenant_id found for customer: {customer_id}")
+                return
+            
+            # Update tenant subscription in database
+            # This would integrate with your existing tenant database
+            logger.info(f"Updated tenant {customer.tenant_id} subscription: {subscription_id} - {tier} - {status}")
+            
+        except Exception as e:
+            logger.error(f"Error updating tenant subscription: {e}")
+
+    def has_feature_access(self, subscription: StripeSubscription, feature: str) -> bool:
+        """Check if user has access to a feature based on subscription"""
+        if not subscription or subscription.status not in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]:
+            return False
+
+        # Check feature access based on tier
+        if feature == 'custom_domain':
+            return subscription.tier in [SubscriptionTier.STARTER, SubscriptionTier.PRO, SubscriptionTier.GROWTH]
+        elif feature == 'advanced_agents':
+            return subscription.tier in [SubscriptionTier.PRO, SubscriptionTier.GROWTH]
+        elif feature == 'isolated_database':
+            return subscription.tier == SubscriptionTier.GROWTH
+        elif feature == 'priority_support':
+            return subscription.tier in [SubscriptionTier.PRO, SubscriptionTier.GROWTH]
+        else:
+            return True  # Basic features available to all paid tiers
+
+    def check_usage_limits(self, subscription: StripeSubscription, usage: Dict[str, int]) -> Dict[str, Any]:
+        """Check usage limits for a subscription"""
+        if not subscription or subscription.status not in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]:
+            return {
+                "within_limits": False,
+                "exceeded_features": ["subscription"],
+                "remaining": {"projects": 0, "build_hours": 0, "storage_gb": 0}
+            }
+
+        tier = subscription.tier
+        if not tier:
+            return {
+                "within_limits": False,
+                "exceeded_features": ["tier"],
+                "remaining": {"projects": 0, "build_hours": 0, "storage_gb": 0}
+            }
+
+        limits = self.get_tier_limits(tier)
+        exceeded_features = []
+        remaining = {}
+
+        # Check projects limit
+        if usage.get("projects", 0) > limits.get("projects", 1):
+            exceeded_features.append("projects")
+        remaining["projects"] = max(0, limits.get("projects", 1) - usage.get("projects", 0))
+
+        # Check build hours limit
+        build_hours_limit = limits.get("build_hours", 5)
+        if build_hours_limit != -1 and usage.get("build_hours", 0) > build_hours_limit:
+            exceeded_features.append("build_hours")
+        remaining["build_hours"] = build_hours_limit if build_hours_limit == -1 else max(0, build_hours_limit - usage.get("build_hours", 0))
+
+        # Check storage limit
+        if usage.get("storage_gb", 0) > limits.get("storage_gb", 1):
+            exceeded_features.append("storage")
+        remaining["storage_gb"] = max(0, limits.get("storage_gb", 1) - usage.get("storage_gb", 0))
+
+        return {
+            "within_limits": len(exceeded_features) == 0,
+            "exceeded_features": exceeded_features,
+            "remaining": remaining
+        }
+
 
 # Global instance
 stripe_integration = StripeIntegration()

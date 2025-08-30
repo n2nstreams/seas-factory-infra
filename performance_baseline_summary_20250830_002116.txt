@@ -1,0 +1,30 @@
+PERFORMANCE BASELINE SUMMARY
+==================================================
+Generated: 2025-08-30 00:21:16
+
+DATABASE PERFORMANCE:
+  connection_time_ms: 2.25ms
+  count_query_time_ms: 2.54ms
+  scan_query_time_ms: 2.66ms
+  database_version: PostgreSQL 15.12 (Debian 15.12-1.pgdg120+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+
+QUERY PERFORMANCE:
+  active_users_count: 1.2ms avg
+  tenant_user_distribution: 1.13ms avg
+  recent_ideas: 1.35ms avg
+  user_authentication: 1.13ms avg
+  tenant_settings: Error - invalid input for query argument $1: 1 ('int' object has no attribute 'bytes')
+
+CONNECTION PERFORMANCE:
+  max_concurrent_connections: 10
+  avg_connection_time_ms: 16.7
+  min_connection_time_ms: 15.85
+  max_connection_time_ms: 19.14
+  connection_success_rate: 100.0%
+
+OVERALL METRICS:
+  database_performance_score: 95.5
+  query_performance_score: 94.0
+  connection_performance_score: 100.0
+  overall_performance_score: 96.2
+  performance_grade: A+

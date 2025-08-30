@@ -1,92 +1,222 @@
+#!/usr/bin/env python3
+"""
+Billing Agent - Stripe Integration
+Handles payment processing, subscriptions, and customer portal
+"""
+
 import os
 import logging
-import sys
-from fastapi import FastAPI, Request, HTTPException, Header
+import asyncio
+from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from stripe_integration import get_stripe_integration, SubscriptionTier
-from shared.tenant_db import TenantDatabase
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+import stripe
+from stripe_integration import stripe_integration, SubscriptionTier
 
-# Add shared modules to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from access_control import (
-    get_subscription_status, refresh_subscription_cache, 
-    subscription_verifier, AccessLevel
-)
-
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Billing Agent", version="1.0.0")
+# Initialize FastAPI app
+app = FastAPI(
+    title="Billing Agent",
+    description="Stripe payment processing and subscription management",
+    version="1.0.0"
+)
 
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Configure appropriately for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-tenant_db = TenantDatabase()
-stripe_integration = get_stripe_integration()
-
-class CreateCustomerRequest(BaseModel):
-    email: str
-    name: Optional[str] = None
-    tenant_id: str
-    metadata: Optional[Dict[str, Any]] = None
-
+# Request/Response Models
 class CreateCheckoutSessionRequest(BaseModel):
-    customer_id: str
-    tier: SubscriptionTier
+    tier: str
+    billing_period: str  # "monthly" or "yearly"
     success_url: str
     cancel_url: str
+    customer_id: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
 
-@app.on_event("startup")
-async def startup():
-    await tenant_db.init_pool()
+class CreatePortalSessionRequest(BaseModel):
+    return_url: str
+    customer_id: Optional[str] = None
 
-@app.on_event("shutdown")
-async def shutdown():
-    await tenant_db.close_pool()
+class CustomerResponse(BaseModel):
+    id: str
+    email: str
+    name: Optional[str] = None
+    tenant_id: Optional[str] = None
+    created: str
+    metadata: Dict[str, Any]
 
+class SubscriptionResponse(BaseModel):
+    id: str
+    customer_id: str
+    price_id: str
+    tier: str
+    status: str
+    current_period_start: str
+    current_period_end: str
+    cancel_at_period_end: bool
+    trial_end: Optional[str] = None
+    metadata: Dict[str, Any]
+
+class CheckoutSessionResponse(BaseModel):
+    id: str
+    url: str
+    customer_id: str
+    success_url: str
+    cancel_url: str
+    metadata: Dict[str, Any]
+
+class PortalSessionResponse(BaseModel):
+    id: str
+    url: str
+    customer_id: str
+    return_url: str
+
+# Helper function to get customer ID from request
+async def get_customer_id(request: Request) -> str:
+    """Extract customer ID from request headers or query params"""
+    # In production, this should come from authentication middleware
+    customer_id = request.headers.get("X-Customer-ID")
+    if not customer_id:
+        raise HTTPException(status_code=401, detail="Customer ID required")
+    return customer_id
+
+# Health check endpoint
 @app.get("/health")
-async def health():
-    return {"status": "healthy"}
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "billing-agent"}
 
-@app.post("/create-customer")
-async def create_customer(req: CreateCustomerRequest):
+# Customer management endpoints
+@app.post("/customers", response_model=CustomerResponse)
+async def create_customer(
+    email: str,
+    name: Optional[str] = None,
+    tenant_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+):
+    """Create a new Stripe customer"""
     try:
         customer = await stripe_integration.create_customer(
-            email=req.email,
-            name=req.name,
-            tenant_id=req.tenant_id,
-            metadata=req.metadata
+            email=email,
+            name=name,
+            tenant_id=tenant_id,
+            metadata=metadata
         )
-        return customer.dict()
+        
+        return CustomerResponse(
+            id=customer.id,
+            email=customer.email,
+            name=customer.name,
+            tenant_id=customer.tenant_id,
+            created=customer.created.isoformat(),
+            metadata=customer.metadata
+        )
     except Exception as e:
         logger.error(f"Error creating customer: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/create-checkout-session")
-async def create_checkout_session(req: CreateCheckoutSessionRequest):
+@app.get("/customers/{customer_id}", response_model=CustomerResponse)
+async def get_customer(customer_id: str):
+    """Get customer by ID"""
     try:
+        customer = await stripe_integration.get_customer(customer_id)
+        if not customer:
+            raise HTTPException(status_code=404, detail="Customer not found")
+        
+        return CustomerResponse(
+            id=customer.id,
+            email=customer.email,
+            name=customer.name,
+            tenant_id=customer.tenant_id,
+            created=customer.created.isoformat(),
+            metadata=customer.metadata
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving customer: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Checkout session endpoints
+@app.post("/create-checkout-session", response_model=CheckoutSessionResponse)
+async def create_checkout_session(req: CreateCheckoutSessionRequest):
+    """Create a Stripe checkout session for subscription"""
+    try:
+        # Validate tier
+        try:
+            tier = SubscriptionTier(req.tier)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid tier: {req.tier}")
+        
+        # Validate billing period
+        if req.billing_period not in ["monthly", "yearly"]:
+            raise HTTPException(status_code=400, detail="Billing period must be 'monthly' or 'yearly'")
+        
         session = await stripe_integration.create_checkout_session(
             customer_id=req.customer_id,
-            tier=req.tier,
+            tier=tier,
+            billing_period=req.billing_period,
             success_url=req.success_url,
             cancel_url=req.cancel_url,
             metadata=req.metadata
         )
-        return session.dict()
+        
+        return CheckoutSessionResponse(
+            id=session.id,
+            url=session.url,
+            customer_id=session.customer_id,
+            success_url=session.success_url,
+            cancel_url=session.cancel_url,
+            metadata=session.metadata
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating checkout session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Customer portal endpoints
+@app.post("/create-portal-session", response_model=PortalSessionResponse)
+async def create_portal_session(req: CreatePortalSessionRequest):
+    """Create a customer portal session for managing subscriptions"""
+    try:
+        # Get customer ID from request if not provided
+        customer_id = req.customer_id
+        if not customer_id:
+            # In production, this should come from authentication
+            raise HTTPException(status_code=400, detail="Customer ID required")
+        
+        session = await stripe_integration.create_customer_portal_session(
+            customer_id=customer_id,
+            return_url=req.return_url
+        )
+        
+        return PortalSessionResponse(
+            id=session.id,
+            url=session.url,
+            customer_id=session.customer_id,
+            return_url=session.return_url
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating portal session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Webhook endpoint
 @app.post("/webhook")
 async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
+    """Handle Stripe webhook events"""
     try:
         payload = await request.body()
         result = await stripe_integration.handle_webhook(payload, stripe_signature)
@@ -95,112 +225,217 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
         logger.error(f"Error handling Stripe webhook: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Subscription Verification Endpoints (Night 53)
-
-@app.get("/subscription/status/{tenant_id}")
-async def get_tenant_subscription_status(tenant_id: str):
-    """Get detailed subscription status for a tenant"""
+# Subscription management endpoints
+@app.get("/subscription/status/{customer_id}", response_model=SubscriptionResponse)
+async def get_customer_subscription_status(customer_id: str):
+    """Get detailed subscription status for a customer"""
     try:
-        status = await get_subscription_status(tenant_id)
-        return status
+        subscriptions = await stripe_integration.get_customer_subscriptions(customer_id)
+        
+        if not subscriptions:
+            raise HTTPException(status_code=404, detail="No subscription found for customer")
+        
+        # Return the most recent active subscription
+        active_subscription = None
+        for sub in subscriptions:
+            if sub.status in ["active", "trialing"]:
+                active_subscription = sub
+                break
+        
+        if not active_subscription:
+            # Return the most recent subscription regardless of status
+            active_subscription = subscriptions[0]
+        
+        return SubscriptionResponse(
+            id=active_subscription.id,
+            customer_id=active_subscription.customer_id,
+            price_id=active_subscription.price_id,
+            tier=active_subscription.tier.value,
+            status=active_subscription.status.value,
+            current_period_start=active_subscription.current_period_start.isoformat(),
+            current_period_end=active_subscription.current_period_end.isoformat(),
+            cancel_at_period_end=active_subscription.cancel_at_period_end,
+            trial_end=active_subscription.trial_end.isoformat() if active_subscription.trial_end else None,
+            metadata=active_subscription.metadata
+        )
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error getting subscription status for {tenant_id}: {e}")
+        logger.error(f"Error getting subscription status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/subscription/status")
-async def get_current_tenant_subscription_status(
-    x_tenant_id: str = Header(..., description="Tenant ID")
+@app.get("/subscriptions/{subscription_id}", response_model=SubscriptionResponse)
+async def get_subscription(subscription_id: str):
+    """Get subscription by ID"""
+    try:
+        subscription = await stripe_integration.get_subscription(subscription_id)
+        if not subscription:
+            raise HTTPException(status_code=404, detail="Subscription not found")
+        
+        return SubscriptionResponse(
+            id=subscription.id,
+            customer_id=subscription.customer_id,
+            price_id=subscription.price_id,
+            tier=subscription.tier.value,
+            status=subscription.status.value,
+            current_period_start=subscription.current_period_start.isoformat(),
+            current_period_end=subscription.current_period_end.isoformat(),
+            cancel_at_period_end=subscription.cancel_at_period_end,
+            trial_end=subscription.trial_end.isoformat() if subscription.trial_end else None,
+            metadata=subscription.metadata
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting subscription: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Payment intent endpoints
+@app.post("/create-payment-intent")
+async def create_payment_intent(
+    amount: int,
+    currency: str = "usd",
+    customer_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
 ):
-    """Get subscription status for current tenant from headers"""
+    """Create a payment intent for one-time payments"""
     try:
-        status = await get_subscription_status(x_tenant_id)
-        return status
-    except Exception as e:
-        logger.error(f"Error getting subscription status for {x_tenant_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/subscription/refresh/{tenant_id}")
-async def refresh_tenant_subscription_cache(tenant_id: str):
-    """Force refresh subscription cache for a tenant"""
-    try:
-        subscription = await refresh_subscription_cache(tenant_id)
-        return {
-            "tenant_id": tenant_id,
-            "tier": subscription.tier.value,
-            "status": subscription.status.value,
-            "refreshed_at": subscription.last_checked.isoformat() if subscription.last_checked else None
-        }
-    except Exception as e:
-        logger.error(f"Error refreshing subscription cache for {tenant_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/subscription/limits/{tenant_id}")
-async def get_tenant_limits(tenant_id: str):
-    """Get subscription limits and usage for a tenant"""
-    try:
-        subscription = await subscription_verifier.get_tenant_subscription(tenant_id)
-        limits_check = subscription_verifier.check_usage_limits(subscription)
-        tier_limits = subscription_verifier.tier_limits.get(subscription.tier, {})
-        
-        return {
-            "tenant_id": tenant_id,
-            "tier": subscription.tier.value,
-            "limits": {
-                "projects": {
-                    "max": tier_limits.get('max_projects', -1),
-                    "used": subscription.projects_used,
-                    "remaining": max(0, tier_limits.get('max_projects', 0) - subscription.projects_used) 
-                               if tier_limits.get('max_projects', -1) > 0 else -1,
-                    "within_limit": limits_check.get('projects_within_limit', True)
-                },
-                "build_hours": {
-                    "max": tier_limits.get('max_build_hours', -1),
-                    "used": subscription.build_hours_used,
-                    "remaining": max(0, tier_limits.get('max_build_hours', 0) - subscription.build_hours_used)
-                               if tier_limits.get('max_build_hours', -1) > 0 else -1,
-                    "within_limit": limits_check.get('build_hours_within_limit', True)
-                }
-            },
-            "features": tier_limits.get('features', [])
-        }
-    except Exception as e:
-        logger.error(f"Error getting limits for {tenant_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/subscription/verify-access")
-async def verify_subscription_access(
-    request_data: Dict[str, Any],
-    x_tenant_id: str = Header(..., description="Tenant ID")
-):
-    """Verify if tenant has access to specific feature or tier"""
-    try:
-        required_tier = request_data.get('required_tier', 'starter')
-        feature = request_data.get('feature')
-        
-        subscription = await subscription_verifier.get_tenant_subscription(x_tenant_id)
-        
-        # Check tier access
-        tier_access = subscription_verifier.check_access_level(
-            subscription, AccessLevel(required_tier)
+        payment_intent = await stripe_integration.create_payment_intent(
+            amount=amount,
+            currency=currency,
+            customer_id=customer_id,
+            metadata=metadata
         )
         
-        # Check feature access if specified
-        feature_access = True
-        if feature:
-            feature_access = subscription_verifier.check_feature_access(subscription, feature)
-        
-        # Check usage limits
-        limits_check = subscription_verifier.check_usage_limits(subscription)
-        
         return {
-            "tenant_id": x_tenant_id,
-            "has_access": tier_access and feature_access and all(limits_check.values()),
-            "tier_access": tier_access,
-            "feature_access": feature_access,
-            "within_limits": limits_check,
-            "current_tier": subscription.tier.value,
-            "subscription_status": subscription.status.value
+            "id": payment_intent.id,
+            "amount": payment_intent.amount,
+            "currency": payment_intent.currency,
+            "status": payment_intent.status.value,
+            "customer_id": payment_intent.customer_id,
+            "metadata": payment_intent.metadata
         }
     except Exception as e:
-        logger.error(f"Error verifying access for {x_tenant_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        logger.error(f"Error creating payment intent: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Plan information endpoints
+@app.get("/plans/{tier}/limits")
+async def get_plan_limits(tier: str):
+    """Get plan limits for a specific tier"""
+    try:
+        try:
+            subscription_tier = SubscriptionTier(tier)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid tier: {tier}")
+        
+        limits = stripe_integration.get_tier_limits(subscription_tier)
+        return {
+            "tier": tier,
+            "limits": limits
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting plan limits: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/plans")
+async def get_available_plans():
+    """Get all available subscription plans"""
+    try:
+        plans = {}
+        for tier in SubscriptionTier:
+            if tier != SubscriptionTier.FREE:
+                limits = stripe_integration.get_tier_limits(tier)
+                plans[tier.value] = {
+                    "name": tier.value.title(),
+                    "limits": limits
+                }
+        
+        return {
+            "plans": plans,
+            "free_plan": {
+                "name": "Free",
+                "limits": {
+                    "projects": 1,
+                    "build_hours": 5,
+                    "storage_gb": 1,
+                    "embeddings_mb": 100
+                }
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting available plans: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Feature access check endpoint
+@app.post("/check-feature-access")
+async def check_feature_access(
+    feature: str,
+    customer_id: str
+):
+    """Check if a customer has access to a specific feature"""
+    try:
+        subscriptions = await stripe_integration.get_customer_subscriptions(customer_id)
+        
+        if not subscriptions:
+            return {
+                "has_access": False,
+                "reason": "No active subscription"
+            }
+        
+        # Check if any subscription grants access to the feature
+        for subscription in subscriptions:
+            if subscription.status in ["active", "trialing"]:
+                has_access = stripe_integration.has_feature_access(subscription, feature)
+                if has_access:
+                    return {
+                        "has_access": True,
+                        "subscription_id": subscription.id,
+                        "tier": subscription.tier.value
+                    }
+        
+        return {
+            "has_access": False,
+            "reason": "Feature not available on current plan"
+        }
+    except Exception as e:
+        logger.error(f"Error checking feature access: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Usage limits check endpoint
+@app.post("/check-usage-limits")
+async def check_usage_limits(
+    customer_id: str,
+    usage: Dict[str, int]
+):
+    """Check if customer usage is within plan limits"""
+    try:
+        subscriptions = await stripe_integration.get_customer_subscriptions(customer_id)
+        
+        if not subscriptions:
+            return {
+                "within_limits": False,
+                "exceeded_features": ["subscription"],
+                "remaining": {"projects": 0, "build_hours": 0, "storage_gb": 0}
+            }
+        
+        # Check usage against the most recent active subscription
+        for subscription in subscriptions:
+            if subscription.status in ["active", "trialing"]:
+                result = stripe_integration.check_usage_limits(subscription, usage)
+                return result
+        
+        return {
+            "within_limits": False,
+            "exceeded_features": ["subscription"],
+            "remaining": {"projects": 0, "build_hours": 0, "storage_gb": 0}
+        }
+    except Exception as e:
+        logger.error(f"Error checking usage limits: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000) 

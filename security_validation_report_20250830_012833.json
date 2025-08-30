@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-08-30T01:28:28.107441",
+  "overall_score": 0.0,
+  "tests_passed": 0,
+  "tests_total": 4,
+  "critical_issues": [
+    "RLS policies not properly enforcing tenant isolation",
+    "Access control not properly enforcing permissions",
+    "Audit trails not properly logging security events",
+    "Compliance checks not meeting requirements"
+  ],
+  "warnings": [],
+  "recommendations": [],
+  "RLS Policy Testing_score": 0,
+  "Access Control Verification_score": 0,
+  "Audit Trail Validation_score": 0,
+  "Compliance Checks_score": 0,
+  "grade": "F"
+}

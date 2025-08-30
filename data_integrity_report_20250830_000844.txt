@@ -1,0 +1,36 @@
+================================================================================
+DATA INTEGRITY VERIFICATION REPORT
+================================================================================
+Generated: 2025-08-30 00:08:44
+
+SUMMARY
+----------------------------------------
+Total Checks: 4
+Passed: 0
+Failed: 4
+Success Rate: 0.0%
+
+DETAILED RESULTS
+----------------------------------------
+❌ Database Parity: FAIL
+  Error: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+
+❌ Golden Query Validation: FAIL
+  Error: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+
+❌ Referential Integrity: FAIL
+  Error: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+
+❌ Data Completeness: FAIL
+  Error: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+
+RECOMMENDATIONS
+----------------------------------------
+⚠️  Some checks failed. Review the details above and address issues before proceeding.
+🔧 Recommended actions:
+  - Fix Database Parity: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+  - Fix Golden Query Validation: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+  - Fix Referential Integrity: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+  - Fix Data Completeness: Multiple exceptions: [Errno 61] Connect call failed ('::1', 5432, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 5432)
+
+================================================================================
