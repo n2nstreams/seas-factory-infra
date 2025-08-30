@@ -362,7 +362,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY agents/requirements.txt .
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY agents/ops/ ./ops/

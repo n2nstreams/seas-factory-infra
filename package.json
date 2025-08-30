@@ -1,0 +1,60 @@
+{
+  "name": "saas-factory",
+  "version": "1.0.0",
+  "description": "Modern, Clean Architecture for AI-Powered SaaS Applications",
+  "private": true,
+  "workspaces": [
+    "ui"
+  ],
+  "scripts": {
+    "dev": "cd ui && npm run dev",
+    "build": "cd ui && npm run build",
+    "start": "cd ui && npm run start",
+    "lint": "cd ui && npm run lint",
+    "test": "cd ui && npm run test",
+    "type-check": "cd ui && npm run type-check",
+    "clean": "rm -rf ui/dist ui/.next ui/node_modules/.cache",
+    "install-all": "npm install && cd ui && npm install",
+    "update-deps": "cd ui && npm update",
+    "supabase:start": "cd ui && npx supabase start",
+    "supabase:stop": "cd ui && npx supabase stop",
+    "supabase:status": "cd ui && npx supabase status",
+    "db:migrate": "cd ui && npx supabase db reset",
+    "db:generate-types": "cd ui && npx supabase gen types typescript --local > supabase/types/database.ts",
+    "edge:deploy": "cd ui && npx supabase functions deploy ai-agent",
+    "edge:logs": "cd ui && npx supabase functions logs ai-agent",
+    "python:install": "pip install -r requirements.txt",
+    "python:install-dev": "pip install -r requirements.txt[dev]",
+    "python:setup": "python setup.py develop",
+    "python:test": "pytest",
+    "python:lint": "black . && isort . && flake8 .",
+    "python:format": "black . && isort ."
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "saas",
+    "ai",
+    "react",
+    "nextjs",
+    "supabase",
+    "typescript",
+    "tailwindcss"
+  ],
+  "author": "SaaS Factory Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/saas-factory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/saas-factory/issues"
+  },
+  "homepage": "https://github.com/your-org/saas-factory#readme"
+}

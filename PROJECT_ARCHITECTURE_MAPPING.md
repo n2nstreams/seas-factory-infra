@@ -28,7 +28,6 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 ├── dev/                           # Development environment setup ✅ ACTIVE
 ├── docs/                          # Project documentation ✅ ACTIVE
 ├── examples/                      # Example code and demos ✅ ACTIVE
-├── infra/                         # Infrastructure as Code (Terraform) ✅ ACTIVE
 ├── logs/                          # Application and system logs ✅ ACTIVE
 ├── reports/                       # Generated reports and analytics ✅ ACTIVE
 ├── scripts/                       # Utility and automation scripts ✅ ACTIVE
@@ -46,6 +45,7 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 - ❌ **`/event-relay/`** - Legacy event relay service - **DELETED**
 - ❌ **`/lang_dummy/`** - Legacy language dummy service - **DELETED**
 - ❌ **`/legacy_archive/`** - Archived legacy components - **DELETED**
+- ❌ **`/infra/`** - Google Cloud infrastructure (Terraform) - **DELETED**
 
 ### **Configuration Files CLEANED:**
 - ✅ **Environment files**: All legacy service URLs removed
@@ -86,13 +86,7 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 - **Contents**: Task templates, documentation, references
 - **Action**: ✅ **KEEP** - Core component of new architecture
 
-### **2. Infrastructure and Configuration**
-
-#### `/infra/` - Infrastructure as Code ✅ **ACTIVE**
-- **Purpose**: Terraform infrastructure definitions
-- **Status**: ✅ **ACTIVE** - Production infrastructure
-- **Contents**: Terraform modules, production configurations
-- **Action**: ✅ **KEEP** - Production infrastructure
+### **2. Configuration and Development**
 
 #### `/config/` - Configuration Files ✅ **ACTIVE & CLEANED**
 - **Purpose**: Application configuration and settings
@@ -155,7 +149,6 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 - **`ui/`** - React/Vite frontend (builds successfully)
 - **`config/`** - Configuration management (cleaned)
 - **`dev/`** - Development environment (starts/stops correctly)
-- **`infra/`** - Terraform infrastructure (ready)
 - **`tests/`** - Test suite (infrastructure fixed)
 - **`scripts/`** - Utility scripts (functional)
 
@@ -166,6 +159,7 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 - **`event-relay/`** - Python event relay
 - **`lang_dummy/`** - Python language service
 - **`legacy_archive/`** - Legacy backups
+- **`infra/`** - Google Cloud infrastructure (Terraform)
 - **All configuration references** to legacy services
 
 ### **✅ What's Been Fixed:**
@@ -182,6 +176,7 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 3. **Test Infrastructure**: All import and fixture issues resolved
 4. **Import Issues**: Shared module structure fixed
 5. **Final Validation**: All components tested and working
+6. **Infrastructure Cleanup**: Google Cloud infrastructure removed
 
 ### **✅ NO WORK REMAINING:**
 - **All cleanup phases completed**
@@ -197,6 +192,7 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 **What we accomplished:**
 - **Successfully transitioned** from old Python tech stack to new AI agent + React architecture
 - **Completely removed** all legacy services and configurations
+- **Removed Google Cloud infrastructure** and simplified to Supabase
 - **Fixed all import and configuration issues**
 - **Validated that new architecture works correctly**
 - **Simplified project structure** significantly
@@ -205,6 +201,7 @@ This document maps out the complete folder architecture of the SaaS Factory proj
 - **Clean, organized project structure**
 - **Fully functional new architecture**
 - **No legacy code or dependencies**
+- **Supabase-based backend** (simplified infrastructure)
 - **Ready for continued development**
 - **Simplified maintenance and deployment**
 

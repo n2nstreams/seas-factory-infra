@@ -13,11 +13,6 @@ help:
 	@echo "  test          Run all tests"
 	@echo "  lint          Run linting"
 	@echo ""
-	@echo "Tenant Management:"
-	@echo "  isolate TENANT_ID=<slug>         Promote tenant to isolated infrastructure (DB + Cloud Run)"
-	@echo "  isolate-db-only TENANT_ID=<slug> Promote tenant to isolated database only"
-	@echo "  tenant-status TENANT_ID=<slug>   Check tenant isolation status"
-	@echo ""
 	@echo "Build & Deploy:"
 	@echo "  build         Build all services"
 	@echo "  deploy        Deploy to production"
@@ -52,60 +47,6 @@ test-ui:
 	@echo "🖥️  Testing UI build..."
 	cd ui && npm run build
 	@echo "✅ UI build test completed"
-
-# Tenant isolation management
-isolate:
-ifndef TENANT_ID
-	@echo "❌ Error: TENANT_ID is required"
-	@echo "Usage: make isolate TENANT_ID=acme-corp [SKIP_CLOUD_RUN=true] [KEEP_SHARED_DATA=true]"
-	@exit 1
-endif
-	@echo "🔧 Promoting tenant $(TENANT_ID) to isolated infrastructure..."
-	@echo "⚠️  This will create a dedicated database and Cloud Run service"
-	@echo "   - Database: tenant_$(subst -,_,$(TENANT_ID))"
-	@echo "   - Cloud Run: api-$(TENANT_ID)"
-	@echo "   - Region: $(shell echo $${CLOUD_RUN_REGION:-us-central1})"
-	@echo ""
-	@read -p "Continue? [y/N] " -n 1 -r; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		echo ""; \
-		echo "🚀 Starting tenant isolation..."; \
-		ARGS="--tenant-slug=$(TENANT_ID) --confirm"; \
-		if [ "$(KEEP_SHARED_DATA)" = "true" ]; then \
-			ARGS="$$ARGS --keep-shared-data"; \
-		fi; \
-		if [ "$(SKIP_CLOUD_RUN)" = "true" ]; then \
-			ARGS="$$ARGS --no-cloud-run"; \
-		fi; \
-		python3 scripts/tenant_isolation.py promote $$ARGS; \
-	else \
-		echo ""; \
-		echo "❌ Tenant isolation cancelled"; \
-	fi
-
-tenant-status:
-ifndef TENANT_ID
-	@echo "❌ Error: TENANT_ID is required"
-	@echo "Usage: make tenant-status TENANT_ID=acme-corp"
-	@exit 1
-endif
-	@echo "📊 Getting isolation status for tenant: $(TENANT_ID)"
-	python3 scripts/tenant_isolation.py status --tenant-slug=$(TENANT_ID)
-
-# Quick tenant isolation (database only, no Cloud Run)
-isolate-db-only:
-ifndef TENANT_ID
-	@echo "❌ Error: TENANT_ID is required"
-	@echo "Usage: make isolate-db-only TENANT_ID=acme-corp"
-	@exit 1
-endif
-	@echo "🗄️  Promoting tenant $(TENANT_ID) to isolated database only..."
-	@read -p "Continue? [y/N] " -n 1 -r; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		python3 scripts/tenant_isolation.py promote --tenant-slug=$(TENANT_ID) --confirm --no-cloud-run; \
-	else \
-		echo "❌ Tenant isolation cancelled"; \
-	fi
 
 # Build operations
 build:
@@ -144,8 +85,6 @@ start-design:
 	@echo "🎨 Starting Design Agent..."
 	cd agents/design && uvicorn main:app --host 0.0.0.0 --port 8082 --reload
 
-# start-gateway: REMOVED (API Gateway service decommissioned)
-
 start-ui:
 	@echo "🖥️  Starting UI development server..."
 	cd ui && npm run dev
@@ -166,7 +105,9 @@ db-reset:
 # Deployment
 deploy:
 	@echo "🚀 Deploying to production..."
-	@echo "🚧 Production deployment not yet implemented"
+	@echo "📝 Note: Frontend deploys to Vercel, backend uses Supabase"
+	@echo "🔗 Vercel: https://vercel.com"
+	@echo "🔗 Supabase: https://supabase.com"
 
 # Cleanup
 clean:
@@ -186,7 +127,7 @@ setup:
 	# Install UI dependencies
 	cd ui && npm install
 	# Install Python dependencies
-	pip3 install -r agents/requirements.txt
+pip3 install -r requirements.txt
 	@echo "✅ Setup completed"
 	@echo ""
 	@echo "🎯 Next steps:"

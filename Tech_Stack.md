@@ -11,7 +11,7 @@ This document provides a comprehensive analysis of the **current, clean tech sta
 - **Frontend:** Next.js + React with modern UI components
 - **Backend:** Supabase (PostgreSQL + real-time features)
 - **AI Agents:** React-based components with modern orchestration
-- **Infrastructure:** Terraform for GCP infrastructure
+- **Infrastructure:** Supabase backend-as-a-service platform
 - **Authentication:** Supabase Auth with dual-provider support
 
 ### **❌ What We Removed (Legacy):**
@@ -20,6 +20,7 @@ This document provides a comprehensive analysis of the **current, clean tech sta
 - ~~Old testing frameworks~~
 - ~~Outdated configuration files~~
 - ~~Legacy documentation~~
+- ~~Google Cloud infrastructure~~
 
 ---
 
@@ -74,11 +75,11 @@ This document provides a comprehensive analysis of the **current, clean tech sta
 
 ## ☁️ **Infrastructure & Deployment**
 
-### **Cloud Platform**
-- **Google Cloud Platform (GCP)** - Primary infrastructure
-- **Terraform** - Infrastructure as Code
-- **Cloud Run** - Serverless container deployment
-- **Cloud SQL** - Managed PostgreSQL
+### **Backend Platform**
+- **Supabase** - Backend-as-a-service platform
+- **PostgreSQL** - Reliable database with extensions
+- **Edge Functions** - Serverless backend logic
+- **Storage** - File uploads and management
 
 ### **Development & CI/CD**
 - **Vercel** - Frontend deployment platform

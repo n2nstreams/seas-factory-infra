@@ -16,7 +16,7 @@ AI SaaS Factory is a **modern, clean architecture** for building AI-powered SaaS
 - **⚡ Next.js Frontend** - Modern React with App Router and TypeScript
 - **🗄️ Supabase Backend** - PostgreSQL with real-time features and auth
 - **🎨 Glassmorphism UI** - Beautiful, modern design system
-- **☁️ GCP Infrastructure** - Scalable cloud infrastructure with Terraform
+- **☁️ Supabase Infrastructure** - Scalable backend-as-a-service platform
 
 ## ✨ **Key Features**
 
@@ -41,12 +41,14 @@ AI SaaS Factory is a **modern, clean architecture** for building AI-powered SaaS
 - **Built-in Authentication** - OAuth providers (Google, GitHub)
 - **Real-time Updates** - Live data synchronization
 - **Database Migrations** - Schema versioning and management
+- **Edge Functions** - Serverless backend logic
+- **Storage** - File uploads and management
 
 ### **Infrastructure**
-- **Google Cloud Platform** - Scalable cloud infrastructure
-- **Terraform** - Infrastructure as Code
-- **Cloud Run** - Serverless container deployment
+- **Supabase** - Backend-as-a-service platform
 - **Vercel** - Frontend deployment platform
+- **GitHub Actions** - CI/CD automation
+- **PostgreSQL** - Reliable database with extensions
 
 ## 🚀 **Quick Start**
 
@@ -54,7 +56,6 @@ AI SaaS Factory is a **modern, clean architecture** for building AI-powered SaaS
 - Node.js 18+ 
 - npm or yarn
 - Supabase account
-- Google Cloud Platform account
 
 ### **Installation**
 
@@ -73,7 +74,7 @@ AI SaaS Factory is a **modern, clean architecture** for building AI-powered SaaS
 3. **Set up environment variables**
    ```bash
    cp .env.example .env.local
-   # Fill in your Supabase and GCP credentials
+   # Fill in your Supabase credentials
    ```
 
 4. **Start development server**
@@ -103,7 +104,6 @@ SaaS Factory/
 │   └── public/               # Static assets
 ├── ai_docs/                   # Project documentation
 ├── agents/                    # AI agent definitions
-├── infra/                     # Terraform infrastructure
 ├── docs/                      # Additional documentation
 └── LICENSE                    # Project license
 ```
@@ -150,6 +150,7 @@ npm run type-check   # Run TypeScript check
 
 ### **✅ Completed**
 - **Legacy Python backend removed** - Clean, modern architecture
+- **Google Cloud infrastructure removed** - Simplified to Supabase
 - **Outdated documentation cleaned up** - Focused, relevant docs
 - **Project structure organized** - Logical file organization
 - **Modern tech stack** - Next.js + React + Supabase + AI agents
@@ -158,7 +159,7 @@ npm run type-check   # Run TypeScript check
 - **New feature development** - Clean codebase
 - **AI agent enhancement** - Modern component system
 - **Performance optimization** - Optimized architecture
-- **Scalability improvements** - Cloud-native design
+- **Scalability improvements** - Supabase-native design
 
 ## 🤝 **Contributing**
 
