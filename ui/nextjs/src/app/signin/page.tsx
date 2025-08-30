@@ -1,10 +1,13 @@
+"use client";
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/components/features/ui/separator";
 import { authApi, tenantUtils } from '@/lib/api';
-import { useAuth } from '@/App';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { supabase } from '@/lib/supabase';
 import {
   Mail,
   Lock,
@@ -16,6 +19,8 @@ import {
   Code2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 
 interface SignInFormData {
   email: string;
@@ -117,60 +122,28 @@ export default function SignIn() {
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Initiating ${provider} OAuth flow`);
+  const handleSocialLogin = async (provider: string) => {
+    console.log(`Initiating ${provider} OAuth flow via Supabase`);
     
-    // OAuth configuration - use environment variables or defaults
-    const oauthConfigs = {
-      github: {
-        clientId: import.meta.env.VITE_GITHUB_CLIENT_ID || 'your_github_client_id',
-        redirectUri: `http://localhost:8000/auth/github`,
-        scope: 'user:email',
-        authUrl: 'https://github.com/login/oauth/authorize'
-      },
-      google: {
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your_google_client_id',
-        redirectUri: `http://localhost:8000/auth/google`,
-        scope: 'openid email profile',
-        authUrl: 'https://accounts.google.com/oauth2/v2/auth'
-      }
-    };
-
-    const config = oauthConfigs[provider as keyof typeof oauthConfigs];
-    
-    if (!config) {
-      console.error(`Unsupported OAuth provider: ${provider}`);
-      return;
-    }
-
-    // Check if OAuth is properly configured
-    if (config.clientId === 'your_github_client_id' || config.clientId === 'your_google_client_id') {
-      console.error(`${provider} OAuth not configured. Please set VITE_${provider.toUpperCase()}_CLIENT_ID environment variable.`);
-      alert(`${provider} OAuth is not configured. Please contact support.`);
-      return;
-    }
-
     try {
       // Store current path for redirect after authentication
       sessionStorage.setItem('oauth_redirect_path', window.location.pathname);
       
-      // Build OAuth URL with proper parameters
-      const params = new URLSearchParams({
-        client_id: config.clientId,
-        redirect_uri: config.redirectUri,
-        scope: config.scope,
-        response_type: 'code',
-        ...(provider === 'google' && {
-          access_type: 'offline',
-          prompt: 'consent'
-        })
+      // Use Supabase OAuth for social login
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: provider as 'github' | 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
       });
       
-      const oauthUrl = `${config.authUrl}?${params.toString()}`;
-      console.log(`Redirecting to ${provider} OAuth: ${oauthUrl}`);
+      if (error) {
+        console.error(`Error initiating ${provider} OAuth:`, error);
+        alert(`Failed to start ${provider} authentication. Please try again.`);
+        return;
+      }
       
-      // Redirect to OAuth provider
-      window.location.href = oauthUrl;
+      console.log(`Successfully initiated ${provider} OAuth flow`);
       
     } catch (error) {
       console.error(`Error initiating ${provider} OAuth:`, error);
@@ -182,98 +155,69 @@ export default function SignIn() {
     <div className="min-h-screen bg-homepage relative overflow-hidden">
       {/* Glassmorphism Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-green-800/20 to-green-900/25 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-32 w-80 h-80 bg-gradient-to-bl from-slate-700/20 to-green-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-stone-600/20 to-green-700/25 rounded-full blur-3xl animate-pulse delay-2000"></div>
-        <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-green-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
+        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-stone-800/20 to-stone-900/25 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-32 w-80 h-80 bg-gradient-to-bl from-stone-700/20 to-stone-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-stone-600/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute bottom-32 right-20 w-72 h-72 bg-gradient-to-tl from-stone-800/20 to-stone-700/25 rounded-full blur-3xl animate-pulse delay-3000"></div>
       </div>
 
+      {/* Main Content */}
       <div className="flex min-h-screen items-center justify-center px-4 py-12 relative z-10">
         <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center shadow-2xl">
-                <Code2 className="w-8 h-8 text-white" />
-              </div>
+          {/* Logo */}
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-stone-800 to-stone-900 rounded-2xl flex items-center justify-center shadow-2xl">
+              <Code2 className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-heading mb-2">Welcome Back!</h1>
-                            <p className="text-body">Sign in to your Forge95 account</p>
           </div>
 
-          <Card className="card-glass">
-            <CardHeader className="text-center space-y-2">
-              <div className="w-12 h-12 bg-accent-icon rounded-xl flex items-center justify-center mx-auto">
-                <LogIn className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-xl font-bold text-heading">Sign In</CardTitle>
-            </CardHeader>
+          {/* Brand Name */}
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 bg-accent-icon rounded-xl flex items-center justify-center mx-auto">
+              <Code2 className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-stone-900 mt-4">AI SaaS Factory</h1>
+            <p className="text-stone-600 mt-2">Sign in to your account</p>
+          </div>
 
-            <CardContent className="space-y-6">
-              {/* Social Login */}
-              <div className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full btn-secondary"
-                  onClick={() => handleSocialLogin('github')}
-                >
-                  <Github className="w-5 h-5 mr-2" />
-                  Continue with GitHub
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full btn-secondary"
-                  onClick={() => handleSocialLogin('google')}
-                >
-                  <Mail className="w-5 h-5 mr-2" />
-                  Continue with Google
-                </Button>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted">Or sign in with email</span>
-                </div>
-              </div>
-
-              {/* Sign In Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Sign In Form */}
+          <Card className="glass-card border border-stone-300/50 shadow-2xl">
+            <CardContent className="p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email Field */}
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-heading">
-                    Email Address
-                  </label>
+                  <Label htmlFor="email" className="text-stone-700 font-medium">
+                    Email
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
                     <Input
                       id="email"
-                      name="email"
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="pl-10"
-                      placeholder="your@email.com"
+                      placeholder="Enter your email"
+                      className="pl-10 bg-white/50 backdrop-blur-sm border border-stone-300/50 text-stone-800 placeholder-stone-500 focus:border-stone-500 focus:ring-2 focus:ring-stone-500/20"
+                      required
                     />
                   </div>
-                  {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
                 </div>
 
+                {/* Password Field */}
                 <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium text-heading">
+                  <Label htmlFor="password" className="text-stone-700 font-medium">
                     Password
-                  </label>
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
                     <Input
                       id="password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="pl-10 pr-10"
                       placeholder="Enter your password"
+                      className="pl-10 bg-white/50 backdrop-blur-sm border border-stone-300/50 text-stone-800 placeholder-stone-500 focus:ring-stone-500 focus:ring-2 focus:ring-stone-500/20"
+                      required
                     />
                     <button
                       type="button"
@@ -283,112 +227,155 @@ export default function SignIn() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
                 </div>
 
+                {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      id="rememberMe"
+                      id="remember"
                       name="rememberMe"
                       checked={formData.rememberMe}
                       onChange={handleInputChange}
-                      className="h-4 w-4 text-green-800 focus:ring-green-800 border-stone-300 rounded"
+                      className="h-4 w-4 text-stone-800 focus:ring-stone-800 border-stone-300 rounded"
+                      aria-label="Remember me"
                     />
-                    <label htmlFor="rememberMe" className="text-sm text-body">
+                    <Label htmlFor="remember" className="text-sm text-stone-600">
                       Remember me
-                    </label>
+                    </Label>
                   </div>
-                  <a href="/forgot-password" className="text-sm text-accent hover:underline">
+                  <a href="#" className="text-sm text-stone-700 hover:text-stone-800 font-medium">
                     Forgot password?
                   </a>
                 </div>
 
+                {/* Sign In Button */}
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-900 hover:to-stone-800 text-white font-semibold py-3 px-4 rounded-lg shadow-lg backdrop-blur-sm border border-stone-400/40 transition-all duration-300 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+
+                {/* Divider */}
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-stone-500">Or continue with</span>
+                  <Separator className="absolute inset-0 -z-10" />
+                </div>
+
+                {/* Social Login Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleSocialLogin('github')}
+                    disabled={isSubmitting}
+                    className="bg-white/50 backdrop-blur-sm border border-stone-300/50 text-stone-800 hover:bg-white/70 hover:border-stone-400/60 transition-all duration-300"
+                  >
+                    <Github className="w-4 h-4 mr-2" />
+                    GitHub
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleSocialLogin('google')}
+                    disabled={isSubmitting}
+                    className="bg-white/50 backdrop-blur-sm border border-stone-300/50 text-stone-800 hover:bg-white/70 hover:border-stone-400/60 transition-all duration-300"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Google
+                  </Button>
+                </div>
+
+                {/* Error Message */}
                 {errors.submit && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-red-600 text-sm">{errors.submit}</p>
                   </div>
                 )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full btn-primary"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Signing in...' : 'Sign In'}
-                  {!isSubmitting && <ArrowRight className="w-4 h-4 ml-2" />}
-                </Button>
               </form>
-
-              {/* Sign Up Link */}
-              <div className="text-center pt-4">
-                <p className="text-sm text-body">
-                  Don't have an account?{' '}
-                  <a href="/signup" className="text-accent hover:underline font-medium">
-                    Get started for free
-                  </a>
-                </p>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Additional Links */}
-          <div className="text-center mt-8 space-y-2">
-            <p className="text-sm text-body">
-              Need help? <a href="/support" className="text-accent hover:underline">Contact Support</a>
+          {/* Sign Up Link */}
+          <div className="text-center mt-6">
+            <p className="text-stone-600">
+              Don't have an account?{" "}
+              <a href="/signup" className="text-stone-700 hover:text-stone-800 font-medium underline">
+                Sign up
+              </a>
             </p>
-            <div className="flex items-center justify-center space-x-4 text-xs text-muted">
-              <a href="/privacy" className="hover:text-body">Privacy Policy</a>
-              <span>•</span>
-              <a href="/terms" className="hover:text-body">Terms of Service</a>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-8 text-center">
+            <div className="flex items-center justify-center space-x-4 text-xs text-stone-500">
+              <span>🔒 Enterprise-grade security</span>
+              <span>⚡ Lightning fast</span>
+              <span>🚀 AI-powered</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30">
+      <footer className="bg-stone-900/95 backdrop-blur-lg text-white py-12 border-t border-stone-400/30 absolute bottom-0 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 bg-gradient-to-r from-stone-800 to-stone-900 rounded-xl flex items-center justify-center shadow-lg">
                   <Code2 className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold">Forge95</span>
+                <span className="text-lg font-bold">AI SaaS Factory</span>
               </div>
               <p className="text-stone-300">
-                Turn any idea into a live SaaS business - no code required.
+                Modern, Clean Architecture for AI-Powered SaaS Applications
               </p>
             </div>
-            <div>
+
+            <div className="space-y-4">
               <h4 className="font-semibold mb-4 text-stone-200">Product</h4>
               <div className="space-y-2 text-stone-400">
-                <a href="/" className="block hover:text-white transition-colors">Features</a>
-                <a href="/pricing" className="block hover:text-white transition-colors">Pricing</a>
                 <a href="/dashboard" className="block hover:text-white transition-colors">Dashboard</a>
+                <a href="/pricing" className="block hover:text-white transition-colors">Pricing</a>
+                <a href="/docs" className="block hover:text-white transition-colors">Documentation</a>
+                <a href="/api" className="block hover:text-white transition-colors">API</a>
               </div>
             </div>
-            <div>
+
+            <div className="space-y-4">
               <h4 className="font-semibold mb-4 text-stone-200">Company</h4>
               <div className="space-y-2 text-stone-400">
-                <a href="#" className="block hover:text-white transition-colors">About</a>
-                <a href="#" className="block hover:text-white transition-colors">Blog</a>
-                <a href="#" className="block hover:text-white transition-colors">Contact</a>
+                <a href="/about" className="block hover:text-white transition-colors">About</a>
+                <a href="/blog" className="block hover:text-white transition-colors">Blog</a>
+                <a href="/careers" className="block hover:text-white transition-colors">Careers</a>
+                <a href="/contact" className="block hover:text-white transition-colors">Contact</a>
               </div>
             </div>
-            <div>
+
+            <div className="space-y-4">
               <h4 className="font-semibold mb-4 text-stone-200">Support</h4>
               <div className="space-y-2 text-stone-400">
-                <a href="#" className="block hover:text-white transition-colors">Documentation</a>
-                <a href="#" className="block hover:text-white transition-colors">Community</a>
-                <a href="#" className="block hover:text-white transition-colors">Help Center</a>
+                <a href="/help" className="block hover:text-white transition-colors">Help Center</a>
+                <a href="/status" className="block hover:text-white transition-colors">Status</a>
+                <a href="/security" className="block hover:text-white transition-colors">Security</a>
+                <a href="/privacy" className="block hover:text-white transition-colors">Privacy</a>
               </div>
             </div>
           </div>
+
           <div className="border-t border-stone-700/50 mt-8 pt-8 text-center text-stone-300">
-                            <p>&copy; 2025 Forge95. All rights reserved.</p>
+            <p>&copy; 2025 AI SaaS Factory. All rights reserved.</p>
           </div>
         </div>
       </footer>

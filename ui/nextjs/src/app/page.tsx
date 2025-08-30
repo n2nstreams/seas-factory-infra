@@ -4,7 +4,7 @@ import { useFeatureFlag } from '@/components/providers/FeatureFlagProvider'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import LandingPage from './(marketing)/page'
+import LandingPage from './landing/page'
 
 export default function HomePage() {
   const uiShellV2 = useFeatureFlag('ui_shell_v2')

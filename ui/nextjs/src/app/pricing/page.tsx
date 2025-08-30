@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,10 +15,13 @@ import {
   BarChart3,
   Headphones,
   Rocket,
-  Users
+  Users,
+  Star,
+  Crown,
+  Code2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import pricingData from './data/pricing.json';
+import pricingData from '@/data/pricing.json';
 
 export default function Pricing() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -73,275 +78,315 @@ export default function Pricing() {
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(34,197,94,0.1),transparent_50%),radial-gradient(circle_at_70%_80%,rgba(34,197,94,0.05),transparent_50%)]" />
       
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-800/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-green-900/10 rounded-full blur-3xl animate-pulse delay-1000" />
+      {/* Background Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-stone-800/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-stone-900/10 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
-      <section className="relative py-20 lg:py-32">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="text-center space-y-8 max-w-5xl mx-auto">
-            <div className="space-y-6">
-              <Badge className="glass-button">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Simple, Transparent Pricing
-              </Badge>
-              <h1 className="text-4xl lg:text-6xl xl:text-7xl font-bold text-heading leading-tight">
-                Choose Your{" "}
-                <span className="text-accent">
-                  Perfect Plan
-                </span>
-              </h1>
-              <p className="text-xl lg:text-2xl text-body leading-relaxed max-w-4xl mx-auto">
-                Start building your AI-powered SaaS business today. All plans include our complete platform with different levels of usage and support.
+      {/* Header */}
+      <div className="text-center mb-16 relative z-10">
+        <Badge className="bg-stone-800/20 text-stone-800 ml-2">
+          Pricing
+        </Badge>
+        <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-stone-900 mt-4 mb-6">
+          Simple, Transparent Pricing
+        </h1>
+        <p className="text-xl lg:text-2xl text-stone-700 max-w-3xl mx-auto leading-relaxed">
+          Choose the plan that fits your needs. All plans include our core AI agents and infrastructure.
+        </p>
+      </div>
+
+      {/* Billing Toggle */}
+      <div className="flex items-center justify-center mb-12">
+        <div className="bg-white/50 backdrop-blur-sm border border-stone-300/50 rounded-full p-1 shadow-lg">
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                billingPeriod === 'monthly' ? 'bg-accent' : 'bg-stone-300'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('yearly')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                billingPeriod === 'yearly' ? 'bg-accent' : 'bg-stone-300'
+              }`}
+            >
+              Yearly
+              <span className="text-xs text-green-800 font-medium">
+                Save 20%
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing Cards */}
+      <div className="grid lg:grid-cols-3 gap-8 mb-16">
+        {/* Free Tier */}
+        <Card className="glass-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 border-stone-300/60">
+          <CardHeader className="text-center pb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-stone-800 to-stone-900 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+              <Rocket className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl text-stone-900">Free</CardTitle>
+            <CardDescription className="text-body text-sm leading-relaxed min-h-[2.5rem] flex items-center justify-center px-2">
+              Perfect for testing your first idea
+            </CardDescription>
+            <div className="space-y-2 min-h-[4rem] flex flex-col justify-center">
+              <div className="flex items-baseline justify-center space-x-1">
+                <span className="text-4xl font-bold text-stone-900">$0</span>
+                <span className="text-stone-600">/month</span>
+              </div>
+              <p className="text-xs text-stone-800 font-medium">
+                No credit card required
               </p>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-3">
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">1 Project</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">5 Build Hours</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Core AI Agents</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Demo Deploy</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Community Support</span>
+              </li>
+            </ul>
+            <Button 
+              className="w-full bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
+              onClick={() => navigate('/signup')}
+            >
+              Get Started Free
+            </Button>
+          </CardContent>
+        </Card>
 
-            {/* Billing Toggle */}
-            <div className="flex items-center justify-center space-x-4">
-              <span className={`text-lg font-medium ${billingPeriod === 'monthly' ? 'text-accent' : 'text-body'}`}>
-                Monthly
-              </span>
-                              <button
-                  onClick={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
-                    billingPeriod === 'yearly' ? 'bg-accent' : 'bg-stone-300'
-                  }`}
-                  aria-label={`Switch to ${billingPeriod === 'monthly' ? 'yearly' : 'monthly'} billing`}
-                >
-                <span
-                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                    billingPeriod === 'yearly' ? 'translate-x-7' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-              <span className={`text-lg font-medium ${billingPeriod === 'yearly' ? 'text-accent' : 'text-body'}`}>
-                Yearly
-              </span>
-              {billingPeriod === 'yearly' && (
-                <Badge className="bg-green-800/20 text-green-800 ml-2">
-                  Save 2 months
-                </Badge>
-              )}
+        {/* Starter Tier */}
+        <Card className="glass-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 border-stone-800/60 relative">
+          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            <Badge className="bg-gradient-to-r from-stone-800 to-stone-900 text-white shadow-lg backdrop-blur-sm border border-stone-400/40">
+              <Star className="w-4 h-4 mr-1" />
+              Most Popular
+            </Badge>
+          </div>
+          <CardHeader className="text-center pb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-stone-800 to-stone-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Zap className="w-8 h-8 text-white" />
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative py-16">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 gap-8 xl:gap-6 max-w-7xl mx-auto">
-            {pricingData.tiers.map((tier) => (
-              <Card 
-                key={tier.id}
-                className="relative overflow-hidden h-full flex flex-col card-glass hover:shadow-xl transition-all duration-300 hover:scale-105"
-              >
-                
-                <CardHeader className="text-center space-y-4 pb-4">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                    {getPlanIcon(tier.id)}
-                  </div>
-                  <div className="space-y-2">
-                    <CardTitle className="text-2xl font-bold text-heading">{tier.name}</CardTitle>
-                    <CardDescription className="text-body text-sm leading-relaxed min-h-[2.5rem] flex items-center justify-center px-2">
-                      {tier.description}
-                    </CardDescription>
-                  </div>
-                  <div className="space-y-2 min-h-[4rem] flex flex-col justify-center">
-                    <div className="flex items-baseline justify-center space-x-1">
-                      {typeof getDisplayPrice(tier) === 'string' ? (
-                        <span className="text-2xl lg:text-3xl font-bold text-accent">{getDisplayPrice(tier)}</span>
-                      ) : (
-                        <>
-                          <span className="text-4xl lg:text-5xl font-bold text-accent">${getDisplayPrice(tier)}</span>
-                          <span className="text-body text-sm">/{billingPeriod === 'yearly' ? 'year' : 'month'}</span>
-                        </>
-                      )}
-                    </div>
-                    {billingPeriod === 'yearly' && typeof tier.monthly === 'number' && tier.monthly > 0 && typeof tier.yearly === 'number' && (
-                      <div className="space-y-1">
-                        <p className="text-xs text-muted">
-                          ${Math.round(tier.yearly / 12)}/month billed annually
-                        </p>
-                        {getYearlySavings(tier) && (
-                          <p className="text-xs text-green-800 font-medium">
-                            Save ${getYearlySavings(tier)?.savings}/year ({getYearlySavings(tier)?.savingsPercent}% off)
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="flex-1 flex flex-col space-y-6 pt-2">
-                  <div className="flex-1 space-y-3 min-h-[10rem] flex flex-col justify-start">
-                    {tier.features.map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-3 text-left">
-                        <Check className="w-5 h-5 text-accent flex-shrink-0" />
-                        <span className="text-body text-sm leading-relaxed text-left">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-4">
-                    <Button 
-                      onClick={() => handleGetStarted(tier.id)}
-                      className="w-full btn-primary shadow-lg hover:shadow-xl transition-all duration-300"
-                      size="lg"
-                    >
-                      {tier.ctaText}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="relative py-20">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="max-w-5xl mx-auto text-center">
-            <h2 className="text-3xl lg:text-5xl font-bold text-heading mb-6">
-              Everything You Need to Succeed
-            </h2>
-            <p className="text-xl text-body mb-12">
-              All plans include these core features to turn your ideas into profitable SaaS businesses
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: <Zap className="w-8 h-8 text-white" />,
-                  title: "AI-Powered Development",
-                  description: "Complete SaaS built by AI agents in under 24 hours"
-                },
-                {
-                  icon: <Globe className="w-8 h-8 text-white" />,
-                  title: "Global Deployment",
-                  description: "Auto-deploy to cloud with custom domain and SSL"
-                },
-                {
-                  icon: <CreditCard className="w-8 h-8 text-white" />,
-                  title: "Payment Integration",
-                  description: "Stripe checkout and subscription management included"
-                },
-                {
-                  icon: <BarChart3 className="w-8 h-8 text-white" />,
-                  title: "Analytics Dashboard",
-                  description: "Real-time metrics and user behavior insights"
-                },
-                {
-                  icon: <Shield className="w-8 h-8 text-white" />,
-                  title: "Security First",
-                  description: "Enterprise-grade security and compliance built-in"
-                },
-                {
-                  icon: <Headphones className="w-8 h-8 text-white" />,
-                  title: "Expert Support",
-                  description: "Get help from our team when you need it most"
-                }
-              ].map((feature, index) => (
-                <div key={index} className="card-glass p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-800 to-green-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-heading mb-2">{feature.title}</h3>
-                  <p className="text-body">{feature.description}</p>
-                </div>
-              ))}
+            <CardTitle className="text-2xl text-stone-900">Starter</CardTitle>
+            <CardDescription className="text-body text-sm leading-relaxed min-h-[2.5rem] flex items-center justify-center px-2">
+              Ideal for solo entrepreneurs launching their first SaaS
+            </CardDescription>
+            <div className="space-y-2 min-h-[4rem] flex flex-col justify-center">
+              <div className="flex items-baseline justify-center space-x-1">
+                <span className="text-4xl font-bold text-stone-900">$19</span>
+                <span className="text-stone-600">/month</span>
+              </div>
+              <p className="text-xs text-stone-800 font-medium">
+                Billed {billingPeriod === 'yearly' ? 'annually' : 'monthly'}
+              </p>
             </div>
-          </div>
-        </div>
-      </section>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-3">
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">1 Project</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">25 Build Hours</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Core + Advanced Agents</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Custom Domain</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Priority Support</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Analytics Dashboard</span>
+              </li>
+            </ul>
+            <Button 
+              className="w-full bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
+              onClick={() => navigate('/signup')}
+            >
+              Start Building
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Pro Tier */}
+        <Card className="glass-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-2 border-stone-300/60">
+          <CardHeader className="text-center pb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-stone-800 to-stone-900 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Crown className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl text-stone-900">Pro</CardTitle>
+            <CardDescription className="text-body text-sm leading-relaxed min-h-[2.5rem] flex items-center justify-center px-2">
+              For entrepreneurs building multiple SaaS products
+            </CardDescription>
+            <div className="space-y-2 min-h-[4rem] flex flex-col justify-center">
+              <div className="flex items-baseline justify-center space-x-1">
+                <span className="text-4xl font-bold text-stone-900">$79</span>
+                <span className="text-stone-600">/month</span>
+              </div>
+              <p className="text-xs text-stone-800 font-medium">
+                Billed {billingPeriod === 'yearly' ? 'annually' : 'monthly'}
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-3">
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">3 Projects</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">100 Build Hours</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">All AI Agents</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Custom Branding</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Advanced Analytics</span>
+              </li>
+              <li className="flex items-center space-x-3">
+                <Check className="w-5 h-5 text-stone-800 flex-shrink-0" />
+                <span className="text-stone-700">Dedicated Support</span>
+              </li>
+            </ul>
+            <Button 
+              className="w-full bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-900 hover:to-stone-800 shadow-lg backdrop-blur-sm border border-stone-400/40"
+              onClick={() => navigate('/signup')}
+            >
+              Go Pro
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* FAQ Section */}
-      <section className="relative py-20">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl lg:text-5xl font-bold text-heading text-center mb-12">
-              Frequently Asked Questions
-            </h2>
-            
-            <div className="space-y-6">
-              {[
-                {
-                  question: "What are build hours?",
-                  answer: "Build hours represent the compute time our AI agents spend working on your project. This includes idea validation, design creation, code generation, testing, and deployment. Most simple SaaS projects use 10-20 hours, while complex ones may use 50+ hours."
-                },
-                {
-                  question: "Can I upgrade or downgrade my plan?",
-                  answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and you'll be charged or credited the prorated difference."
-                },
-                {
-                  question: "What happens if I exceed my build hours?",
-                  answer: `You'll be charged $${pricingData.overage.blockPrice} for every ${pricingData.overage.blockHours} additional hours. We'll notify you at 80% usage and offer auto-top-up to prevent project interruptions.`
-                },
-                {
-                  question: "Do I retain ownership of my code and idea?",
-                  answer: "Absolutely! You retain 100% ownership of your idea, code, and business. Forge95 just provides the tools and AI agents to help you build it."
-                },
-                {
-                  question: "What's included in the Free plan?",
-                  answer: "The Free plan lets you test our platform with 1 project, 5 build hours, and a demo deployment. Perfect for exploring how our AI agents work before committing to a paid plan."
-                }
-              ].map((faq, index) => (
-                <div key={index} className="card-glass p-6">
-                  <h3 className="text-xl font-bold text-heading mb-3">{faq.question}</h3>
-                  <p className="text-body">{faq.answer}</p>
-                </div>
-              ))}
-            </div>
+      <div className="max-w-4xl mx-auto mb-16">
+        <h2 className="text-3xl font-bold text-stone-900 text-center mb-12">Frequently Asked Questions</h2>
+        <div className="space-y-6">
+          <div className="bg-white/50 backdrop-blur-sm border border-stone-300/50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-stone-900 mb-3">Can I change my plan later?</h3>
+            <p className="text-stone-700">Yes! You can upgrade, downgrade, or cancel your plan at any time from your billing dashboard.</p>
+          </div>
+          <div className="bg-white/50 backdrop-blur-sm border border-stone-300/50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-stone-900 mb-3">What happens if I exceed my build hours?</h3>
+            <p className="text-stone-700">We'll notify you when you're close to your limit. You can either upgrade your plan or wait until the next billing cycle.</p>
+          </div>
+          <div className="bg-white/50 backdrop-blur-sm border border-stone-300/50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-stone-900 mb-3">Do you offer refunds?</h3>
+            <p className="text-stone-700">We offer a 30-day money-back guarantee. If you're not satisfied, we'll refund your first month.</p>
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* CTA Section */}
+      <div className="text-center">
+        <div className="bg-gradient-to-r from-stone-800/10 to-stone-900/10 backdrop-blur-lg border border-stone-800/20 rounded-2xl p-8 max-w-2xl mx-auto">
+          <h2 className="text-2xl lg:text-3xl font-bold text-stone-900 mb-4">
+            Ready to Build Your SaaS?
+          </h2>
+          <p className="text-stone-700 mb-6">
+            Join thousands of entrepreneurs who are already building successful businesses with AI.
+          </p>
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-stone-800 to-stone-900 hover:from-stone-900 hover:to-stone-800 text-lg px-8 py-6 shadow-xl backdrop-blur-sm border border-stone-400/40"
+            onClick={() => navigate('/signup')}
+          >
+            Start Building Today
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </div>
 
       {/* Footer */}
-      <footer className="relative py-16 border-t border-stone-300/50">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-              <div className="md:col-span-2">
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-green-800 to-green-900 rounded-xl flex items-center justify-center shadow-lg">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H9V3H7V1H5V7L1 9V11L7 13V21H9V19H11V21H13V19H15V21H17V13L23 11V9H21ZM19 10.5L17 11.5V17H15V15H13V17H11V15H9V17H7V11.5L5 10.5V9.5L7 8.5V7H9V9H11V7H13V9H15V7H17V8.5L19 9.5V10.5Z"/>
-                    </svg>
-                  </div>
-                  <span className="text-xl font-bold text-stone-900">Forge95</span>
+      <footer className="mt-20 border-t border-stone-200/50 pt-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-gradient-to-r from-stone-800 to-stone-900 rounded-xl flex items-center justify-center shadow-lg">
+                  <Code2 className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-stone-600 max-w-md">
-                  Turn any idea into a live SaaS business – no code required. Built by AI agents, deployed globally, ready for customers.
-                </p>
+                <span className="text-xl font-bold text-stone-900">Forge95</span>
               </div>
-              
-              <div>
-                <h4 className="font-semibold text-stone-900 mb-4">Product</h4>
-                <ul className="space-y-2 text-stone-600">
-                  <li><a href="/pricing" className="hover:text-stone-900 transition-colors">Pricing</a></li>
-                  <li><a href="/faq" className="hover:text-stone-900 transition-colors">FAQ</a></li>
-                  <li><a href="/signin" className="hover:text-stone-900 transition-colors">Sign In</a></li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-stone-900 mb-4">Legal</h4>
-                <ul className="space-y-2 text-stone-600">
-                  <li><a href="/privacy" className="hover:text-stone-900 transition-colors">Privacy Policy</a></li>
-                  <li><a href="/terms" className="hover:text-stone-900 transition-colors">Terms of Service</a></li>
-                  <li><a href="/dpa" className="hover:text-stone-900 transition-colors">DPA</a></li>
-                </ul>
-              </div>
-            </div>
-            
-            <div className="border-t border-stone-300/50 mt-12 pt-8 text-center">
-              <p className="text-stone-500">
-                &copy; 2025 Forge95. Turn any idea into a live SaaS business – no code required.
+              <p className="text-stone-600 max-w-md">
+                Transform your ideas into fully-deployed SaaS applications with AI-powered development agents.
               </p>
             </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-stone-900 mb-4">Product</h4>
+              <ul className="space-y-2 text-stone-600">
+                <li><a href="/pricing" className="hover:text-stone-900 transition-colors">Pricing</a></li>
+                <li><a href="/faq" className="hover:text-stone-900 transition-colors">FAQ</a></li>
+                <li><a href="/signin" className="hover:text-stone-900 transition-colors">Sign In</a></li>
+                <li><a href="/signup" className="hover:text-stone-900 transition-colors">Sign Up</a></li>
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-stone-900 mb-4">Legal</h4>
+              <ul className="space-y-2 text-stone-600">
+                <li><a href="/privacy" className="hover:text-stone-900 transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms" className="hover:text-stone-900 transition-colors">Terms of Service</a></li>
+                <li><a href="/dpa" className="hover:text-stone-900 transition-colors">DPA</a></li>
+                <li><a href="/security" className="hover:text-stone-900 transition-colors">Security</a></li>
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-stone-900 mb-4">Support</h4>
+              <ul className="space-y-2 text-stone-600">
+                <li><a href="/help" className="hover:text-stone-900 transition-colors">Help Center</a></li>
+                <li><a href="/contact" className="hover:text-stone-900 transition-colors">Contact Us</a></li>
+                <li><a href="/status" className="hover:text-stone-900 transition-colors">Status</a></li>
+                <li><a href="/docs" className="hover:text-stone-900 transition-colors">Documentation</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-stone-200/50 mt-8 pt-8 text-center">
+            <p className="text-stone-500">
+              &copy; 2025 Forge95. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>
