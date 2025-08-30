@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   async rewrites() {
     return [
       // Legacy backend proxy - REMOVED (legacy system decommissioned)
@@ -75,12 +72,12 @@ const nextConfig = {
       },
     ];
   },
-  // Sentry configuration
-  sentry: {
-    hideSourceMaps: true,
-    disableServerWebpackPlugin: process.env.NODE_ENV === 'development',
-    disableClientWebpackPlugin: process.env.NODE_ENV === 'development',
-  },
+  // Sentry configuration (commented out for now)
+  // sentry: {
+  //   hideSourceMaps: true,
+  //   disableServerWebpackPlugin: process.env.NODE_ENV === 'development',
+  //   disableClientWebpackPlugin: process.env.NODE_ENV === 'development',
+  // },
   // Cache policies for canary deployments
   generateEtags: true,
   compress: true,
@@ -91,7 +88,7 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
   // Performance optimizations
-  swcMinify: true,
+  // swcMinify: true, // This is enabled by default in Next.js 15
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },

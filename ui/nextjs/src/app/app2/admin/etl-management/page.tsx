@@ -16,7 +16,7 @@ export default function ETLManagementPage() {
   
   const [etlJobs, setEtlJobs] = useState<ETLJob[]>([])
   const [dataMappings, setDataMappings] = useState<Record<string, DataMapping[]>>({})
-  const [isLoading, setIsLoading] = useState(true)
+  const [isPageLoading, setIsPageLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTable, setSelectedTable] = useState<string>('tenants')
   const [batchSize, setBatchSize] = useState<number>(100)
@@ -40,7 +40,7 @@ export default function ETLManagementPage() {
 
   const loadETLData = async () => {
     try {
-      setIsLoading(true)
+      setIsPageLoading(true)
       setError(null)
       
       const [jobs, mappings] = await Promise.all([
@@ -53,7 +53,7 @@ export default function ETLManagementPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load ETL data')
     } finally {
-      setIsLoading(false)
+      setIsPageLoading(false)
     }
   }
 

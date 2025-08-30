@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * WebSocket Dashboard Component
  * Provides real-time monitoring and testing of WebSocket functionality

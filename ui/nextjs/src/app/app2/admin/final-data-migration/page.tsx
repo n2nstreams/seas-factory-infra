@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { finalDataMigrationService, CutoverTable, CutoverChecklist, FreezeWindow } from '@/lib/data-migration-final'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,7 @@ export default function FinalDataMigrationPage() {
   const [cutoverTables, setCutoverTables] = useState<CutoverTable[]>([])
   const [freezeWindows, setFreezeWindows] = useState<FreezeWindow[]>([])
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPageLoading, setIsPageLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 

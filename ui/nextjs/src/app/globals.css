@@ -61,30 +61,30 @@
 @layer components {
   /* Glassmorphism Design System */
   .glass {
-    @apply bg-glass-white/20 backdrop-blur-md border border-white/20 shadow-glass;
+    @apply bg-glass-white backdrop-blur-md border border-white-10 shadow-glass;
   }
   
   .glass-dark {
-    @apply bg-glass-black/20 backdrop-blur-md border border-white/10 shadow-glass;
+    @apply bg-glass-black-20 backdrop-blur-md border border-white-10 shadow-glass;
   }
   
   .glass-primary {
-    @apply bg-glass-primary/20 backdrop-blur-md border border-primary-300/30 shadow-glass;
+    @apply bg-glass-primary backdrop-blur-md border border-primary-300-40 shadow-glass;
   }
   
   .glass-card {
-    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-glass p-6;
+    @apply bg-glass-white backdrop-blur-md border border-white-10 rounded-xl shadow-glass p-6;
   }
   
   .glass-button {
-    @apply bg-glass-primary/30 backdrop-blur-sm border border-primary-300/40 
-           hover:bg-glass-primary/50 hover:border-primary-300/60 
+    @apply bg-glass-primary-30 backdrop-blur-sm border border-primary-300-40 
+           hover:bg-glass-primary-50 hover:border-primary-300-60 
            transition-all duration-200 rounded-lg px-4 py-2;
   }
   
   .glass-input {
-    @apply bg-glass-white/20 backdrop-blur-sm border border-white/30 
-           focus:border-primary-300/60 focus:ring-2 focus:ring-primary-300/20
+    @apply bg-glass-white backdrop-blur-sm border border-white-10 
+           focus:border-primary-300-60 focus:ring-2 focus:ring-primary-300-40
            transition-all duration-200 rounded-lg px-3 py-2;
   }
   

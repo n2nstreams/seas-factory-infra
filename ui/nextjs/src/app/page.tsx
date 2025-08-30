@@ -15,16 +15,16 @@ export default function HomePage() {
     if (uiShellV2) {
       // New Next.js UI shell
       if (user) {
-        router.push('/app2/dashboard')
-      } else {
-        router.push('/app2')
-      }
-    } else {
-      // Legacy UI shell
-      if (user) {
         router.push('/dashboard')
       } else {
         router.push('/')
+      }
+    } else {
+      // Legacy UI shell - redirect to legacy components
+      if (user) {
+        router.push('/legacy/dashboard')
+      } else {
+        router.push('/legacy')
       }
     }
   }, [uiShellV2, user, router])

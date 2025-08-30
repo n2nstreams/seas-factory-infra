@@ -19,7 +19,7 @@ export default function DatabaseMigrationPage() {
   
   const [migrationStatus, setMigrationStatus] = useState<MigrationStatus[]>([])
   const [migrationTables, setMigrationTables] = useState<MigrationTable[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isPageLoading, setIsPageLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
   const [consistencyResults, setConsistencyResults] = useState<Record<string, any>>({})
@@ -42,7 +42,7 @@ export default function DatabaseMigrationPage() {
 
   const loadMigrationData = async () => {
     try {
-      setIsLoading(true)
+      setIsPageLoading(true)
       setError(null)
       
       const [status, tables] = await Promise.all([
@@ -55,7 +55,7 @@ export default function DatabaseMigrationPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load migration data')
     } finally {
-      setIsLoading(false)
+      setIsPageLoading(false)
     }
   }
 
