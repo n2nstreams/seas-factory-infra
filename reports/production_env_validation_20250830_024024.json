@@ -1,0 +1,121 @@
+{
+  "timestamp": "2025-08-30T02:40:23.480839",
+  "overall_score": 79.60390421064578,
+  "sections": {
+    "staging_production_parity": {
+      "name": "Staging to Production Parity",
+      "score": 83.41561684258313,
+      "tests": [
+        {
+          "test": "Environment File Parity",
+          "status": "PASS",
+          "score": 83.58018386108273,
+          "details": "Environment configuration parity: 83.58018386108273/100"
+        },
+        {
+          "test": "Infrastructure Parity",
+          "status": "PASS",
+          "score": 100.0,
+          "details": "Infrastructure configuration parity: 100.0/100"
+        },
+        {
+          "test": "Service Parity",
+          "status": "FAIL",
+          "score": 66.66666666666666,
+          "details": "Service configuration parity: 66.66666666666666/100"
+        }
+      ],
+      "status": "COMPLETE"
+    },
+    "environment_variables": {
+      "name": "Environment Variables Configuration",
+      "score": 66.66666666666667,
+      "tests": [
+        {
+          "test": "Required Variables",
+          "status": "PASS",
+          "score": 100.0,
+          "details": "Required environment variables: 100.0/100"
+        },
+        {
+          "test": "Variable Security",
+          "status": "FAIL",
+          "score": 0.0,
+          "details": "Environment variable security: 0.0/100"
+        },
+        {
+          "test": "Configuration Consistency",
+          "status": "PASS",
+          "score": 100.0,
+          "details": "Configuration consistency: 100.0/100"
+        }
+      ],
+      "status": "COMPLETE"
+    },
+    "ssl_tls_configuration": {
+      "name": "SSL/TLS Configuration",
+      "score": 88.33333333333333,
+      "tests": [
+        {
+          "test": "SSL Certificates",
+          "status": "PASS",
+          "score": 85.0,
+          "details": "SSL certificate validation: 85.0/100"
+        },
+        {
+          "test": "TLS Configuration",
+          "status": "PASS",
+          "score": 80.0,
+          "details": "TLS configuration: 80.0/100"
+        },
+        {
+          "test": "Security Headers",
+          "status": "PASS",
+          "score": 100.0,
+          "details": "Security headers: 100.0/100"
+        }
+      ],
+      "status": "COMPLETE"
+    },
+    "domain_dns_configuration": {
+      "name": "Domain & DNS Configuration",
+      "score": 80.0,
+      "tests": [
+        {
+          "test": "DNS Resolution",
+          "status": "FAIL",
+          "score": 40.0,
+          "details": "DNS resolution: 40.0/100"
+        },
+        {
+          "test": "Domain Routing",
+          "status": "PASS",
+          "score": 100.0,
+          "details": "Domain routing: 100.0/100"
+        },
+        {
+          "test": "Load Balancer",
+          "status": "PASS",
+          "score": 100.0,
+          "details": "Load balancer configuration: 100.0/100"
+        }
+      ],
+      "status": "COMPLETE"
+    }
+  },
+  "recommendations": [
+    {
+      "section": "environment_variables",
+      "priority": "MEDIUM",
+      "recommendation": "Improve environment_variables configuration to achieve target score of 80+",
+      "current_score": 66.66666666666667
+    },
+    {
+      "section": "Overall",
+      "priority": "HIGH",
+      "recommendation": "Address critical issues before proceeding to production",
+      "current_score": 79.60390421064578
+    }
+  ],
+  "critical_issues": []
+}

@@ -23,6 +23,9 @@ from marketplace_routes import router as marketplace_router
 from oauth_routes import router as oauth_router
 from websocket_manager import get_websocket_manager
 
+# Import security middleware
+from security_middleware import create_security_middleware
+
 # Configure logging using centralized configuration
 try:
     from config.logging_config import get_logger
@@ -58,6 +61,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Add security middleware
+app.add_middleware(create_security_middleware(app))
 
 # Add admin routes
 app.include_router(admin_router)
