@@ -1,5 +1,0 @@
-functions-framework==3.*
-google-cloud-logging==3.*
-google-cloud-monitoring==3.*
-google-cloud-billing==1.*
-sendgrid==6.* 
