@@ -18,7 +18,7 @@ import {
   LogIn,
   Code2
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
@@ -30,7 +30,7 @@ interface SignInFormData {
 
 export default function SignIn() {
   const { setUser } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [formData, setFormData] = useState<SignInFormData>({
     email: '',
@@ -109,8 +109,8 @@ export default function SignIn() {
 
         setUser(userData);
 
-        // Navigate to dashboard using React Router
-        navigate('/dashboard');
+        // Navigate to dashboard using Next.js router
+        router.push('/dashboard');
       } else {
         throw new Error('Invalid response from server');
       }
